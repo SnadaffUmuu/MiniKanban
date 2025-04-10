@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanban App</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header>
+    <h1 id="board-title">Kanban Board</h1>
+    <button id="menu-toggle">Меню</button>
+
+    <div class="rename-board-block hidden">
+      <input type="text" id="rename-board-input" />
+      <button id="rename-cancel">Отменить</button>
+      <button id="rename-confirm">Сохранить</button>
+    </div>
+    
+    <div class="delete-board-block hidden">
+      <p>Действительно удалить?</p>
+      <button id="delete-cancel">Отменить</button>
+      <button id="delete-confirm">Удалить</button>
+    </div>    
+    <section id="menu" class="hidden">
+      <div id="menu-content">
+        <button id="boards-button">Доски</button>
+        <button id="rename-board">Переименовать доску</button>
+        <button id="delete-board">Удалить доску</button>
+      </div>
+  
+      <div id="rename-board" class="hidden">
+        <input type="text" id="rename-input" />
+        <button id="cancel-rename">Отменить</button>
+        <button id="confirm-rename">Сохранить</button>
+      </div>
+  
+      <div id="delete-board" class="hidden">
+        <p>Действительно удалить?</p>
+        <button id="cancel-delete">Отменить</button>
+        <button id="confirm-delete">Удалить</button>
+      </div>
+    </section>
+    <div id="boards-list" class="hidden">
+      <h3>Доски</h3>
+      <div id="boards-buttons"></div>
+      <button id="create-board">Создать доску</button>
+      <button id="close-boards-list">Закрыть</button>
+    </div>
+  </header>
+
+
+  <main>
+    <div id="columns"></div>
+    <button id="add-column">Добавить колонку</button>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>
