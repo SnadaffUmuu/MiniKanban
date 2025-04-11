@@ -1,3 +1,26 @@
+const renderedEvents = {
+  'click' : {
+    '.move-column-left' : [moveColumn, false],
+    '.move-column-right' : [moveColumn, true],
+    '.move-column' : toggleMoveColumnUi,
+    '.rename-column' : toggleRenameColumnUi,
+    '.cancel-rename-column' : [toggleRenameColumnUi, false],
+    '.save-rename-column' : renameColumn,
+    '.delete-column' : toggleDeleteColumnUi,
+    '.cancel-delete-column' : [toggleDeleteColumnUi, false],
+    '.save-delete-column' : deleteColumn,
+    '.add-task-button' : showAddTaskUi,
+    '.add-task' : showAddTaskUi,
+    '.task-edit-cancel' : hideAddTaskUi, 
+    '.task-edit-save' : addTask,
+    //'.task' : toggleTaskInfo,
+    '.delete-task' : showDeleteTaskUi,
+    '.cancel-delete-task' : removeDeleteTaskUi,
+    '.task .task-title' : showEditTaskUi,
+    '.task' : [toggleTaskInfo, null, true],
+  },
+}
+
 // Утилита для генерации uid
 function generateUID() {
   return '_' + Math.random().toString(36).substr(2, 9);
@@ -126,7 +149,6 @@ function renderBoard() {
           </div>
           <div class="task-info hidden">
             <p class="task-date">Дата добавления: ${card.enteredColDate}</p>
-            <button class="task-edit">Редактировать</button>
             <button class="task-delete">Удалить</button>
             <button class="task-change-color">Сменить цвет</button>
           </div>
@@ -316,56 +338,35 @@ document.getElementById('add-column').addEventListener('click', function() {
 });
 
 document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('add-task-button')
-    || e.target.classList.contains('add-task')) {
-      const columnBody = e.target.closest('.column').querySelector('.column-body');
-      columnBody.insertAdjacentHTML('afterbegin', getTaskEditFormHtml());
-      const editBlock = columnBody.querySelector('.task-edit');
-      editBlock.querySelector('.task-edit-save').addEventListener('click', () => {
-        const colId = e.target.closest('.column').dataset.id;
-        const column = getCurrentBoard().columns.find(c => c.id == colId);
-      
-        const newCard = {
-          id: generateUID(),
-          description: editBlock.querySelector('.task-edit-input').value,
-          color: 'ffffff', 
-          enteredColDate: new Date(),
-          editing: true
-        };
-        
-        column.cards = column.cards ? [...column.cards, newCard] : [newCard];
-  
-        saveBoards(appData.boards, appData.currentBoardId);
-        renderBoard();
-        editBlock.remove();
-      })
-  } else if (e.target.classList.contains('.task-edit')) {
-    const columnBody = e.target.closest('.column').querySelector('.column-body');
-    const colId = e.target.closest('.column').dataset.id;
-    const taskId = e.target.closedt('.task').dataset.id;
-    const column = getCurrentBoard().columns.find(c => c.id == colId);
-    const task = column.find(t => t.id == taskId);
-      columnBody.insertAdjacentHTML('afterbegin', getTaskEditFormHtml(task.description));
-  } else if (e.target.classList.contains('task-info-toggle')) {
-    const infoBlock = e.target.closest('.task').querySelector('.task-info');
-    infoBlock.classList.toggle('hidden');
-  } else if (e.target.classList.contains('column-menu-toggle')) {
+  if (e.target.classList.contains('column-menu-toggle')) {
     if (isColumnUiShown(e.target.closest('.column'))) {
       hideColumActionsUi(e.target.closest('.column'));
     } else {
       e.target.closest('.column').querySelector('.column-menu').classList.toggle('hidden');
     }
-  } else if (e.target.classList.contains('rename-column')) {
-    e.target.closest('.column').querySelector('.column-menu').classList.toggle('hidden');
-    e.target.closest('.column').querySelector('.rename-column-block').classList.toggle('hidden');
-  } else if (e.target.classList.contains('delete-column')) {
-    e.target.closest('.column').querySelector('.column-menu').classList.toggle('hidden');
-    e.target.closest('.column').querySelector('.delete-column-block').classList.toggle('hidden');
-  }  else if (e.target.classList.contains('move-column')) {
-    e.target.closest('.column').querySelector('.column-menu').classList.toggle('hidden');
-    e.target.closest('.column').querySelector('.move-column-block').classList.toggle('hidden');
   }
 });
+
+function moveColumn(button, doMoveRight) {
+  const currentBoard = getCurrentBoard();
+  if (currentBoard.columns.length == 1) return;
+  const currentColumnEl = button.closest('.column');
+  const currentColumnIndex = currentBoard.columns.findIndex(col => col.id == currentColumnEl.dataset.id);
+  if ((currentColumnIndex == (currentBoard.columns.length - 1) && doMoveRight)
+    || (currentColumnIndex == 0 && !doMoveRight)) {
+    return
+  }
+  const currentColumn = currentBoard.columns[currentColumnIndex];
+  const moveColId = currentColumn.id;
+  currentBoard.columns = currentBoard.columns.filter(col => col != currentColumn);
+  const insertIndex = doMoveRight ? currentColumnIndex + 1 : currentColumnIndex - 1;
+  currentBoard.columns.splice(insertIndex, 0, currentColumn);
+  saveBoards(appData.boards, appData.currentBoardId);
+  renderBoard();
+  toggleMoveColumnUi(document.querySelector('[data-id="' + moveColId + '"]'), false);
+
+  //TODO: scroll to moved column
+}
 
 function isColumnUiShown(column) {
   return !(column.querySelector('.rename-column-block').classList.contains('hidden')
@@ -384,9 +385,19 @@ function getTaskEditFormHtml(taskDescription) {
     <div class="task-edit">
       <textarea ${taskDescription ? '' : ' placeholder="Описание"'} class="task-edit-input">${taskDescription ? taskDescription : ''}</textarea>
       <button class="task-edit-cancel">Отмена</button>
-      <button class="task-edit-save">Сохранить</button>
+      <button class="task-edit-save" disabled>Сохранить</button>
     </div>  
   `
+}
+
+function getTaskDeleteUi() {
+  return `
+    <div class="task-delete-block">
+      Delete this task?<br>
+      <button class="cancel-delete-task">Cancel</button>
+      <button class="confirm-delete-task">Delete</button>
+    </div>
+  `;
 }
 
 let longPressTimer = null;
@@ -582,4 +593,178 @@ function updateInsertIndicator(columnEl, y) {
 
 function removeInsertIndicators() {
   document.querySelectorAll('.card-insert-indicator').forEach(el => el.remove());
+}
+
+const eventHandler = function (e, eventName) {
+  const entry = renderedEvents[eventName];
+  for (let selector in entry) {
+    const callbackObj = entry[selector];
+    const method = Array.isArray(callbackObj) ? callbackObj[0] : callbackObj;
+    const params = Array.isArray(callbackObj) ? callbackObj[1] : [];
+    const skipSelectorCheck = Array.isArray(callbackObj) && callbackObj.length > 2 ? true : false;
+    if (skipSelectorCheck || e.target.matches && e.target.matches(selector)) {
+      method(e.target, params, e);
+    } 
+  }
+};
+
+for (let eventName in renderedEvents) {
+    document.addEventListener(eventName, (e) => {
+      eventHandler.call(this, e, eventName);
+    })
+}
+
+function toggleMoveColumnUi (el, shouldAdd) {
+  const col = el.classList.contains('column') ? el : el.closest('.column');
+  if (typeof doShow !== 'undefined'
+    && !Array.isArray(doShow)) {
+    col.querySelector('.column-menu').classList.toggle('hidden', true);
+    col.querySelector('.move-column-block').classList.toggle('hidden', shouldAdd);
+  } else {
+    col.querySelector('.column-menu').classList.toggle('hidden', true);
+    col.querySelector('.move-column-block').classList.toggle('hidden');
+  }
+}
+
+function toggleRenameColumnUi (el, shouldShow) {
+  const col = el.classList.contains('column') ? el : el.closest('.column');
+  const colData = getCurrentBoard().columns.find(c => c.id == col.dataset.id);
+  const input = col.querySelector('.rename-column-input');
+  const renameBlock = col.querySelector('.rename-column-block');
+  if (shouldShow === true) {
+    col.querySelector('.column-menu').classList.toggle('hidden', true);
+    renameBlock.classList.toggle('hidden', false);
+    input.value = colData.name;
+  } else if (shouldShow === false) {
+    col.querySelector('.column-menu').classList.toggle('hidden', false);
+    renameBlock.classList.toggle('hidden', true);
+    input.value = '';
+  } else {
+    if (!renameBlock.classList.contains('hidden')) {
+      input.value = '';
+    } else {
+      input.value = colData.name;
+    }
+    col.querySelector('.column-menu').classList.toggle('hidden');
+    renameBlock.classList.toggle('hidden');
+  }
+}
+
+function renameColumn (el) {
+  const col = el.classList.contains('column') ? el : el.closest('.column');
+  const input = col.querySelector('.rename-column-input');
+  const newName = input.value.trim();
+  if (newName) {
+    const dataCol = getCurrentBoard().columns.find(c => c.id == col.dataset.id);
+    dataCol.name = newName;
+    saveBoards(appData.boards);
+    renderBoard();
+  }
+}
+
+function toggleDeleteColumnUi (el, shouldShow) {
+  const col = el.classList.contains('column') ? el : el.closest('.column');
+  const deleteBlock = col.querySelector('.delete-column-block');
+  if (shouldShow === true) {
+    col.querySelector('.column-menu').classList.toggle('hidden', true);
+    deleteBlock.classList.toggle('hidden', false);
+  } else if (shouldShow === false) {
+    col.querySelector('.column-menu').classList.toggle('hidden', false);
+    deleteBlock.classList.toggle('hidden', true);
+  } else {
+    col.querySelector('.column-menu').classList.toggle('hidden');
+    deleteBlock.classList.toggle('hidden');
+  }  
+}
+
+function deleteColumn (el) {
+  const currentBoard = getCurrentBoard();
+  const col = el.closest('.column');
+  const currentIndex = currentBoard.columns.findIndex(c => c.id === col.dataset.id);
+  currentBoard.columns = currentBoard.columns.filter((c, i) => i !== currentIndex);
+  saveBoards(appData.boards);
+  renderBoard();
+}
+
+function showAddTaskUi (el) {
+  const columnBody = el.closest('.column').querySelector('.column-body');
+  columnBody.insertAdjacentHTML('afterbegin', getTaskEditFormHtml());
+  const editBlock = columnBody.querySelector('.task-edit'); 
+  editBlock.querySelector('.task-edit-input').addEventListener('input', updateSaveTaskButtonState)
+}
+
+function hideAddTaskUi (el) {
+  document.querySelector('.task-edit').remove(); 
+}
+
+function addTask (el) {
+  const colEl = el.closest('.column');
+  const column = getCurrentBoard().columns.find(c => c.id == colEl.dataset.id);
+  const editBlock = colEl.querySelector('.task-edit');
+  const newCardId = generateUID();
+
+  const newCard = {
+    id: newCardId,
+    description: editBlock.querySelector('.task-edit-input').value.trim(),
+    color: 'ffffff', 
+    enteredColDate: new Date(),
+  };
+  
+  editBlock.remove();
+  column.cards = column.cards ? [newCard, ...column.cards] : [newCard];
+  saveBoards(appData.boards);
+  renderBoard();
+  toggleTaskInfo(document.querySelector('.task[data-id="' + newCardId + '"] .task-info-toggle'));
+}
+
+function showEditTaskUi (el, params, event) {
+  const card = el.closest('.task');
+  if (el.classList.contains('task-title') && card.querySelector('.task-info').classList.contains('hidden')) return;
+  const value = getCurrentBoard().columns.find(col => 
+    col.cards.find(c => c.id == card.dataset.id)).cards.find(c => 
+      c.id == card.dataset.id).description;
+  let editBlock = card.querySelector('.task-edit');
+  if (!editBlock) {
+    card.insertAdjacentHTML('beforeend', getTaskEditFormHtml(value));
+    editBlock = card.querySelector('.task-edit');
+    const input = editBlock.querySelector('.task-edit-input');
+    input.addEventListener('input', updateSaveTaskButtonState);
+  }
+}
+
+function updateSaveTaskButtonState(e) {
+  const block = e.target.closest('.task-edit');
+  const button = block.querySelector('.task-edit-save');
+  if(e.target.value.trim().length) {
+    button.removeAttribute('disabled');
+  } else {
+    button.setAttribute('disabled', true);
+  }
+}
+
+function toggleTaskInfo (el, params, event) {
+  const task = event.target.classList.contains('task') ? event.target : event.target.closest('.task');
+  if (!task) return;
+  const infoBlock = task.querySelector('.task-info');
+  if (infoBlock.classList.contains('hidden')) {
+    // Если info скрыт, реагируем на клик на любом месте внутри .task
+    infoBlock.classList.toggle('hidden');
+  } else if (event.target.classList.contains('task-info-toggle')) {
+    // Если info видим, реагируем только если клик на toggle
+    infoBlock.classList.toggle('hidden');
+  }
+}
+
+function showDeleteTaskUi(el) {
+  const card = el.closest('.task');
+  const cardInfo = card.querySelector('.task-info');
+  cardInfo.classList.add('hidden');
+  card.insertAdjacentHTML('beforeend', getTaskDeleteUi());
+}
+
+function removeDeleteTaskUi(el) {
+  const card = el.closest('.task');
+  const cardInfo = card.querySelector('.task-info');
+  cardInfo.classList.remove('hidden');
+  card.querySelector('.task-delete-block')?.remove();
 }
