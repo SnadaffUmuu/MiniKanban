@@ -38,7 +38,7 @@ header {
   position: relative;
 }
 
-.card {
+.task {
   background-color: #fff;
   border-radius: 4px;
   padding: 10px;
@@ -83,7 +83,7 @@ header {
   font-weight: bold;
 }
 
-.card-insert-indicator {
+.task-insert-indicator {
   height: 4px;
   background-color: #2196f3;
   margin: 4px 0;

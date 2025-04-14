@@ -1,24 +1,37 @@
+const cardsColors = [
+  "#FFFFFF",   // white
+  "#DBF6FF",   // light blue
+  "#FFFFB3",    // light yellow
+  "#DFF6A7",   // light green
+  "#FFD0D0",   // pink
+  "#DFCFEF",   // light purple
+]
+
 const renderedEvents = {
-  'click' : {
-    '.move-column-left' : [moveColumn, false],
-    '.move-column-right' : [moveColumn, true],
-    '.move-column' : toggleMoveColumnUi,
-    '.rename-column' : toggleRenameColumnUi,
-    '.cancel-rename-column' : [toggleRenameColumnUi, false],
-    '.save-rename-column' : renameColumn,
-    '.delete-column' : toggleDeleteColumnUi,
-    '.cancel-delete-column' : [toggleDeleteColumnUi, false],
-    '.save-delete-column' : deleteColumn,
-    '.add-task-button' : showAddTaskUi,
-    '.add-task' : showAddTaskUi,
-    '.task-edit-cancel' : hideAddTaskUi, 
-    '.task-edit-save' : addTask,
-    //'.task' : toggleTaskInfo,
-    '.delete-task' : showDeleteTaskUi,
-    '.cancel-delete-task' : removeDeleteTaskUi,
-    '.task .task-title' : showEditTaskUi,
-    '.task' : [toggleTaskInfo, null, true],
-  },
+  'click': {
+    '.move-column-left': [moveColumn, false],
+    '.move-column-right': [moveColumn, true],
+    '.move-column': toggleMoveColumnUi,
+    '.rename-column': toggleRenameColumnUi,
+    '.cancel-rename-column': [toggleRenameColumnUi, false],
+    '.save-rename-column': renameColumn,
+    '.delete-column': toggleDeleteColumnUi,
+    '.cancel-delete-column': [toggleDeleteColumnUi, false],
+    '.save-delete-column': deleteColumn,
+    '.add-task-button': showAddTaskUi,
+    '.add-task': showAddTaskUi,
+    '.task-edit-cancel': hideAddTaskUi,
+    '.task-edit-save': addTask,
+    '.task .task-info-toggle' : toggleTaskInfo,
+    '.task-delete': showDeleteTaskUi,
+    '.cancel-delete-task': removeDeleteTaskUi,
+    '.task .task-title': showEditTaskUi,
+    '.task .confirm-delete-task': deleteTask,
+    '.task-change-color' : showSetColorUI,
+    '.colors-list li' : previewTaskColor,
+    '.cancel-set-color' : removeSetColorUI,
+    '.save-set-color' : saveColor,
+  }
 }
 
 // Утилита для генерации uid
@@ -62,6 +75,16 @@ function getCurrentBoard() {
   return appData.boards.find(b => b.id == appData.currentBoardId);
 }
 
+function getCurrentColumnByElement(el) {
+  const currentColEl = el.closest('.column');
+  return getCurrentBoard().columns.find(c => c.id == currentColEl.dataset.id);
+}
+
+function getCurrentCardByElement(el) {
+  const currentTaskEl = el.closest('.task');
+  return getCurrentColumnByElement(el).cards.find(task => task.id == currentTaskEl.dataset.id);
+}
+
 // Отображение заголовка текущей доски
 function renderHeader() {
   const titleEl = document.getElementById('board-title');
@@ -78,7 +101,7 @@ function switchBoard(boardId) {
     saveAppData(appData);
     renderBoardsMenu();
     renderHeader();
-    renderBoard(); 
+    renderBoard();
   }
 }
 
@@ -128,27 +151,26 @@ document.addEventListener('DOMContentLoaded', () => {
   menuButton.addEventListener('click', toggleMenu);
   renderHeader();
   renderBoardsMenu();
-  renderBoard(); 
+  renderBoard();
 });
 
 function renderBoard() {
   const boardContainer = document.getElementById('columns');
   boardContainer.innerHTML = '';
-  const currentBoard = getCurrentBoard(); 
+  const currentBoard = getCurrentBoard();
   if (!currentBoard) return;
 
   currentBoard.columns.forEach(column => {
     // Карточки
     let cardsHtml = [];
-    column.cards.forEach(card => {
+    column.cards.forEach(task => {
       cardsHtml.push(`
-        <div class="task" style="background:#${card.color};" data-id="${card.id}">
+        <div class="task" style="background:${task.color};" data-id="${task.id}">
           <div class="task-header">
-            <span class="task-title">${card.description}</span>
+            <span class="task-title">${task.description}</span>
             <button class="task-info-toggle">⮟</button>
           </div>
           <div class="task-info hidden">
-            <p class="task-date">Дата добавления: ${card.enteredColDate}</p>
             <button class="task-delete">Удалить</button>
             <button class="task-change-color">Сменить цвет</button>
           </div>
@@ -180,13 +202,16 @@ function renderBoard() {
       </div>
     `;
     boardContainer.insertAdjacentHTML('beforeend', columnHtml);
+    boardContainer.querySelectorAll('.rename-column-input').forEach(el => {
+      el.addEventListener('input', updateSaveColumnButtonState);
+    });
   });
 }
 
 function renderRenameColumnUi(name) {
   return `<div class="rename-column-block hidden">
     <h4>Rename column</h4>
-    <input type="text" class="rename-column-input" val="${name}">
+    <input type="text" class="rename-column-input" ${name ? 'val="' + name + '"' : 'placehlder="New column name"'}>
     <button class="cancel-rename-column">Cancel</button>
     <button class="save-rename-column">Save</button>
   </div>`
@@ -212,14 +237,23 @@ function renderMoveColumnUi() {
 const renameBlock = document.querySelector('.rename-board-block');
 const deleteBlock = document.querySelector('.delete-board-block');
 const renameInput = document.getElementById('rename-board-input');
+const renameBoardButton = document.getElementById('rename-confirm');
 const showBoards = document.getElementById('boards-button');
 const boardsListBlock = document.getElementById('boards-list');
+
+renameInput.addEventListener('input', (e) => {
+    updateSaveButtonState(
+    renameInput,
+    renameBoardButton, 
+  );
+})
 
 // Показываем переименование
 function showRenameBoardUI() {
   renameBlock.classList.remove('hidden');
   deleteBlock.classList.add('hidden');
   renameInput.value = getCurrentBoard().name;
+  renameInput.focus();
   toggleMenu();
 }
 
@@ -232,6 +266,7 @@ function showDeleteBoardUI() {
 
 // Скрыть оба
 function hideBoardManagementUI() {
+  renameBoardButton.removeAttribute('disabled');
   renameBlock.classList.add('hidden');
   deleteBlock.classList.add('hidden');
 }
@@ -252,7 +287,7 @@ document.getElementById('rename-cancel').addEventListener('click', () => {
 });
 
 // Подтвердить переименование
-document.getElementById('rename-confirm').addEventListener('click', () => {
+renameBoardButton.addEventListener('click', () => {
   const newName = renameInput.value.trim();
   if (newName) {
     const board = getCurrentBoard();
@@ -264,10 +299,10 @@ document.getElementById('rename-confirm').addEventListener('click', () => {
   }
 });
 
-// Отмена удаления
+// Отмена удаления доски
 document.getElementById('delete-cancel').addEventListener('click', hideBoardManagementUI);
 
-// Подтвердить удаление
+// Подтвердить удаление доски
 document.getElementById('delete-confirm').addEventListener('click', () => {
   const currentIndex = appData.boards.findIndex(b => b.id === appData.currentBoardId);
   const newBoards = appData.boards.filter(b => b.id !== appData.currentBoardId);
@@ -309,7 +344,6 @@ function renderNoBoardsScreen() {
     hideBoardManagementUI();
     document.getElementById('no-boards').remove();
   });
-
 }
 
 function toggleBoardsList() {
@@ -319,25 +353,25 @@ function toggleBoardsList() {
 
 showBoards.addEventListener('click', toggleBoardsList);
 
-document.getElementById('close-boards-list').addEventListener('click', ()=> {
+document.getElementById('close-boards-list').addEventListener('click', () => {
   boardsListBlock.classList.toggle('hidden')
 })
 
 document.getElementById('create-board').addEventListener('click', createBoard);
 
-document.getElementById('add-column').addEventListener('click', function() {
+document.getElementById('add-column').addEventListener('click', function () {
   const newColumn = {
     id: generateUID(),
     name: 'Новая колонка',
     cards: []
   };
-  
+
   getCurrentBoard().columns.push(newColumn);
   saveBoards(appData.boards, appData.currentBoardId);
   renderBoard();
 });
 
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   if (e.target.classList.contains('column-menu-toggle')) {
     if (isColumnUiShown(e.target.closest('.column'))) {
       hideColumActionsUi(e.target.closest('.column'));
@@ -350,7 +384,7 @@ document.addEventListener('click', function(e) {
 function moveColumn(button, doMoveRight) {
   const currentBoard = getCurrentBoard();
   if (currentBoard.columns.length == 1) return;
-  const currentColumnEl = button.closest('.column');
+  let currentColumnEl = button.closest('.column');
   const currentColumnIndex = currentBoard.columns.findIndex(col => col.id == currentColumnEl.dataset.id);
   if ((currentColumnIndex == (currentBoard.columns.length - 1) && doMoveRight)
     || (currentColumnIndex == 0 && !doMoveRight)) {
@@ -364,8 +398,8 @@ function moveColumn(button, doMoveRight) {
   saveBoards(appData.boards, appData.currentBoardId);
   renderBoard();
   toggleMoveColumnUi(document.querySelector('[data-id="' + moveColId + '"]'), false);
-
-  //TODO: scroll to moved column
+  currentColumnEl = document.querySelector(`[data-id="${currentColumn.id}"]`);
+  currentColumnEl.closest('main').scrollLeft = currentColumnEl.offsetLeft - 30;
 }
 
 function isColumnUiShown(column) {
@@ -375,6 +409,7 @@ function isColumnUiShown(column) {
 }
 
 function hideColumActionsUi(column) {
+  column.querySelector('.save-rename-column').removeAttribute('disabled');
   column.querySelector('.rename-column-block').classList.add('hidden');
   column.querySelector('.delete-column-block').classList.add('hidden');
   column.querySelector('.move-column-block').classList.add('hidden');
@@ -405,10 +440,10 @@ let longPressTarget = null;
 
 document.body.addEventListener('touchstart', (e) => {
   //console.log('touchstart', e.target);
-  const card = e.target.closest('.task');
-  if (!card) return;
+  const task = e.target.closest('.task');
+  if (!task) return;
 
-  longPressTarget = card;
+  longPressTarget = task;
   longPressTimer = setTimeout(() => {
     startDrag(longPressTarget, e.touches[0]); // передаем touch
     longPressTimer = null;
@@ -484,7 +519,7 @@ function startDrag(cardElement) {
 }
 
 // Определяем колонку, над которой сейчас находится курсор/палец
-function getColumnAtPoint (cursorX) {
+function getColumnAtPoint(cursorX) {
   const columnsContainer = document.getElementById('columns');
   const columnElements = Array.from(columnsContainer.querySelectorAll('.column'));
   for (let i = 0; i < columnElements.length; i++) {
@@ -513,10 +548,10 @@ function autoScrollColumns(cursorX) {
     //console.log('right scroll');
     // скроллим вправо
     main.scrollLeft += scrollSpeed;
-  }  
+  }
 }
 
-/* DROP Card */
+/* DROP task */
 
 function dropCard(event) {
   if (!dragState.draggingCard || !dragState.clone) return;
@@ -541,9 +576,8 @@ function dropCard(event) {
     }
 
     // Добавим карточку в новую колонку
-    dragState.draggingCard.enteredColDate = new Date().toISOString();
-    const insertIndicator = document.querySelector('.card-insert-indicator');
-    let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task')).findIndex(el => 
+    const insertIndicator = document.querySelector('.task-insert-indicator');
+    let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task')).findIndex(el =>
       el.previousElementSibling === insertIndicator) : -1;
     if (insertIndex === -1) insertIndex = targetColumn.cards.length;
     targetColumn.cards.splice(insertIndex, 0, draggedCard);
@@ -570,14 +604,14 @@ function updateInsertIndicator(columnEl, y) {
   let inserted = false;
 
   for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
-    const rect = card.getBoundingClientRect();
+    const task = cards[i];
+    const rect = task.getBoundingClientRect();
     const midpoint = rect.top + rect.height / 2;
 
     if (y < midpoint) {
       const indicator = document.createElement('div');
-      indicator.classList.add('card-insert-indicator');
-      card.parentNode.insertBefore(indicator, card);
+      indicator.classList.add('task-insert-indicator');
+      task.parentNode.insertBefore(indicator, task);
       inserted = true;
       break;
     }
@@ -586,13 +620,13 @@ function updateInsertIndicator(columnEl, y) {
   if (!inserted) {
     // Если ниже всех — вставим в конец
     const indicator = document.createElement('div');
-    indicator.classList.add('card-insert-indicator');
+    indicator.classList.add('task-insert-indicator');
     columnEl.appendChild(indicator);
   }
 }
 
 function removeInsertIndicators() {
-  document.querySelectorAll('.card-insert-indicator').forEach(el => el.remove());
+  document.querySelectorAll('.task-insert-indicator').forEach(el => el.remove());
 }
 
 const eventHandler = function (e, eventName) {
@@ -604,17 +638,17 @@ const eventHandler = function (e, eventName) {
     const skipSelectorCheck = Array.isArray(callbackObj) && callbackObj.length > 2 ? true : false;
     if (skipSelectorCheck || e.target.matches && e.target.matches(selector)) {
       method(e.target, params, e);
-    } 
+    }
   }
 };
 
 for (let eventName in renderedEvents) {
-    document.addEventListener(eventName, (e) => {
-      eventHandler.call(this, e, eventName);
-    })
+  document.addEventListener(eventName, (e) => {
+    eventHandler.call(this, e, eventName);
+  })
 }
 
-function toggleMoveColumnUi (el, shouldAdd) {
+function toggleMoveColumnUi(el, shouldAdd) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
   if (typeof doShow !== 'undefined'
     && !Array.isArray(doShow)) {
@@ -626,7 +660,7 @@ function toggleMoveColumnUi (el, shouldAdd) {
   }
 }
 
-function toggleRenameColumnUi (el, shouldShow) {
+function toggleRenameColumnUi(el, shouldShow) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
   const colData = getCurrentBoard().columns.find(c => c.id == col.dataset.id);
   const input = col.querySelector('.rename-column-input');
@@ -635,22 +669,24 @@ function toggleRenameColumnUi (el, shouldShow) {
     col.querySelector('.column-menu').classList.toggle('hidden', true);
     renameBlock.classList.toggle('hidden', false);
     input.value = colData.name;
+    input.focus();
   } else if (shouldShow === false) {
     col.querySelector('.column-menu').classList.toggle('hidden', false);
     renameBlock.classList.toggle('hidden', true);
     input.value = '';
   } else {
-    if (!renameBlock.classList.contains('hidden')) {
-      input.value = '';
-    } else {
-      input.value = colData.name;
-    }
     col.querySelector('.column-menu').classList.toggle('hidden');
     renameBlock.classList.toggle('hidden');
+    if (renameBlock.classList.contains('hidden')) {
+      input.value = '';
+    } else {
+      input.focus();
+      input.value = colData.name;
+    }    
   }
 }
 
-function renameColumn (el) {
+function renameColumn(el) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
   const input = col.querySelector('.rename-column-input');
   const newName = input.value.trim();
@@ -662,7 +698,7 @@ function renameColumn (el) {
   }
 }
 
-function toggleDeleteColumnUi (el, shouldShow) {
+function toggleDeleteColumnUi(el, shouldShow) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
   const deleteBlock = col.querySelector('.delete-column-block');
   if (shouldShow === true) {
@@ -674,10 +710,10 @@ function toggleDeleteColumnUi (el, shouldShow) {
   } else {
     col.querySelector('.column-menu').classList.toggle('hidden');
     deleteBlock.classList.toggle('hidden');
-  }  
+  }
 }
 
-function deleteColumn (el) {
+function deleteColumn(el) {
   const currentBoard = getCurrentBoard();
   const col = el.closest('.column');
   const currentIndex = currentBoard.columns.findIndex(c => c.id === col.dataset.id);
@@ -686,18 +722,20 @@ function deleteColumn (el) {
   renderBoard();
 }
 
-function showAddTaskUi (el) {
+function showAddTaskUi(el) {
   const columnBody = el.closest('.column').querySelector('.column-body');
   columnBody.insertAdjacentHTML('afterbegin', getTaskEditFormHtml());
-  const editBlock = columnBody.querySelector('.task-edit'); 
-  editBlock.querySelector('.task-edit-input').addEventListener('input', updateSaveTaskButtonState)
+  const editBlock = columnBody.querySelector('.task-edit');
+  const input = editBlock.querySelector('.task-edit-input');
+  input.focus();
+  input.addEventListener('input', updateSaveTaskButtonState);
 }
 
-function hideAddTaskUi (el) {
-  document.querySelector('.task-edit').remove(); 
+function hideAddTaskUi(el) {
+  document.querySelector('.task-edit').remove();
 }
 
-function addTask (el) {
+function addTask(el) {
   const colEl = el.closest('.column');
   const column = getCurrentBoard().columns.find(c => c.id == colEl.dataset.id);
   const editBlock = colEl.querySelector('.task-edit');
@@ -706,10 +744,9 @@ function addTask (el) {
   const newCard = {
     id: newCardId,
     description: editBlock.querySelector('.task-edit-input').value.trim(),
-    color: 'ffffff', 
-    enteredColDate: new Date(),
+    color: '#FFFFFF',
   };
-  
+
   editBlock.remove();
   column.cards = column.cards ? [newCard, ...column.cards] : [newCard];
   saveBoards(appData.boards);
@@ -717,54 +754,130 @@ function addTask (el) {
   toggleTaskInfo(document.querySelector('.task[data-id="' + newCardId + '"] .task-info-toggle'));
 }
 
-function showEditTaskUi (el, params, event) {
-  const card = el.closest('.task');
-  if (el.classList.contains('task-title') && card.querySelector('.task-info').classList.contains('hidden')) return;
-  const value = getCurrentBoard().columns.find(col => 
-    col.cards.find(c => c.id == card.dataset.id)).cards.find(c => 
-      c.id == card.dataset.id).description;
-  let editBlock = card.querySelector('.task-edit');
+function showEditTaskUi(el, params, event) {
+  const task = el.closest('.task');
+  if (el.classList.contains('task-title') && task.querySelector('.task-info').classList.contains('hidden')) return;
+  const value = getCurrentBoard().columns.find(col =>
+    col.cards.find(c => c.id == task.dataset.id)).cards.find(c =>
+      c.id == task.dataset.id).description;
+  let editBlock = task.querySelector('.task-edit');
   if (!editBlock) {
-    card.insertAdjacentHTML('beforeend', getTaskEditFormHtml(value));
-    editBlock = card.querySelector('.task-edit');
+    task.insertAdjacentHTML('beforeend', getTaskEditFormHtml(value));
+    editBlock = task.querySelector('.task-edit');
     const input = editBlock.querySelector('.task-edit-input');
     input.addEventListener('input', updateSaveTaskButtonState);
   }
 }
 
 function updateSaveTaskButtonState(e) {
-  const block = e.target.closest('.task-edit');
-  const button = block.querySelector('.task-edit-save');
-  if(e.target.value.trim().length) {
+  updateSaveButtonState(
+    e.target,
+    e.target.closest('.task-edit').querySelector('.task-edit-save'), 
+  );
+}
+
+function updateSaveColumnButtonState(e) {
+  updateSaveButtonState(
+    e.target,
+    e.target.closest('.rename-column-block').querySelector('.save-rename-column'), 
+  );
+}
+
+function updateSaveButtonState(field, button) {
+  if (field.value.trim().length) {
     button.removeAttribute('disabled');
   } else {
     button.setAttribute('disabled', true);
   }
 }
 
-function toggleTaskInfo (el, params, event) {
-  const task = event.target.classList.contains('task') ? event.target : event.target.closest('.task');
+function toggleTaskInfo(el, params, event) {
+  const task = el.classList.contains('task') ? el : el.closest('.task');
   if (!task) return;
   const infoBlock = task.querySelector('.task-info');
-  if (infoBlock.classList.contains('hidden')) {
+  if (infoBlock.classList.contains('hidden')
+    || el.classList.contains('task-info-toggle')) {
     // Если info скрыт, реагируем на клик на любом месте внутри .task
+    // или info видим, реагируем только если клик на toggle
     infoBlock.classList.toggle('hidden');
-  } else if (event.target.classList.contains('task-info-toggle')) {
-    // Если info видим, реагируем только если клик на toggle
-    infoBlock.classList.toggle('hidden');
-  }
+    task.querySelector('.task-delete-block')?.remove();
+  } 
 }
 
 function showDeleteTaskUi(el) {
-  const card = el.closest('.task');
-  const cardInfo = card.querySelector('.task-info');
-  cardInfo.classList.add('hidden');
-  card.insertAdjacentHTML('beforeend', getTaskDeleteUi());
+  const task = el.closest('.task');
+  task.querySelector('.task-info').classList.add('hidden');
+  task.insertAdjacentHTML('beforeend', getTaskDeleteUi());
 }
 
 function removeDeleteTaskUi(el) {
-  const card = el.closest('.task');
-  const cardInfo = card.querySelector('.task-info');
-  cardInfo.classList.remove('hidden');
-  card.querySelector('.task-delete-block')?.remove();
+  const task = el.closest('.task');
+  task.querySelector('.task-info').classList.remove('hidden');
+  task.querySelector('.task-delete-block')?.remove();
+}
+
+function deleteTask(el) {
+  const col = getCurrentColumnByElement(el);
+  col.cards = col.cards.filter(task => task.id != el.closest('.task').dataset.id);
+  saveBoards(appData.boards);
+  renderBoard();
+}
+
+function showSetColorUI(el) {
+  const cardEl = el.closest('.task');
+  cardEl.querySelector('.task-info').classList.add('hidden');
+  cardEl.insertAdjacentHTML('beforeend', getSetColorUI(cardEl));
+}
+
+function removeSetColorUI(el) {
+  const cardEl = el.closest('.task');
+  cardEl.querySelector('.task-info').classList.remove('hidden');
+  const colorsBlock = cardEl.querySelector('.set-task-colors');
+  cardEl.style.background = colorsBlock.dataset.originalColor;
+  colorsBlock.remove();
+}
+
+function getSetColorUI(el)  {
+  const currentTask = getCurrentCardByElement(el);
+  const currentColor = currentTask.color || '#FFFFFF';
+  const colors = cardsColors.map(color => `
+    <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
+  `);
+  return `
+    <div data-original-color="${currentColor}" class="set-task-colors">
+      Choose task color<br>
+      <ul class="colors-list">
+        ${colors.join('')}
+      </ul>
+      <button class="cancel-set-color">Cancel</button>
+      <button class="save-set-color" disabled>Save</button>
+    </div>
+  `;
+}
+
+function previewTaskColor(el) {
+  el.classList.add('current');
+  const cardEl = el.closest('.task');
+  const colorEls = el.parentNode.querySelectorAll('li');
+  colorEls.forEach(ce => {
+    if (ce != el) {
+      ce.classList.remove('current');
+    }
+  })
+  el.closest('.task').style.background = el.dataset.color;
+  const colorsBlock = el.closest('.set-task-colors');
+  const button = cardEl.querySelector('.save-set-color');
+  if (el.dataset.color == colorsBlock.dataset.originalColor) {
+    button.setAttribute('disabled', "true");
+  } else {
+    button.removeAttribute('disabled');
+  }
+}
+
+function saveColor(el) {
+  const cardEl = el.closest('.task');
+  const currentTask = getCurrentCardByElement(el);
+  currentTask.color = cardEl.querySelector('li.current').dataset.color;
+  saveBoards(appData.boards);
+  renderBoard();
 }
