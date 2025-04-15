@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.content.*;
 import android.net.Uri;
 
@@ -31,11 +32,13 @@ public class MainActivity extends AppCompatActivity {
         WebView webView = findViewById(R.id.webview);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         webView.addJavascriptInterface(new WebAppInterface(this), "Android");
         webView.setWebViewClient(new WebViewClient());
         WebView.setWebContentsDebuggingEnabled(true);
-        //webView.loadUrl("http://192.168.2.48:3001/index.html");
-        webView.loadUrl("file:///android_asset/index.html");
+        webView.clearCache(true);
+        webView.loadUrl("http://192.168.2.48:3001/index.html");
+        //webView.loadUrl("file:///android_asset/index.html");
     }
 
     @Override

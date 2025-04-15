@@ -1,20 +1,120 @@
+html, body {
+  width:100%;
+  height:100%;
+  background:#2c2c2c;
+  margin:0;
+  padding:0;
+}
+
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f4f9;
-  padding: 20px;
 }
 
 header {
-  margin-bottom: 20px;
+  background:#2c2c2c;
+  position: relative;
 }
 
 .hidden {
-  display:none;
+  display:none !important;
 }
 
-#boardList {
-  display: flex;
-  gap: 10px;
+#board-title {
+  padding: 20px;
+  box-shadow: 0px 10px 7px -7px black;
+  font-size:20px;
+  color:#f0f0f0;
+  margin:0;
+}
+
+#menu-toggle {
+  border:none;
+  outline: none;
+  width: 24px;
+  height:24px;
+  position: absolute;
+  top:20px;
+  right:5px;
+  z-index: 300;
+  background: url(images/menu_dots.svg) 0 0 no-repeat;
+}
+
+#menu {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  box-shadow: 0px 6px 6px -4px black;
+  background:#2c2c2c;
+  width:60vw;
+  z-index: 301;
+  border-radius: 15px;
+  padding: 10px;
+}
+
+#menu button {
+  background: transparent;
+  border:0;
+  padding:10px 15px;
+  color:#f0f0f0;
+  font-size:13px;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: left;
+}
+
+#boards-list {
+  position: relative;
+  box-shadow: 0px 10px 7px -7px black;
+}
+
+#boards-list h3 {
+  padding: 20px;
+  font-size:20px;
+  color:#f0f0f0;
+  margin:0;
+}
+
+#close-boards-list {
+  border:none;
+  outline: none;
+  width: 20px;
+  height:20px;
+  position: absolute;
+  top:20px;
+  right:10px;
+  z-index: 300;
+  background: url(images/close.svg) 0 0 no-repeat;
+  background-size: contain;
+}
+
+#boards-buttons {
+  display:flex;
+  flex-flow:row wrap;
+  padding:0 10px;
+}
+
+#boards-list button:not(#close-boards-list) {
+  border-radius: 15px;
+  background: #f0f0f0;
+  border:1px solid transparent;
+  color:black;
+  font-size:14px;
+  padding:5px 10px;
+  margin-right:10px;
+  margin-bottom:10px;
+}
+
+#boards-list button:not(#close-boards-list).active {
+  background:#ffa500;
+  color:#fff;
+}
+
+#boards-list button:not(#close-boards-list)#create-board {
+  color:#ffa500;
+  border: 1px solid #ffa500;
+  background: transparent url(images/plus.svg) 7px 50% no-repeat;
+  background-size: 24px;
+  padding-left:35px;
 }
 
 #boardsContainer {
@@ -120,4 +220,8 @@ main {
   background: #fff;
   width:65dvw;
   flex:1 0 auto;
+}
+
+body:has(.dragged) {
+  touch-action: none;
 }

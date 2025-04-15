@@ -32,6 +32,11 @@ const renderedEvents = {
     '.cancel-set-color' : removeSetColorUI,
     '.save-set-color' : saveColor,
   }
+
+}
+
+function preventDefault (e) {
+  e.preventDefault();
 }
 
 // Утилита для генерации uid
@@ -41,10 +46,12 @@ function generateUID() {
 
 // Чтение и запись в localStorage
 function saveAppData(data) {
+  //Android.saveDataToFile(JSON.stringify(data));
   localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
+  //const raw = Android.loadDataFromFile();
   const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
@@ -112,7 +119,9 @@ function createBoard() {
     id: newId,
     name: "Новая доска",
     columns: [
-      { id: generateUID(), name: "Новая колонка", cards: [] }
+      { id: generateUID(), name: "To Do", cards: [] },
+      { id: generateUID(), name: "In progress", cards: [] },
+      { id: generateUID(), name: "Done", cards: [] }
     ]
   });
   saveBoards(appData.boards, newId)
@@ -124,6 +133,11 @@ function createBoard() {
 // Заполнение меню досок
 function renderBoardsMenu() {
   const listEl = document.getElementById('boards-buttons');
+  const parent = listEl.closest('#boards-list');
+  let createButton = listEl.querySelector('#create-board') || parent.querySelector('#create-board');
+  if (createButton) {
+    createButton = createButton.parentNode.removeChild(createButton);
+  }
   listEl.innerHTML = '';
   appData.boards.forEach(board => {
     const btn = document.createElement('button');
@@ -136,22 +150,33 @@ function renderBoardsMenu() {
       switchBoard(board.id)
     });
     listEl.appendChild(btn);
+    createButton && listEl.appendChild(createButton);
   });
 }
 
 const menuButton = document.getElementById('menu-toggle');
 
 // Показ/скрытие меню
-function toggleMenu() {
+function toggleMenu(e) {
+  e && e.stopPropagation();
   document.getElementById('menu').classList.toggle('hidden');
+}
+
+function hideMenu(e) {
+  if (!(e.target.id && e.target.id == 'menu' || e.target.closest('#menu') 
+    && !document.getElementById('menu').classList.contains('hidden'))) {
+      document.getElementById('menu').classList.add('hidden');
+  }
 }
 
 // Начальный рендер
 document.addEventListener('DOMContentLoaded', () => {
   menuButton.addEventListener('click', toggleMenu);
+  document.addEventListener('click', hideMenu);
   renderHeader();
   renderBoardsMenu();
   renderBoard();
+
 });
 
 function renderBoard() {
@@ -349,12 +374,16 @@ function renderNoBoardsScreen() {
 function toggleBoardsList() {
   boardsListBlock.classList.toggle('hidden');
   toggleMenu();
+  document.getElementById("board-title").classList.toggle('hidden');
+  document.getElementById("menu-toggle").classList.toggle('hidden');
 }
 
 showBoards.addEventListener('click', toggleBoardsList);
 
 document.getElementById('close-boards-list').addEventListener('click', () => {
-  boardsListBlock.classList.toggle('hidden')
+  boardsListBlock.classList.toggle('hidden');
+  document.getElementById("board-title").classList.toggle('hidden');
+  document.getElementById("menu-toggle").classList.toggle('hidden');
 })
 
 document.getElementById('create-board').addEventListener('click', createBoard);
@@ -438,28 +467,47 @@ function getTaskDeleteUi() {
 let longPressTimer = null;
 let longPressTarget = null;
 
+function enableTextSelection(enable) {
+  document.body.style.userSelect = enable ? '' : 'none';
+}
+
+function blockContextMenuTemporarily() {
+  function preventOnce(e) {
+    e.preventDefault();
+    // После одного вызова — удаляем обработчик
+    document.removeEventListener('contextmenu', preventOnce, true);
+  }
+
+  document.addEventListener('contextmenu', preventOnce, true);
+
+  // На всякий случай — удалим и по таймеру (если вдруг не сработал preventOnce)
+  setTimeout(() => {
+    document.removeEventListener('contextmenu', preventOnce, true);
+  }, 300);
+}
+
 document.body.addEventListener('touchstart', (e) => {
-  //console.log('touchstart', e.target);
   const task = e.target.closest('.task');
   if (!task) return;
-
+  
   longPressTarget = task;
   longPressTimer = setTimeout(() => {
-    startDrag(longPressTarget, e.touches[0]); // передаем touch
+    enableTextSelection(false);
+    startDrag(longPressTarget, e); 
+    blockContextMenuTemporarily(); 
     longPressTimer = null;
   }, 400);
 });
 
 document.body.addEventListener('touchend', () => {
-  //console.log('touchsend');
   if (longPressTimer) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
+    enableTextSelection(false);
   }
 });
 
 document.body.addEventListener('touchmove', () => {
-  //console.log('touchmove');
   if (longPressTimer) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
@@ -471,7 +519,7 @@ document.body.addEventListener('touchmove', () => {
 let dragState = null;
 
 //function startDrag(cardElement, columnId, cardId) {
-function startDrag(cardElement) {
+function startDrag(cardElement, event) {
   cardElement.classList.add('dragged');
   const rect = cardElement.getBoundingClientRect();
   const clone = cardElement.cloneNode(true);
@@ -516,6 +564,7 @@ function startDrag(cardElement) {
   document.addEventListener('touchmove', onMove, { passive: false });
   document.addEventListener('mouseup', onEnd);
   document.addEventListener('touchend', onEnd);
+
 }
 
 // Определяем колонку, над которой сейчас находится курсор/палец
@@ -757,11 +806,11 @@ function addTask(el) {
 function showEditTaskUi(el, params, event) {
   const task = el.closest('.task');
   if (el.classList.contains('task-title') && task.querySelector('.task-info').classList.contains('hidden')) return;
-  const value = getCurrentBoard().columns.find(col =>
-    col.cards.find(c => c.id == task.dataset.id)).cards.find(c =>
-      c.id == task.dataset.id).description;
   let editBlock = task.querySelector('.task-edit');
   if (!editBlock) {
+    const value = getCurrentBoard().columns.find(col =>
+      col.cards.find(c => c.id == task.dataset.id)).cards.find(c =>
+        c.id == task.dataset.id).description;
     task.insertAdjacentHTML('beforeend', getTaskEditFormHtml(value));
     editBlock = task.querySelector('.task-edit');
     const input = editBlock.querySelector('.task-edit-input');
@@ -806,13 +855,11 @@ function toggleTaskInfo(el, params, event) {
 
 function showDeleteTaskUi(el) {
   const task = el.closest('.task');
-  task.querySelector('.task-info').classList.add('hidden');
   task.insertAdjacentHTML('beforeend', getTaskDeleteUi());
 }
 
 function removeDeleteTaskUi(el) {
   const task = el.closest('.task');
-  task.querySelector('.task-info').classList.remove('hidden');
   task.querySelector('.task-delete-block')?.remove();
 }
 
@@ -825,13 +872,11 @@ function deleteTask(el) {
 
 function showSetColorUI(el) {
   const cardEl = el.closest('.task');
-  cardEl.querySelector('.task-info').classList.add('hidden');
   cardEl.insertAdjacentHTML('beforeend', getSetColorUI(cardEl));
 }
 
 function removeSetColorUI(el) {
   const cardEl = el.closest('.task');
-  cardEl.querySelector('.task-info').classList.remove('hidden');
   const colorsBlock = cardEl.querySelector('.set-task-colors');
   cardEl.style.background = colorsBlock.dataset.originalColor;
   colorsBlock.remove();
