@@ -3,56 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kanban App</title>
+  <title>Mvd Kanban App</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <header>
-    <h1 id="board-title">Kanban Board</h1>
+    <h1 id="board-title" class="top-menu-title"></h1>
     <button id="menu-toggle"></button>
-
-    <div class="rename-board-block hidden">
-      <input type="text" id="rename-board-input" />
-      <button id="rename-cancel">Отменить</button>
-      <button id="rename-confirm">Сохранить</button>
-    </div>
-    
-    <div class="delete-board-block hidden">
-      <p>Действительно удалить?</p>
-      <button id="delete-cancel">Отменить</button>
-      <button id="delete-confirm">Удалить</button>
-    </div>    
     <section id="menu" class="hidden">
       <div id="menu-content">
-        <button id="boards-button">Доски</button>
-        <button id="rename-board">Переименовать доску</button>
-        <button id="delete-board">Удалить доску</button>
-      </div>
-  
-      <div id="rename-board" class="hidden">
-        <input type="text" id="rename-input" />
-        <button id="cancel-rename">Отменить</button>
-        <button id="confirm-rename">Сохранить</button>
-      </div>
-  
-      <div id="delete-board" class="hidden">
-        <p>Действительно удалить?</p>
-        <button id="cancel-delete">Отменить</button>
-        <button id="confirm-delete">Удалить</button>
+        <button id="boards-button">Boards</button>
+        <button id="rename-board" class="hidden">Rename board</button>
+        <button id="delete-board" class="hidden">Delete board</button>
       </div>
     </section>
+
+    <div id="rename-board-block" class="hidden">
+      <h3 class="top-menu-title">Rename board</h3>
+      <button class="js-cancel-current button-close"></button>
+      <input type="text" id="rename-board-input" />
+      <button id="confirm-rename" class="board-management-button">Save</button>
+      <button id="cancel-rename" class="js-cancel-current board-management-button">Cancel</button>
+    </div>
+
+    <div id="delete-board-block" class="hidden">
+      <p>Delete this board with all columns and tasks?</p>
+      <button class="js-cancel-current button-close"></button>
+      <button id="delete-confirm" class="board-management-button">Delete</button>
+      <button id="delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
+    </div>      
+
     <div id="boards-list" class="hidden">
-      <h3>Доски</h3>
+      <h3 class="top-menu-title">Boards</h3>
       <div id="boards-buttons"></div>
-      <button id="create-board">Создать доску</button>
-      <button id="close-boards-list"></button>
+      <button id="create-board">Create board</button>
+      <button id="close-boards-list" class="button-close"></button>
     </div>
   </header>
 
 
   <main>
     <div id="columns"></div>
-    <button id="add-column">Добавить колонку</button>
+    <button id="add-column">Add column</button>
   </main>
 
   <script src="./script.js"></script>

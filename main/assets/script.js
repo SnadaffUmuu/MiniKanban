@@ -98,6 +98,12 @@ function renderHeader() {
   const currentBoard = getCurrentBoard();
   if (titleEl && currentBoard) {
     titleEl.textContent = currentBoard.name;
+    document.getElementById('rename-board').classList.remove('hidden');
+    document.getElementById('delete-board').classList.remove('hidden');
+  } else {
+    titleEl.innerHTML = '';
+    document.getElementById('rename-board').classList.add('hidden');
+    document.getElementById('delete-board').classList.add('hidden');
   }
 }
 
@@ -114,6 +120,9 @@ function switchBoard(boardId) {
 
 // Создание новой доски
 function createBoard() {
+  if (!appData.boards?.length) {
+    removeNoBoardsScreen();
+  }
   const newId = generateUID();
   appData.boards.push({
     id: newId,
@@ -150,8 +159,8 @@ function renderBoardsMenu() {
       switchBoard(board.id)
     });
     listEl.appendChild(btn);
-    createButton && listEl.appendChild(createButton);
   });
+  createButton && listEl.appendChild(createButton);
 }
 
 const menuButton = document.getElementById('menu-toggle');
@@ -176,15 +185,17 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHeader();
   renderBoardsMenu();
   renderBoard();
-
 });
 
 function renderBoard() {
   const boardContainer = document.getElementById('columns');
   boardContainer.innerHTML = '';
   const currentBoard = getCurrentBoard();
-  if (!currentBoard) return;
-
+  if (!currentBoard) {
+    renderNoBoardsScreen();
+    return;
+  }
+  
   currentBoard.columns.forEach(column => {
     // Карточки
     let cardsHtml = [];
@@ -259,16 +270,16 @@ function renderMoveColumnUi() {
 }
 
 // Ссылки на блоки
-const renameBlock = document.querySelector('.rename-board-block');
-const deleteBlock = document.querySelector('.delete-board-block');
-const renameInput = document.getElementById('rename-board-input');
-const renameBoardButton = document.getElementById('rename-confirm');
+const renameBlock = document.getElementById('rename-board-block');
+const deleteBlock = document.getElementById('delete-board-block');
+const renameBoardInput = document.getElementById('rename-board-input');
+const renameBoardButton = document.getElementById('confirm-rename');
 const showBoards = document.getElementById('boards-button');
 const boardsListBlock = document.getElementById('boards-list');
 
-renameInput.addEventListener('input', (e) => {
+renameBoardInput.addEventListener('input', (e) => {
     updateSaveButtonState(
-    renameInput,
+    renameBoardInput,
     renameBoardButton, 
   );
 })
@@ -277,8 +288,10 @@ renameInput.addEventListener('input', (e) => {
 function showRenameBoardUI() {
   renameBlock.classList.remove('hidden');
   deleteBlock.classList.add('hidden');
-  renameInput.value = getCurrentBoard().name;
-  renameInput.focus();
+  document.getElementById("board-title").classList.add('hidden');
+  document.getElementById("menu-toggle").classList.add('hidden');  
+  renameBoardInput.value = getCurrentBoard().name;
+  renameBoardInput.focus();
   toggleMenu();
 }
 
@@ -286,6 +299,8 @@ function showRenameBoardUI() {
 function showDeleteBoardUI() {
   deleteBlock.classList.remove('hidden');
   renameBlock.classList.add('hidden');
+  //document.getElementById("board-title").classList.add('hidden');
+  document.getElementById("menu-toggle").classList.add('hidden');
   toggleMenu();
 }
 
@@ -294,26 +309,31 @@ function hideBoardManagementUI() {
   renameBoardButton.removeAttribute('disabled');
   renameBlock.classList.add('hidden');
   deleteBlock.classList.add('hidden');
+  document.getElementById("board-title").classList.remove('hidden');
+  document.getElementById("menu-toggle").classList.remove('hidden');    
 }
 
 function saveBoards(updatedBoards, currentBoardId) {
   appData.boards = updatedBoards;
-  appData.currentBoardId = currentBoardId ?? appData.currentBoardId;
+  if (currentBoardId === null) {
+    delete appData.currentBoardId
+  } else {
+    appData.currentBoardId = currentBoardId ?? appData.currentBoardId;
+  }
   saveAppData(appData);
 }
 
-// Кнопки "переименовать", "удалить"
 document.getElementById('rename-board').addEventListener('click', showRenameBoardUI);
 document.getElementById('delete-board').addEventListener('click', showDeleteBoardUI);
 
-// Отмена переименования
-document.getElementById('rename-cancel').addEventListener('click', () => {
-  hideBoardManagementUI();
+document.querySelectorAll('.js-cancel-current').forEach(el => {
+  el.addEventListener('click', () => {
+    hideBoardManagementUI();
+  });
 });
 
-// Подтвердить переименование
 renameBoardButton.addEventListener('click', () => {
-  const newName = renameInput.value.trim();
+  const newName = renameBoardInput.value.trim();
   if (newName) {
     const board = getCurrentBoard();
     board.name = newName;
@@ -323,9 +343,6 @@ renameBoardButton.addEventListener('click', () => {
     hideBoardManagementUI();
   }
 });
-
-// Отмена удаления доски
-document.getElementById('delete-cancel').addEventListener('click', hideBoardManagementUI);
 
 // Подтвердить удаление доски
 document.getElementById('delete-confirm').addEventListener('click', () => {
@@ -343,8 +360,11 @@ document.getElementById('delete-confirm').addEventListener('click', () => {
     toggleMenu();
     hideBoardManagementUI();
   } else {
-    // Нет досок вообще
     saveBoards([], null);
+    hideBoardManagementUI();
+    renderHeader();
+    renderBoardsMenu();
+    renderBoard();
     renderNoBoardsScreen();
   }
 
@@ -353,9 +373,9 @@ document.getElementById('delete-confirm').addEventListener('click', () => {
 function renderNoBoardsScreen() {
   const main = document.querySelector('main');
   main.insertAdjacentHTML('afterbegin', `
-    <div id="no-boards" style="background:gray;position:fixed; left:0;right:0;top:0;bottom:0;z-index:1000;display:flex;justify-content:center;align-items:center;">
-      <button id="create-default-board" style="font-size:1.2em;padding:1em;">
-        Нажми, чтобы создать доску
+    <div id="no-boards">
+      <button id="create-default-board">
+        Click to create a board
       </button>
     </div>
   `);
@@ -367,8 +387,12 @@ function renderNoBoardsScreen() {
     renderBoard();
     renderBoardsMenu();
     hideBoardManagementUI();
-    document.getElementById('no-boards').remove();
   });
+}
+
+function removeNoBoardsScreen() {
+  const el = document.getElementById('no-boards');
+  el && el.remove();
 }
 
 function toggleBoardsList() {
