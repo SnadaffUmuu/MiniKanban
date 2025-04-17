@@ -204,30 +204,30 @@ function renderBoard() {
         <div class="task" style="background:${task.color};" data-id="${task.id}">
           <div class="task-header">
             <span class="task-title">${task.description}</span>
-            <button class="task-info-toggle">⮟</button>
+            <button class="task-info-toggle"></button>
           </div>
           <div class="task-info hidden">
-            <button class="task-delete">Удалить</button>
-            <button class="task-change-color">Сменить цвет</button>
+            <button class="task-delete"></button>
+            <button class="task-change-color"></button>
           </div>
         </div>
       `);
     });
     if (!cardsHtml.length) {
-      cardsHtml = [`<button class="add-task-button">Кликни, чтобы добавить задачу</button>`];
+      cardsHtml = [`<button class="add-task-button">Click to add first task</button>`];
     }
     const columnHtml = `
       <div class="column" data-id="${column.id}">
         <div class="column-header">
           <h3 class="column-title">${column.name}</h3>
           <span class="task-count">${column.cards.length}</span>
-          <button class="add-task">+</button>
-          <button class="column-menu-toggle">Меню</button>
+          <button class="add-task"></button>
+          <button class="column-menu-toggle"></button>
         </div>
         <div class="column-menu hidden">
-          <button class="move-column">Переместить</button>
-          <button class="rename-column">Переименовать</button>
-          <button class="delete-column">Удалить</button>
+          <button class="move-column">Move column</button>
+          <button class="rename-column">Rename column</button>
+          <button class="delete-column">Delete column</button>
         </div>
         ${renderRenameColumnUi(column.name)}
         ${renderDeleteColumnUi()}
@@ -868,11 +868,9 @@ function toggleTaskInfo(el, params, event) {
   const task = el.classList.contains('task') ? el : el.closest('.task');
   if (!task) return;
   const infoBlock = task.querySelector('.task-info');
-  if (infoBlock.classList.contains('hidden')
-    || el.classList.contains('task-info-toggle')) {
-    // Если info скрыт, реагируем на клик на любом месте внутри .task
-    // или info видим, реагируем только если клик на toggle
+  if (el.classList.contains('task-info-toggle')) {
     infoBlock.classList.toggle('hidden');
+    el.classList.toggle('expanded')
     task.querySelector('.task-delete-block')?.remove();
   } 
 }
