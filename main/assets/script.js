@@ -31,6 +31,8 @@ const renderedEvents = {
     '.colors-list li' : previewTaskColor,
     '.cancel-set-color' : removeSetColorUI,
     '.save-set-color' : saveColor,
+    '.task-edit-button' : showEditTaskUi,
+    '.new-task-cancel' : hideAddTaskUi,
   }
 
 }
@@ -87,7 +89,7 @@ function getCurrentColumnByElement(el) {
   return getCurrentBoard().columns.find(c => c.id == currentColEl.dataset.id);
 }
 
-function getCurrentCardByElement(el) {
+function getCurrentTaskByElement(el) {
   const currentTaskEl = el.closest('.task');
   return getCurrentColumnByElement(el).cards.find(task => task.id == currentTaskEl.dataset.id);
 }
@@ -207,8 +209,9 @@ function renderBoard() {
             <button class="task-info-toggle"></button>
           </div>
           <div class="task-info hidden">
-            <button class="task-delete"></button>
             <button class="task-change-color"></button>
+            <button class="task-delete"></button>
+            <button class="task-edit-button"></button>
           </div>
         </div>
       `);
@@ -249,7 +252,7 @@ function renderRenameColumnUi(name) {
     <h4>Rename column</h4>
     <input type="text" class="rename-column-input" ${name ? 'val="' + name + '"' : 'placehlder="New column name"'}>
     <button class="cancel-rename-column">Cancel</button>
-    <button class="save-rename-column">Save</button>
+    <button class="save-rename-column" disabled>Save</button>
   </div>`
 }
 
@@ -290,8 +293,8 @@ function showRenameBoardUI() {
   deleteBlock.classList.add('hidden');
   document.getElementById("board-title").classList.add('hidden');
   document.getElementById("menu-toggle").classList.add('hidden');  
-  renameBoardInput.value = getCurrentBoard().name;
   renameBoardInput.focus();
+  renameBoardInput.value = getCurrentBoard().name;
   toggleMenu();
 }
 
@@ -468,22 +471,31 @@ function hideColumActionsUi(column) {
   column.querySelector('.move-column-block').classList.add('hidden');
 }
 
-function getTaskEditFormHtml(taskDescription) {
-  return `
-    <div class="task-edit">
-      <textarea ${taskDescription ? '' : ' placeholder="Описание"'} class="task-edit-input">${taskDescription ? taskDescription : ''}</textarea>
-      <button class="task-edit-cancel">Отмена</button>
-      <button class="task-edit-save" disabled>Сохранить</button>
+function getTaskEditFormHtml(task) {
+  const inner = `
+    <div class="task-edit"${task ? ' data-id="' + task.id + '"' : ''}>
+      <textarea rows="1" ${task ? '' : ' placeholder="Description"'} class="task-edit-input">${task ? task.description : ''}</textarea>
+      <button class="task-edit-save board-management-button" disabled>Save</button>
+      <button class="task-edit-cancel board-management-button">Cancel</button>
     </div>  
-  `
+  `;
+  if (task) {
+    return inner;
+  } else {
+    return `<div class="task">
+      <button class="new-task-cancel"></button>
+      ${inner}
+      </div>
+    `
+  }
 }
 
 function getTaskDeleteUi() {
   return `
     <div class="task-delete-block">
       Delete this task?<br>
-      <button class="cancel-delete-task">Cancel</button>
-      <button class="confirm-delete-task">Delete</button>
+      <button class="cancel-delete-task  board-management-button">Cancel</button>
+      <button class="confirm-delete-task  board-management-button">Delete</button>
     </div>
   `;
 }
@@ -741,8 +753,8 @@ function toggleRenameColumnUi(el, shouldShow) {
   if (shouldShow === true) {
     col.querySelector('.column-menu').classList.toggle('hidden', true);
     renameBlock.classList.toggle('hidden', false);
-    input.value = colData.name;
     input.focus();
+    input.value = colData.name;
   } else if (shouldShow === false) {
     col.querySelector('.column-menu').classList.toggle('hidden', false);
     renameBlock.classList.toggle('hidden', true);
@@ -805,41 +817,68 @@ function showAddTaskUi(el) {
 }
 
 function hideAddTaskUi(el) {
-  document.querySelector('.task-edit').remove();
+  const taskEl = el.closest('.task');
+  if (taskEl.querySelector('.new-task-cancel') != null) {
+    taskEl.remove()
+  } else {
+    document.querySelector('.task-edit').remove();
+    taskEl.classList.remove('overlayUiExpanded');
+    taskEl.querySelector('.task-info-toggle').classList.remove('expanded');
+  }
 }
 
 function addTask(el) {
-  const colEl = el.closest('.column');
-  const column = getCurrentBoard().columns.find(c => c.id == colEl.dataset.id);
-  const editBlock = colEl.querySelector('.task-edit');
-  const newCardId = generateUID();
-
-  const newCard = {
-    id: newCardId,
-    description: editBlock.querySelector('.task-edit-input').value.trim(),
-    color: '#FFFFFF',
-  };
-
+  const editBlock = el.closest('.task-edit');
+  const isAdding = !editBlock.dataset || typeof editBlock.dataset.id === 'undefined';
+  const input = editBlock.querySelector('.task-edit-input');
+  let theId = null;
+  if (isAdding) {
+    const column = getCurrentColumnByElement(el);
+    const newCardId = generateUID();
+    theId = newCardId;
+    const newCard = {
+      id: newCardId,
+      description: input.value.trim(),
+      color: '#FFFFFF',
+    };
+    column.cards = column.cards ? [newCard, ...column.cards] : [newCard];
+  } else {
+    const task = getCurrentTaskByElement(el);
+    task.description = input.value.trim();
+    theId = task.id;
+  }
   editBlock.remove();
-  column.cards = column.cards ? [newCard, ...column.cards] : [newCard];
   saveBoards(appData.boards);
   renderBoard();
-  toggleTaskInfo(document.querySelector('.task[data-id="' + newCardId + '"] .task-info-toggle'));
+  toggleTaskInfo(document.querySelector('.task[data-id="' + theId + '"] .task-info-toggle'));
 }
 
-function showEditTaskUi(el, params, event) {
-  const task = el.closest('.task');
-  if (el.classList.contains('task-title') && task.querySelector('.task-info').classList.contains('hidden')) return;
-  let editBlock = task.querySelector('.task-edit');
+function showEditTaskUi(el) {
+  const taskEl = el.closest('.task');
+  if (el.classList.contains('task-title') && taskEl.querySelector('.task-info').classList.contains('hidden')) return;
+  let editBlock = taskEl.querySelector('.task-edit');
   if (!editBlock) {
-    const value = getCurrentBoard().columns.find(col =>
-      col.cards.find(c => c.id == task.dataset.id)).cards.find(c =>
-        c.id == task.dataset.id).description;
-    task.insertAdjacentHTML('beforeend', getTaskEditFormHtml(value));
-    editBlock = task.querySelector('.task-edit');
+    const task = getCurrentTaskByElement(el);
+    taskEl.insertAdjacentHTML('beforeend', getTaskEditFormHtml(task));
+    taskEl.classList.add('overlayUiExpanded');
+    editBlock = taskEl.querySelector('.task-edit');
     const input = editBlock.querySelector('.task-edit-input');
     input.addEventListener('input', updateSaveTaskButtonState);
+    input.addEventListener('input', expandInput);
+    input.addEventListener('focus', function() {
+      setTimeout(() => {
+        this.setSelectionRange(this.value.length, this.value.length);
+      }, 0);
+    });
+  
+    toggleTaskInfo(null, taskEl);
+    input.focus();
   }
+}
+
+function expandInput(e) {
+  e.target.style.height = 'auto';
+  e.target.style.height = (e.target.scrollHeight) + 'px';
 }
 
 function updateSaveTaskButtonState(e) {
@@ -864,15 +903,18 @@ function updateSaveButtonState(field, button) {
   }
 }
 
-function toggleTaskInfo(el, params, event) {
-  const task = el.classList.contains('task') ? el : el.closest('.task');
+function toggleTaskInfo(el, taskEl) {
+  const task = taskEl instanceof HTMLElement ? taskEl : (el.classList.contains('task') ? el : el.closest('.task'));
   if (!task) return;
   const infoBlock = task.querySelector('.task-info');
-  if (el.classList.contains('task-info-toggle')) {
+  if (el && el.classList.contains('task-info-toggle')) {
     infoBlock.classList.toggle('hidden');
-    el.classList.toggle('expanded')
+    el?.classList.toggle('expanded')
     task.querySelector('.task-delete-block')?.remove();
-  } 
+    task.querySelector('.task-edit')?.remove();
+  } else {
+    infoBlock.classList.toggle('hidden');
+  }
 }
 
 function showDeleteTaskUi(el) {
@@ -905,7 +947,7 @@ function removeSetColorUI(el) {
 }
 
 function getSetColorUI(el)  {
-  const currentTask = getCurrentCardByElement(el);
+  const currentTask = getCurrentTaskByElement(el);
   const currentColor = currentTask.color || '#FFFFFF';
   const colors = cardsColors.map(color => `
     <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
@@ -943,7 +985,7 @@ function previewTaskColor(el) {
 
 function saveColor(el) {
   const cardEl = el.closest('.task');
-  const currentTask = getCurrentCardByElement(el);
+  const currentTask = getCurrentTaskByElement(el);
   currentTask.color = cardEl.querySelector('li.current').dataset.color;
   saveBoards(appData.boards);
   renderBoard();

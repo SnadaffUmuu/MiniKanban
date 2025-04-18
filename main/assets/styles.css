@@ -8,8 +8,13 @@ html, body {
 
 body {
   font-family: Arial, sans-serif;
+  font-size:16px;
   display: flex;
   flex-flow:column nowrap;
+}
+
+button, input, textarea {
+  outline: none;
 }
 
 header {
@@ -162,6 +167,10 @@ header {
   border:none;
 }
 
+.board-management-button[disabled] {
+  color:#999999;
+}
+
 #rename-board-block:after,
 #delete-board-block:after {
   content: '';
@@ -209,10 +218,11 @@ header {
 }
 
 .task, 
-.dragging,
-.task-edit {
+.dragging {
   border-radius: 5px;
   box-shadow: 0 1px 3px #47474775;
+  background: #fff;
+  position: relative;
 }
 
 .task + .task {
@@ -324,9 +334,13 @@ body:has(.dragged) {
 .task-header {
   display:flex;
   flex-flow:row nowrap;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  padding:10px;
+  padding:10px 15px;
+}
+
+.task-title {
+  flex: 1 0 auto;
 }
 
 #add-column {
@@ -340,7 +354,7 @@ body:has(.dragged) {
 }
 
 .task-info {
-  padding: 0 10px 10px;
+  padding: 0 15px 15px;
   display:flex;
   flex-flow:row nowrap;
   justify-content: flex-end;
@@ -350,7 +364,9 @@ body:has(.dragged) {
 .task-change-color,
 .task-info-toggle,
 .add-task,
-.column-menu-toggle {
+.column-menu-toggle,
+.task-edit-button,
+.new-task-cancel {
   width:25px;
   height:25px;
   border:none;
@@ -372,7 +388,8 @@ body:has(.dragged) {
   background-size: 20px;
 }
 
-.task-info-toggle.expanded {
+.task-info-toggle.expanded,
+.new-task-cancel {
   background: transparent url(images/close1.svg) 50% no-repeat;
   background-size: 17px;
 }
@@ -388,6 +405,53 @@ body:has(.dragged) {
   background-size: 20px;
 }
 
-.task-edit {
-  background:#fff;
+.task-edit-button {
+  background: transparent url(images/edit.svg) 50% no-repeat;
+  background-size: 22px;
+}
+
+.task-edit::after {
+  content:'';
+  clear:both;
+  display:block;
+}
+
+.task-edit-input {
+  font-family: Arial, sans-serif;
+  border:0;
+  background:0;
+  font-size:16px;
+  padding:17px 37px 10px 0;
+  box-sizing: border-box;
+  margin-left:15px;
+  min-height: 1em; 
+  overflow-y: hidden; 
+  resize: none;
+  border-bottom:2px solid #f79d35;
+  width: calc(100% - 24px);
+  display: block;
+}
+
+.task.overlayUiExpanded {
+  position: relative;
+}
+
+.task.overlayUiExpanded .task-title {
+  display:none;
+}
+
+.task.overlayUiExpanded .task-header {
+  padding:0;
+}
+
+.task.overlayUiExpanded .task-info-toggle {
+  position:absolute;
+  top:10px;
+  right:15px;
+}
+
+.new-task-cancel { 
+  position: absolute;
+  right:10px;
+  top:10px;
 }
