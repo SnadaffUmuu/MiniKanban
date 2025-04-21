@@ -1,4 +1,4 @@
-const cardsColors = [
+const tasksColors = [
   "#FFFFFF",   // white
   "#DBF6FF",   // light blue
   "#FFFFB3",    // light yellow
@@ -28,8 +28,8 @@ const renderedEvents = {
     '.task .task-title': showEditTaskUi,
     '.task .confirm-delete-task': deleteTask,
     '.task-change-color' : showSetColorUI,
-    '.colors-list li' : previewTaskColor,
     '.cancel-set-color' : removeSetColorUI,
+    '.colors-list li' : previewTaskColor,
     '.save-set-color' : saveColor,
     '.task-edit-button' : showEditTaskUi,
     '.new-task-cancel' : hideAddTaskUi,
@@ -66,9 +66,9 @@ function createDefaultBoard() {
     id: generateUID(),
     name: 'Kanban Board',
     columns: [
-      { id: generateUID(), name: 'To Do', cards: [] },
-      { id: generateUID(), name: 'In Progress', cards: [] },
-      { id: generateUID(), name: 'Done', cards: [] }
+      { id: generateUID(), name: 'To Do', tasks: [] },
+      { id: generateUID(), name: 'In Progress', tasks: [] },
+      { id: generateUID(), name: 'Done', tasks: [] }
     ]
   };
 }
@@ -91,7 +91,7 @@ function getCurrentColumnByElement(el) {
 
 function getCurrentTaskByElement(el) {
   const currentTaskEl = el.closest('.task');
-  return getCurrentColumnByElement(el).cards.find(task => task.id == currentTaskEl.dataset.id);
+  return getCurrentColumnByElement(el).tasks.find(task => task.id == currentTaskEl.dataset.id);
 }
 
 // Отображение заголовка текущей доски
@@ -130,9 +130,9 @@ function createBoard() {
     id: newId,
     name: "Новая доска",
     columns: [
-      { id: generateUID(), name: "To Do", cards: [] },
-      { id: generateUID(), name: "In progress", cards: [] },
-      { id: generateUID(), name: "Done", cards: [] }
+      { id: generateUID(), name: "To Do", tasks: [] },
+      { id: generateUID(), name: "In progress", tasks: [] },
+      { id: generateUID(), name: "Done", tasks: [] }
     ]
   });
   saveBoards(appData.boards, newId)
@@ -200,13 +200,13 @@ function renderBoard() {
   
   currentBoard.columns.forEach(column => {
     // Карточки
-    let cardsHtml = [];
-    column.cards.forEach(task => {
-      cardsHtml.push(`
+    let tasksHtml = [];
+    column.tasks.forEach(task => {
+      tasksHtml.push(`
         <div class="task" style="background:${task.color};" data-id="${task.id}">
+          <button class="task-info-toggle"></button>
           <div class="task-header">
             <span class="task-title">${task.description}</span>
-            <button class="task-info-toggle"></button>
           </div>
           <div class="task-info hidden">
             <button class="task-change-color"></button>
@@ -216,14 +216,14 @@ function renderBoard() {
         </div>
       `);
     });
-    if (!cardsHtml.length) {
-      cardsHtml = [`<button class="add-task-button">Click to add first task</button>`];
+    if (!tasksHtml.length) {
+      tasksHtml = [`<button class="add-task-button">Click to add first task</button>`];
     }
     const columnHtml = `
       <div class="column" data-id="${column.id}">
         <div class="column-header">
           <h3 class="column-title">${column.name}</h3>
-          <span class="task-count">${column.cards.length}</span>
+          <span class="task-count">${column.tasks.length}</span>
           <button class="add-task"></button>
           <button class="column-menu-toggle"></button>
         </div>
@@ -236,7 +236,7 @@ function renderBoard() {
         ${renderDeleteColumnUi()}
         ${renderMoveColumnUi()}
         <div class="column-body">
-          ${cardsHtml.join('')}
+          ${tasksHtml.join('')}
         </div>
       </div>
     `;
@@ -419,7 +419,7 @@ document.getElementById('add-column').addEventListener('click', function () {
   const newColumn = {
     id: generateUID(),
     name: 'Новая колонка',
-    cards: []
+    tasks: []
   };
 
   getCurrentBoard().columns.push(newColumn);
@@ -494,8 +494,8 @@ function getTaskDeleteUi() {
   return `
     <div class="task-delete-block">
       Delete this task?<br>
-      <button class="cancel-delete-task  board-management-button">Cancel</button>
       <button class="confirm-delete-task  board-management-button">Delete</button>
+      <button class="cancel-delete-task  board-management-button">Cancel</button>
     </div>
   `;
 }
@@ -551,14 +551,12 @@ document.body.addEventListener('touchmove', () => {
 });
 
 /* START DRAG */
-
 let dragState = null;
 
-//function startDrag(cardElement, columnId, cardId) {
-function startDrag(cardElement, event) {
-  cardElement.classList.add('dragged');
-  const rect = cardElement.getBoundingClientRect();
-  const clone = cardElement.cloneNode(true);
+function startDrag(taskElement, event) {
+  taskElement.classList.add('dragged');
+  const rect = taskElement.getBoundingClientRect();
+  const clone = taskElement.cloneNode(true);
   clone.classList.add('dragging');
   clone.style.position = 'fixed';
   clone.style.top = `${rect.top}px`;
@@ -569,7 +567,7 @@ function startDrag(cardElement, event) {
 
   dragState = {
     clone: clone,
-    draggingCard: cardElement,
+    draggingTask: taskElement,
   };
 
   function onMove(e) {
@@ -593,7 +591,7 @@ function startDrag(cardElement, event) {
     document.removeEventListener('mouseup', onEnd);
     document.removeEventListener('touchend', onEnd);
 
-    dropCard(e);
+    dropTask(e);
   }
 
   document.addEventListener('mousemove', onMove);
@@ -638,8 +636,8 @@ function autoScrollColumns(cursorX) {
 
 /* DROP task */
 
-function dropCard(event) {
-  if (!dragState.draggingCard || !dragState.clone) return;
+function dropTask(event) {
+  if (!dragState.draggingTask || !dragState.clone) return;
 
   const cursorX = event.clientX || (event.touches && event.changedTouches[0].clientX);
 
@@ -649,32 +647,32 @@ function dropCard(event) {
     const currentBoard = getCurrentBoard();
     const targetColumn = currentBoard.columns.find(c => c.id == targetColumnEl.dataset.id);
 
-    if (!targetColumn.cards) targetColumn.cards = [];
+    if (!targetColumn.tasks) targetColumn.tasks = [];
 
     const sourceColumn = currentBoard.columns.find(col =>
-      col.cards && col.cards.some(c => c.id === dragState.draggingCard.dataset.id)
+      col.tasks && col.tasks.some(c => c.id === dragState.draggingTask.dataset.id)
     );
-    const draggedCard = sourceColumn.cards.find(c => c.id === dragState.draggingCard.dataset.id);
+    const draggedTask = sourceColumn.tasks.find(c => c.id === dragState.draggingTask.dataset.id);
     // Удалим карточку из старой колонки
     if (sourceColumn) {
-      sourceColumn.cards = sourceColumn.cards.filter(c => c.id !== dragState.draggingCard.dataset.id);
+      sourceColumn.tasks = sourceColumn.tasks.filter(c => c.id !== dragState.draggingTask.dataset.id);
     }
 
     // Добавим карточку в новую колонку
     const insertIndicator = document.querySelector('.task-insert-indicator');
     let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task')).findIndex(el =>
       el.previousElementSibling === insertIndicator) : -1;
-    if (insertIndex === -1) insertIndex = targetColumn.cards.length;
-    targetColumn.cards.splice(insertIndex, 0, draggedCard);
-    //targetColumn.cards.push(draggedCard);
+    if (insertIndex === -1) insertIndex = targetColumn.tasks.length;
+    targetColumn.tasks.splice(insertIndex, 0, draggedTask);
+    //targetColumn.tasks.push(draggedTask);
     saveBoards(appData.boards, appData.currentBoardId);
     renderBoard();
   }
 
   // Очистка
   removeInsertIndicators();
-  dragState.draggingCard.classList.remove('dragged');
-  dragState.draggingCard = null;
+  dragState.draggingTask.classList.remove('dragged');
+  dragState.draggingTask = null;
   if (dragState.clone) {
     dragState.clone.remove();
     dragState.clone = null;
@@ -684,12 +682,12 @@ function dropCard(event) {
 function updateInsertIndicator(columnEl, y) {
   removeInsertIndicators();
 
-  const cards = Array.from(columnEl.querySelectorAll('.task:not(.dragged)'));
-  if (!cards.length) return;
+  const tasks = Array.from(columnEl.querySelectorAll('.task:not(.dragged)'));
+  if (!tasks.length) return;
   let inserted = false;
 
-  for (let i = 0; i < cards.length; i++) {
-    const task = cards[i];
+  for (let i = 0; i < tasks.length; i++) {
+    const task = tasks[i];
     const rect = task.getBoundingClientRect();
     const midpoint = rect.top + rect.height / 2;
 
@@ -822,8 +820,8 @@ function hideAddTaskUi(el) {
     taskEl.remove()
   } else {
     document.querySelector('.task-edit').remove();
-    taskEl.classList.remove('overlayUiExpanded');
-    taskEl.querySelector('.task-info-toggle').classList.remove('expanded');
+    //taskEl.classList.remove('overlayUiExpanded');
+    //taskEl.querySelector('.task-info-toggle').classList.remove('expanded');
   }
 }
 
@@ -834,14 +832,14 @@ function addTask(el) {
   let theId = null;
   if (isAdding) {
     const column = getCurrentColumnByElement(el);
-    const newCardId = generateUID();
-    theId = newCardId;
-    const newCard = {
-      id: newCardId,
+    const newTaskId = generateUID();
+    theId = newTaskId;
+    const newTask = {
+      id: newTaskId,
       description: input.value.trim(),
       color: '#FFFFFF',
     };
-    column.cards = column.cards ? [newCard, ...column.cards] : [newCard];
+    column.tasks = column.tasks ? [newTask, ...column.tasks] : [newTask];
   } else {
     const task = getCurrentTaskByElement(el);
     task.description = input.value.trim();
@@ -850,7 +848,7 @@ function addTask(el) {
   editBlock.remove();
   saveBoards(appData.boards);
   renderBoard();
-  toggleTaskInfo(document.querySelector('.task[data-id="' + theId + '"] .task-info-toggle'));
+  document.querySelector('.task[data-id="' + theId + '"] .task-info-toggle')?.click();
 }
 
 function showEditTaskUi(el) {
@@ -860,25 +858,26 @@ function showEditTaskUi(el) {
   if (!editBlock) {
     const task = getCurrentTaskByElement(el);
     taskEl.insertAdjacentHTML('beforeend', getTaskEditFormHtml(task));
-    taskEl.classList.add('overlayUiExpanded');
+    //taskEl.classList.add('overlayUiExpanded');
     editBlock = taskEl.querySelector('.task-edit');
     const input = editBlock.querySelector('.task-edit-input');
+    expandInput(input);
     input.addEventListener('input', updateSaveTaskButtonState);
-    input.addEventListener('input', expandInput);
+    input.addEventListener('input', ()=> {
+      expandInput(e.target);
+    });
     input.addEventListener('focus', function() {
       setTimeout(() => {
         this.setSelectionRange(this.value.length, this.value.length);
       }, 0);
     });
-  
-    toggleTaskInfo(null, taskEl);
     input.focus();
   }
 }
 
-function expandInput(e) {
-  e.target.style.height = 'auto';
-  e.target.style.height = (e.target.scrollHeight) + 'px';
+function expandInput(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight) + 'px';
 }
 
 function updateSaveTaskButtonState(e) {
@@ -903,18 +902,15 @@ function updateSaveButtonState(field, button) {
   }
 }
 
-function toggleTaskInfo(el, taskEl) {
-  const task = taskEl instanceof HTMLElement ? taskEl : (el.classList.contains('task') ? el : el.closest('.task'));
+function toggleTaskInfo(el) {
+  const task = el.closest('.task');
   if (!task) return;
   const infoBlock = task.querySelector('.task-info');
-  if (el && el.classList.contains('task-info-toggle')) {
-    infoBlock.classList.toggle('hidden');
-    el?.classList.toggle('expanded')
-    task.querySelector('.task-delete-block')?.remove();
-    task.querySelector('.task-edit')?.remove();
-  } else {
-    infoBlock.classList.toggle('hidden');
-  }
+  infoBlock.classList.toggle('hidden', el.classList.contains('expanded'));
+  el.classList.toggle('expanded');
+  task.querySelector('.task-delete-block')?.remove();
+  task.querySelector('.task-edit')?.remove();
+  task.querySelector('.set-task-colors')?.remove();
 }
 
 function showDeleteTaskUi(el) {
@@ -929,27 +925,27 @@ function removeDeleteTaskUi(el) {
 
 function deleteTask(el) {
   const col = getCurrentColumnByElement(el);
-  col.cards = col.cards.filter(task => task.id != el.closest('.task').dataset.id);
+  col.tasks = col.tasks.filter(task => task.id != el.closest('.task').dataset.id);
   saveBoards(appData.boards);
   renderBoard();
 }
 
 function showSetColorUI(el) {
-  const cardEl = el.closest('.task');
-  cardEl.insertAdjacentHTML('beforeend', getSetColorUI(cardEl));
+  const taskEl = el.closest('.task');
+  taskEl.insertAdjacentHTML('beforeend', getSetColorUI(taskEl));
 }
 
 function removeSetColorUI(el) {
-  const cardEl = el.closest('.task');
-  const colorsBlock = cardEl.querySelector('.set-task-colors');
-  cardEl.style.background = colorsBlock.dataset.originalColor;
+  const taskEl = el.closest('.task');
+  const colorsBlock = taskEl.querySelector('.set-task-colors');
+  taskEl.style.background = colorsBlock.dataset.originalColor;
   colorsBlock.remove();
 }
 
 function getSetColorUI(el)  {
   const currentTask = getCurrentTaskByElement(el);
   const currentColor = currentTask.color || '#FFFFFF';
-  const colors = cardsColors.map(color => `
+  const colors = tasksColors.map(color => `
     <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
   `);
   return `
@@ -966,7 +962,7 @@ function getSetColorUI(el)  {
 
 function previewTaskColor(el) {
   el.classList.add('current');
-  const cardEl = el.closest('.task');
+  const taskEl = el.closest('.task');
   const colorEls = el.parentNode.querySelectorAll('li');
   colorEls.forEach(ce => {
     if (ce != el) {
@@ -975,7 +971,7 @@ function previewTaskColor(el) {
   })
   el.closest('.task').style.background = el.dataset.color;
   const colorsBlock = el.closest('.set-task-colors');
-  const button = cardEl.querySelector('.save-set-color');
+  const button = taskEl.querySelector('.save-set-color');
   if (el.dataset.color == colorsBlock.dataset.originalColor) {
     button.setAttribute('disabled', "true");
   } else {
@@ -984,9 +980,9 @@ function previewTaskColor(el) {
 }
 
 function saveColor(el) {
-  const cardEl = el.closest('.task');
+  const taskEl = el.closest('.task');
   const currentTask = getCurrentTaskByElement(el);
-  currentTask.color = cardEl.querySelector('li.current').dataset.color;
+  currentTask.color = taskEl.querySelector('li.current').dataset.color;
   saveBoards(appData.boards);
-  renderBoard();
+  taskEl.querySelector('.set-task-colors')?.remove();
 }

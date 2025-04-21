@@ -171,8 +171,10 @@ header {
   color:#999999;
 }
 
-#rename-board-block:after,
-#delete-board-block:after {
+#rename-board-block::after,
+#delete-board-block::after,
+.task-edit::after,
+.task-delete-block::after {
   content: '';
   clear:both;
   display:block;
@@ -332,15 +334,19 @@ body:has(.dragged) {
 }
 
 .task-header {
-  display:flex;
-  flex-flow:row nowrap;
-  justify-content: flex-end;
-  align-items: center;
-  padding:10px 15px;
+  padding:10px;
+  padding-right:40px;
 }
 
 .task-title {
-  flex: 1 0 auto;
+  white-space: pre-line
+}
+
+.task-info-toggle {
+  position:absolute;
+  top:7px;
+  right:10px;
+  padding: 0;
 }
 
 #add-column {
@@ -410,12 +416,6 @@ body:has(.dragged) {
   background-size: 22px;
 }
 
-.task-edit::after {
-  content:'';
-  clear:both;
-  display:block;
-}
-
 .task-edit-input {
   font-family: Arial, sans-serif;
   border:0;
@@ -432,6 +432,7 @@ body:has(.dragged) {
   display: block;
 }
 
+/*
 .task.overlayUiExpanded {
   position: relative;
 }
@@ -443,12 +444,7 @@ body:has(.dragged) {
 .task.overlayUiExpanded .task-header {
   padding:0;
 }
-
-.task.overlayUiExpanded .task-info-toggle {
-  position:absolute;
-  top:10px;
-  right:15px;
-}
+*/
 
 .new-task-cancel { 
   position: absolute;
