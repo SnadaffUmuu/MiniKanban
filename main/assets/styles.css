@@ -8,7 +8,7 @@ html, body {
 
 body {
   font-family: Arial, sans-serif;
-  font-size:16px;
+  font-size:14px;
   display: flex;
   flex-flow:column nowrap;
 }
@@ -153,7 +153,7 @@ header {
   border-bottom:2px solid #f79d35;
   padding:10px 0;
   color:#fff;
-  font-size: 15px;
+  font-size: 14px;
   width:100%;
   box-sizing: border-box;
 }
@@ -174,7 +174,11 @@ header {
 #rename-board-block::after,
 #delete-board-block::after,
 .task-edit::after,
-.task-delete-block::after {
+.task-delete-block::after,
+.set-task-colors::after,
+.delete-column-block::after,
+.rename-column-block::after,
+.move-column-block::after {
   content: '';
   clear:both;
   display:block;
@@ -263,7 +267,7 @@ main {
 }
 
 .column-header {
-  background: #e6e5e0;
+  background: #f1f1ee;
   position: relative;
   border-top-right-radius: 5px;
   border-top-left-radius: 5px;
@@ -297,7 +301,7 @@ main {
 }
 
 .column-menu {
-  background: #e6e5e0;
+  background: #f1f1ee;
   box-shadow: 0 3px 3px #47474775;
   position: relative;
   margin-top:-1px;
@@ -306,14 +310,79 @@ main {
 .column-menu button {
   background: transparent;
   border:0;
-  border-top:1px solid #8a8a8a;
+  border-top:1px solid #cfcfcf;
   padding: 13px 0;
   margin-left:60px;
   width:calc(100% - 60px);
   text-align: left;
+  position: relative;
 }
+
 .column-menu button:first-child {
   border-top:none;
+}
+
+.column-menu button::before {
+  position: absolute;
+  left:-40px;
+  height:20px;
+  width:20px;
+  content:'';
+}
+
+.rename-column::before {
+  background: url(images/edit-color.svg) 50% no-repeat;
+  background-size: 17px;
+}
+
+.move-column::before {
+  background: url(images/move.svg) 50% no-repeat;
+  background-size: 20px;
+}
+
+.delete-column::before {
+  background: url(images/delete-colored.svg) 50% no-repeat;
+  background-size: 18px;
+  background-position: 50% -1px;
+}
+
+.move-column-block button {
+  width:20px;
+  height:20px;
+  border-radius: 10px;
+  background-position: 50%;
+  background-size: 10px;
+  background-repeat: no-repeat;
+  background-color: #f79d352c;
+  border: 1px solid #f79d3585;
+  margin:0 15px 15px 0;
+  padding:0;
+}
+
+.move-column-right {
+  background-image: url(images/column-right.svg);
+}
+
+.move-column-left {
+  background-image: url(images/column-right.svg);
+  transform: rotate(180deg);
+}
+
+.rename-column-block {
+  padding-top:5px !important;
+  padding-bottom:5px !important;
+  padding-right:10px !important
+}
+
+.rename-column-input {
+  font-size:16px;
+  border:0;
+  border-bottom:2px solid #f79d35;
+  display: block;
+  padding: 15px 0 10px 0;
+  box-sizing: border-box;
+  width:100%;
+  background: none;
 }
 
 body:has(.dragged) {
@@ -344,7 +413,7 @@ body:has(.dragged) {
 
 .task-info-toggle {
   position:absolute;
-  top:7px;
+  top:5px;
   right:10px;
   padding: 0;
 }
@@ -360,7 +429,7 @@ body:has(.dragged) {
 }
 
 .task-info {
-  padding: 0 15px 15px;
+  padding: 0 15px 10px;
   display:flex;
   flex-flow:row nowrap;
   justify-content: flex-end;
@@ -395,7 +464,8 @@ body:has(.dragged) {
 }
 
 .task-info-toggle.expanded,
-.new-task-cancel {
+.new-task-cancel,
+.column-menu-toggle.expanded {
   background: transparent url(images/close1.svg) 50% no-repeat;
   background-size: 17px;
 }
@@ -411,6 +481,15 @@ body:has(.dragged) {
   background-size: 20px;
 }
 
+.delete-column-block,
+.rename-column-block,
+.move-column-block {
+  background: #f1f1ee;
+  padding:15px 0 0 10px;
+  position: relative;
+  margin-top:-1px;
+}
+
 .task-edit-button {
   background: transparent url(images/edit.svg) 50% no-repeat;
   background-size: 22px;
@@ -420,10 +499,11 @@ body:has(.dragged) {
   font-family: Arial, sans-serif;
   border:0;
   background:0;
-  font-size:16px;
-  padding:17px 37px 10px 0;
+  font-size:14px;
+  padding:10px 40px 10px 0;
   box-sizing: border-box;
-  margin-left:15px;
+  margin-left:10px;
+  margin-bottom:13px;
   min-height: 1em; 
   overflow-y: hidden; 
   resize: none;
@@ -432,22 +512,39 @@ body:has(.dragged) {
   display: block;
 }
 
-/*
-.task.overlayUiExpanded {
-  position: relative;
-}
-
-.task.overlayUiExpanded .task-title {
-  display:none;
-}
-
-.task.overlayUiExpanded .task-header {
-  padding:0;
-}
-*/
-
 .new-task-cancel { 
   position: absolute;
   right:10px;
-  top:10px;
+  top:5px;
+  padding: 0;
+}
+
+.task-delete-block {
+  padding:13px 0 0 13px;
+}
+
+.set-task-colors {
+  padding:10px 0 0 10px;
+}
+
+.colors-list {
+  padding:0;
+  margin:0 0 10px;
+  list-style: none;
+  display:flex;
+  flex-flow:row wrap;
+}
+
+.colors-list li {
+  width:20px;
+  height:20px;
+  border:1px solid #999;
+  border-radius: 10px;
+  margin-right:10px;
+  color:#999;
+  text-align: center;
+}
+
+.colors-list li.current::after {
+  content: '✓';
 }

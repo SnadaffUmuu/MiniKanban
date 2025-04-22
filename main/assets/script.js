@@ -48,13 +48,13 @@ function generateUID() {
 
 // Чтение и запись в localStorage
 function saveAppData(data) {
-  //Android.saveDataToFile(JSON.stringify(data));
-  localStorage.setItem('kanbanAppData', JSON.stringify(data));
+  Android.saveDataToFile(JSON.stringify(data));
+  // localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
-  //const raw = Android.loadDataFromFile();
-  const raw = localStorage.getItem('kanbanAppData');
+  const raw = Android.loadDataFromFile();
+  // const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -249,26 +249,26 @@ function renderBoard() {
 
 function renderRenameColumnUi(name) {
   return `<div class="rename-column-block hidden">
-    <h4>Rename column</h4>
+    Rename column<br>
     <input type="text" class="rename-column-input" ${name ? 'val="' + name + '"' : 'placehlder="New column name"'}>
-    <button class="cancel-rename-column">Cancel</button>
-    <button class="save-rename-column" disabled>Save</button>
+    <button class="save-rename-column board-management-button" disabled>Save</button>
+    <button class="cancel-rename-column board-management-button">Cancel</button>
   </div>`
 }
 
 function renderDeleteColumnUi() {
   return `<div class="delete-column-block hidden">
     <div>Delete this column with all tasks?</div>
-    <button class="cancel-delete-column">Cancel</button>
-    <button class="save-delete-column">Delete</button>
+    <button class="save-delete-column board-management-button">Delete</button>
+    <button class="cancel-delete-column board-management-button">Cancel</button>
   </div>`
 }
 
 function renderMoveColumnUi() {
   return `<div class="move-column-block hidden">
     <div>Move column</div>
-    <button class="move-column-left"><<</button>
-    <button class="move-column-right">>></button>
+    <button class="move-column-right board-management-button"></button>
+    <button class="move-column-left board-management-button"></button>
   </div>`
 }
 
@@ -433,6 +433,7 @@ document.addEventListener('click', function (e) {
       hideColumActionsUi(e.target.closest('.column'));
     } else {
       e.target.closest('.column').querySelector('.column-menu').classList.toggle('hidden');
+      e.target.classList.toggle('expanded');
     }
   }
 });
@@ -455,6 +456,7 @@ function moveColumn(button, doMoveRight) {
   renderBoard();
   toggleMoveColumnUi(document.querySelector('[data-id="' + moveColId + '"]'), false);
   currentColumnEl = document.querySelector(`[data-id="${currentColumn.id}"]`);
+  currentColumnEl.querySelector('.column-menu-toggle').classList.add('expanded');
   currentColumnEl.closest('main').scrollLeft = currentColumnEl.offsetLeft - 30;
 }
 
@@ -469,6 +471,7 @@ function hideColumActionsUi(column) {
   column.querySelector('.rename-column-block').classList.add('hidden');
   column.querySelector('.delete-column-block').classList.add('hidden');
   column.querySelector('.move-column-block').classList.add('hidden');
+  column.querySelector('.column-menu-toggle').classList.remove('expanded');
 }
 
 function getTaskEditFormHtml(task) {
@@ -493,7 +496,7 @@ function getTaskEditFormHtml(task) {
 function getTaskDeleteUi() {
   return `
     <div class="task-delete-block">
-      Delete this task?<br>
+      Delete this task?<br><br>
       <button class="confirm-delete-task  board-management-button">Delete</button>
       <button class="cancel-delete-task  board-management-button">Cancel</button>
     </div>
@@ -820,8 +823,8 @@ function hideAddTaskUi(el) {
     taskEl.remove()
   } else {
     document.querySelector('.task-edit').remove();
-    //taskEl.classList.remove('overlayUiExpanded');
-    //taskEl.querySelector('.task-info-toggle').classList.remove('expanded');
+    taskEl.querySelector('.task-info').classList.remove('hidden');
+    taskEl.querySelector('.task-header').classList.remove('hidden');
   }
 }
 
@@ -858,7 +861,8 @@ function showEditTaskUi(el) {
   if (!editBlock) {
     const task = getCurrentTaskByElement(el);
     taskEl.insertAdjacentHTML('beforeend', getTaskEditFormHtml(task));
-    //taskEl.classList.add('overlayUiExpanded');
+    taskEl.querySelector('.task-info').classList.add('hidden');
+    taskEl.querySelector('.task-header').classList.add('hidden');
     editBlock = taskEl.querySelector('.task-edit');
     const input = editBlock.querySelector('.task-edit-input');
     expandInput(input);
@@ -905,8 +909,8 @@ function updateSaveButtonState(field, button) {
 function toggleTaskInfo(el) {
   const task = el.closest('.task');
   if (!task) return;
-  const infoBlock = task.querySelector('.task-info');
-  infoBlock.classList.toggle('hidden', el.classList.contains('expanded'));
+  task.querySelector('.task-info').classList.toggle('hidden', el.classList.contains('expanded'));
+  task.querySelector('.task-header').classList.remove('hidden');
   el.classList.toggle('expanded');
   task.querySelector('.task-delete-block')?.remove();
   task.querySelector('.task-edit')?.remove();
@@ -916,11 +920,15 @@ function toggleTaskInfo(el) {
 function showDeleteTaskUi(el) {
   const task = el.closest('.task');
   task.insertAdjacentHTML('beforeend', getTaskDeleteUi());
+  task.querySelector('.task-info').classList.add('hidden');
+  task.querySelector('.task-header').classList.add('hidden');
 }
 
 function removeDeleteTaskUi(el) {
   const task = el.closest('.task');
   task.querySelector('.task-delete-block')?.remove();
+  task.querySelector('.task-info').classList.remove('hidden');
+  task.querySelector('.task-header').classList.remove('hidden');
 }
 
 function deleteTask(el) {
@@ -933,6 +941,8 @@ function deleteTask(el) {
 function showSetColorUI(el) {
   const taskEl = el.closest('.task');
   taskEl.insertAdjacentHTML('beforeend', getSetColorUI(taskEl));
+  taskEl.querySelector('.task-info').classList.add('hidden');
+  taskEl.querySelector('.task-header').classList.add('hidden');
 }
 
 function removeSetColorUI(el) {
@@ -940,6 +950,8 @@ function removeSetColorUI(el) {
   const colorsBlock = taskEl.querySelector('.set-task-colors');
   taskEl.style.background = colorsBlock.dataset.originalColor;
   colorsBlock.remove();
+  taskEl.querySelector('.task-info').classList.remove('hidden');
+  taskEl.querySelector('.task-header').classList.remove('hidden');
 }
 
 function getSetColorUI(el)  {
@@ -950,12 +962,12 @@ function getSetColorUI(el)  {
   `);
   return `
     <div data-original-color="${currentColor}" class="set-task-colors">
-      Choose task color<br>
+      Choose task color<br><br>
       <ul class="colors-list">
         ${colors.join('')}
       </ul>
-      <button class="cancel-set-color">Cancel</button>
-      <button class="save-set-color" disabled>Save</button>
+      <button class="save-set-color board-management-button" disabled>Save</button>
+      <button class="cancel-set-color board-management-button" >Cancel</button>
     </div>
   `;
 }
@@ -985,4 +997,6 @@ function saveColor(el) {
   currentTask.color = taskEl.querySelector('li.current').dataset.color;
   saveBoards(appData.boards);
   taskEl.querySelector('.set-task-colors')?.remove();
+  taskEl.querySelector('.task-info').classList.remove('hidden');
+  taskEl.querySelector('.task-header').classList.remove('hidden');
 }
