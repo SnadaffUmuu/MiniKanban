@@ -8,13 +8,18 @@ html, body {
 
 body {
   font-family: Arial, sans-serif;
-  font-size:14px;
+  font-size:15px;
   display: flex;
   flex-flow:column nowrap;
 }
 
 button, input, textarea {
   outline: none;
+  font-size: 15px;
+}
+
+textarea::placeholder {
+  font-weight: normal;
 }
 
 header {
@@ -66,7 +71,6 @@ header {
   border:0;
   padding:10px 15px;
   color:#f0f0f0;
-  font-size:13px;
   box-sizing: border-box;
   width: 100%;
   text-align: left;
@@ -153,7 +157,6 @@ header {
   border-bottom:2px solid #f79d35;
   padding:10px 0;
   color:#fff;
-  font-size: 14px;
   width:100%;
   box-sizing: border-box;
 }
@@ -212,7 +215,6 @@ header {
   left:0;
   right:0;
   background: #2c2c2c;
-  font-size:15px;
   color:#f0f0f0;
 }
 
@@ -316,6 +318,7 @@ main {
   width:calc(100% - 60px);
   text-align: left;
   position: relative;
+  color:#3b3b3b;
 }
 
 .column-menu button:first-child {
@@ -382,7 +385,7 @@ main {
   padding: 15px 0 10px 0;
   box-sizing: border-box;
   width:100%;
-  background: none;
+  background: none; 
 }
 
 body:has(.dragged) {
@@ -403,12 +406,12 @@ body:has(.dragged) {
 }
 
 .task-header {
-  padding:10px;
+  padding:20px 10px;
   padding-right:40px;
 }
 
 .task-title {
-  white-space: pre-line
+  white-space: pre-line;
 }
 
 .task-info-toggle {
@@ -499,8 +502,7 @@ body:has(.dragged) {
   font-family: Arial, sans-serif;
   border:0;
   background:0;
-  font-size:14px;
-  padding:10px 40px 10px 0;
+  padding:20px 40px 10px 0;
   box-sizing: border-box;
   margin-left:10px;
   margin-bottom:13px;
@@ -520,11 +522,11 @@ body:has(.dragged) {
 }
 
 .task-delete-block {
-  padding:13px 0 0 13px;
+  padding:20px 0 0 10px;
 }
 
 .set-task-colors {
-  padding:10px 0 0 10px;
+  padding:20px 0 0 10px;
 }
 
 .colors-list {

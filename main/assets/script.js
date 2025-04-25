@@ -37,6 +37,15 @@ const renderedEvents = {
 
 }
 
+function focusAndPlaceCursorAtEnd(input) {
+  input.addEventListener('focus', function() {
+    setTimeout(() => {
+      this.setSelectionRange(this.value.length, this.value.length);
+    }, 0);
+  });
+  input.focus();
+}
+
 function preventDefault (e) {
   e.preventDefault();
 }
@@ -228,8 +237,8 @@ function renderBoard() {
           <button class="column-menu-toggle"></button>
         </div>
         <div class="column-menu hidden">
+        <button class="rename-column">Rename column</button>
           <button class="move-column">Move column</button>
-          <button class="rename-column">Rename column</button>
           <button class="delete-column">Delete column</button>
         </div>
         ${renderRenameColumnUi(column.name)}
@@ -250,7 +259,7 @@ function renderBoard() {
 function renderRenameColumnUi(name) {
   return `<div class="rename-column-block hidden">
     Rename column<br>
-    <input type="text" class="rename-column-input" ${name ? 'val="' + name + '"' : 'placehlder="New column name"'}>
+    <input type="search" class="rename-column-input" ${name ? 'value="' + name + '"' : 'placehlder="New column name"'}>
     <button class="save-rename-column board-management-button" disabled>Save</button>
     <button class="cancel-rename-column board-management-button">Cancel</button>
   </div>`
@@ -293,8 +302,8 @@ function showRenameBoardUI() {
   deleteBlock.classList.add('hidden');
   document.getElementById("board-title").classList.add('hidden');
   document.getElementById("menu-toggle").classList.add('hidden');  
-  renameBoardInput.focus();
   renameBoardInput.value = getCurrentBoard().name;
+  focusAndPlaceCursorAtEnd(renameBoardInput);
   toggleMenu();
 }
 
@@ -416,15 +425,16 @@ document.getElementById('close-boards-list').addEventListener('click', () => {
 document.getElementById('create-board').addEventListener('click', createBoard);
 
 document.getElementById('add-column').addEventListener('click', function () {
+  const newUid = generateUID();
   const newColumn = {
-    id: generateUID(),
+    id: newUid,
     name: 'Новая колонка',
     tasks: []
   };
-
   getCurrentBoard().columns.push(newColumn);
   saveBoards(appData.boards, appData.currentBoardId);
   renderBoard();
+  document.querySelector('main').scrollLeft = document.querySelector(`.column[data-id=${newUid}]`).offsetLeft - 30;
 });
 
 document.addEventListener('click', function (e) {
@@ -754,8 +764,9 @@ function toggleRenameColumnUi(el, shouldShow) {
   if (shouldShow === true) {
     col.querySelector('.column-menu').classList.toggle('hidden', true);
     renameBlock.classList.toggle('hidden', false);
-    input.focus();
-    input.value = colData.name;
+    focusAndPlaceCursorAtEnd(input);
+    // input.focus();
+    // input.value = colData.name;
   } else if (shouldShow === false) {
     col.querySelector('.column-menu').classList.toggle('hidden', false);
     renameBlock.classList.toggle('hidden', true);
@@ -766,8 +777,9 @@ function toggleRenameColumnUi(el, shouldShow) {
     if (renameBlock.classList.contains('hidden')) {
       input.value = '';
     } else {
-      input.focus();
-      input.value = colData.name;
+      focusAndPlaceCursorAtEnd(input);
+      // input.focus();
+      // input.value = colData.name;
     }    
   }
 }
@@ -870,12 +882,7 @@ function showEditTaskUi(el) {
     input.addEventListener('input', ()=> {
       expandInput(e.target);
     });
-    input.addEventListener('focus', function() {
-      setTimeout(() => {
-        this.setSelectionRange(this.value.length, this.value.length);
-      }, 0);
-    });
-    input.focus();
+    focusAndPlaceCursorAtEnd(input);
   }
 }
 

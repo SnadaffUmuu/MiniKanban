@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient());
         WebView.setWebContentsDebuggingEnabled(true);
         webView.clearCache(true);
-        webView.loadUrl("http://192.168.2.48:3001/index.html");
-        // webView.loadUrl("file:///android_asset/index.html");
+        // webView.loadUrl("http://192.168.2.48:3001/index.html");
+        webView.loadUrl("file:///android_asset/index.html");
     }
 
     @Override
