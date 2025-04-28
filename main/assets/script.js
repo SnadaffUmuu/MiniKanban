@@ -23,6 +23,7 @@ const renderedEvents = {
     '.task-edit-cancel': hideAddTaskUi,
     '.task-edit-save': addTask,
     '.task .task-info-toggle' : toggleTaskInfo,
+    '.task-expand-button' : toggleTaskInfo,
     '.task-delete': showDeleteTaskUi,
     '.cancel-delete-task': removeDeleteTaskUi,
     '.task .task-title': showEditTaskUi,
@@ -94,7 +95,7 @@ function getCurrentBoard() {
 }
 
 function getCurrentColumnByElement(el) {
-  const currentColEl = el.closest('.column');
+  const currentColEl = el.classList.contains('column') ? el : el.closest('.column');
   return getCurrentBoard().columns.find(c => c.id == currentColEl.dataset.id);
 }
 
@@ -213,6 +214,7 @@ function renderBoard() {
     column.tasks.forEach(task => {
       tasksHtml.push(`
         <div class="task" style="background:${task.color};" data-id="${task.id}">
+          <div class="task-expand-button"></div>
           <button class="task-info-toggle"></button>
           <div class="task-header">
             <span class="task-title">${task.description}</span>
@@ -541,6 +543,10 @@ document.body.addEventListener('touchstart', (e) => {
   
   longPressTarget = task;
   longPressTimer = setTimeout(() => {
+    if (task.classList.contains('expanded')) {
+      task.querySelector('.task-info-toggle').click();
+      return;
+    }
     enableTextSelection(false);
     startDrag(longPressTarget, e); 
     blockContextMenuTemporarily(); 
@@ -565,6 +571,7 @@ document.body.addEventListener('touchmove', () => {
 
 /* START DRAG */
 let dragState = null;
+let colsScroll = {};
 
 function startDrag(taskElement, event) {
   taskElement.classList.add('dragged');
@@ -590,9 +597,10 @@ function startDrag(taskElement, event) {
     clone.style.left = `${x - clone.offsetWidth / 2}px`;
     clone.style.top = `${y - clone.offsetHeight / 2}px`;
 
-    autoScrollColumns(x);
-
     const currentColumn = getColumnAtPoint(x);
+    
+    autoScrollColumns(x, y, currentColumn);
+
     if (currentColumn) {
       updateInsertIndicator(currentColumn, e.clientY || e.touches?.[0]?.clientY);
     }
@@ -626,16 +634,14 @@ function getColumnAtPoint(cursorX) {
   }
 }
 
-function autoScrollColumns(cursorX) {
+function autoScrollColumns(cursorX, cursorY, currentColumn) {
   //console.log('autoScrollColumns', cursorX);
-  //const scrollContainer = document.getElementById('columns');
   const main = document.querySelector('main');
   const scrollMargin = 60; // расстояние от края, при котором начинается прокрутка
-  const scrollSpeed = 10;  // пикселей за кадр
+  const scrollSpeed = 7;  // пикселей за кадр
 
   const containerRect = main.getBoundingClientRect();
-  //const containerRect = scrollContainer.getBoundingClientRect();
-
+  
   if (cursorX < containerRect.left + scrollMargin) {
     //console.log('left scroll');
     // скроллим влево
@@ -645,9 +651,21 @@ function autoScrollColumns(cursorX) {
     // скроллим вправо
     main.scrollLeft += scrollSpeed;
   }
+  
+  if (!currentColumn) return;
+  const columnBody = currentColumn.querySelector('.column-body');
+  const colRect = columnBody.getBoundingClientRect();
+  if (cursorY < colRect.top + scrollMargin) {
+    //console.log('top scroll');
+    columnBody.scrollTop -= scrollSpeed;
+    colsScroll[currentColumn.dataset.id] = columnBody.scrollTop;
+  } else if (cursorY > colRect.bottom - scrollMargin) {
+    //console.log('down scroll');
+    columnBody.scrollTop += scrollSpeed;
+    colsScroll[currentColumn.dataset.id] = columnBody.scrollTop;
+  }
+  //console.log(colsScroll);
 }
-
-/* DROP task */
 
 function dropTask(event) {
   if (!dragState.draggingTask || !dragState.clone) return;
@@ -658,7 +676,7 @@ function dropTask(event) {
 
   if (targetColumnEl) {
     const currentBoard = getCurrentBoard();
-    const targetColumn = currentBoard.columns.find(c => c.id == targetColumnEl.dataset.id);
+    const targetColumn = getCurrentColumnByElement(targetColumnEl);
 
     if (!targetColumn.tasks) targetColumn.tasks = [];
 
@@ -673,16 +691,16 @@ function dropTask(event) {
 
     // Добавим карточку в новую колонку
     const insertIndicator = document.querySelector('.task-insert-indicator');
-    let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task')).findIndex(el =>
+    let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task:not(.dragged, .dragging)')).findIndex(el =>
       el.previousElementSibling === insertIndicator) : -1;
+    //console.log(insertIndex);
     if (insertIndex === -1) insertIndex = targetColumn.tasks.length;
     targetColumn.tasks.splice(insertIndex, 0, draggedTask);
-    //targetColumn.tasks.push(draggedTask);
     saveBoards(appData.boards, appData.currentBoardId);
     renderBoard();
+    restoreColsVertScroll(colsScroll);
   }
 
-  // Очистка
   removeInsertIndicators();
   dragState.draggingTask.classList.remove('dragged');
   dragState.draggingTask = null;
@@ -690,6 +708,17 @@ function dropTask(event) {
     dragState.clone.remove();
     dragState.clone = null;
   }
+}
+
+function restoreColsVertScroll(colsScroll) {
+  for (colId in colsScroll) {
+    const colEl = document.querySelector(`.column[data-id="${colId}"]`);
+    if (colEl) {
+      //console.log(colsScroll[colId])
+      colEl.querySelector('.column-body').scrollTop = colsScroll[colId];
+    }
+  }
+  colsScroll = {};
 }
 
 function updateInsertIndicator(columnEl, y) {
@@ -758,15 +787,12 @@ function toggleMoveColumnUi(el, shouldAdd) {
 
 function toggleRenameColumnUi(el, shouldShow) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
-  const colData = getCurrentBoard().columns.find(c => c.id == col.dataset.id);
   const input = col.querySelector('.rename-column-input');
   const renameBlock = col.querySelector('.rename-column-block');
   if (shouldShow === true) {
     col.querySelector('.column-menu').classList.toggle('hidden', true);
     renameBlock.classList.toggle('hidden', false);
     focusAndPlaceCursorAtEnd(input);
-    // input.focus();
-    // input.value = colData.name;
   } else if (shouldShow === false) {
     col.querySelector('.column-menu').classList.toggle('hidden', false);
     renameBlock.classList.toggle('hidden', true);
@@ -778,8 +804,6 @@ function toggleRenameColumnUi(el, shouldShow) {
       input.value = '';
     } else {
       focusAndPlaceCursorAtEnd(input);
-      // input.focus();
-      // input.value = colData.name;
     }    
   }
 }
@@ -826,7 +850,10 @@ function showAddTaskUi(el) {
   const editBlock = columnBody.querySelector('.task-edit');
   const input = editBlock.querySelector('.task-edit-input');
   input.focus();
-  input.addEventListener('input', updateSaveTaskButtonState);
+  input.addEventListener('input', (e) => {
+    updateSaveTaskButtonState(e);
+    expandInput(e.target);
+  });
 }
 
 function hideAddTaskUi(el) {
@@ -879,7 +906,7 @@ function showEditTaskUi(el) {
     const input = editBlock.querySelector('.task-edit-input');
     expandInput(input);
     input.addEventListener('input', updateSaveTaskButtonState);
-    input.addEventListener('input', ()=> {
+    input.addEventListener('input', (e) => {
       expandInput(e.target);
     });
     focusAndPlaceCursorAtEnd(input);
@@ -916,6 +943,7 @@ function updateSaveButtonState(field, button) {
 function toggleTaskInfo(el) {
   const task = el.closest('.task');
   if (!task) return;
+  task.classList.toggle('expanded', !el.classList.contains('expanded'));
   task.querySelector('.task-info').classList.toggle('hidden', el.classList.contains('expanded'));
   task.querySelector('.task-header').classList.remove('hidden');
   el.classList.toggle('expanded');

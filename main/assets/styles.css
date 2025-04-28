@@ -1,6 +1,6 @@
 html, body {
-  width:100%;
-  height:100%;
+  width:100vw;
+  height:100vh;
   background:#333533;
   margin:0;
   padding:0;
@@ -244,21 +244,21 @@ header {
 main {
   width:100%;
   max-width:100%;
+  min-height: 0;
   overflow: auto;
   position: relative;
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   display:flex;
   flex-flow: row nowrap;
   align-items:flex-start;
 }
 
 #columns {
-  display:flex;
-  flex-flow: row nowrap;
-  align-items: stretch;
   display: flex;
   flex-flow: row nowrap;
   align-items: flex-start;
+  height: 100%;
+  max-height: 100%;
 }
 
 .column {
@@ -266,6 +266,9 @@ main {
   flex:1 0 auto;
   max-width:300px;
   margin-left:5px;
+  max-height: 100%;
+  display: flex;
+  flex-flow: column nowrap;
 }
 
 .column-header {
@@ -276,12 +279,9 @@ main {
   display:flex;
   flex-flow:row nowrap;
   align-items: center;
-  padding:10px 10px 0;
-}
-
-.column:has(.column-menu.hidden) .column-header {
   box-shadow: 0 1px 3px #47474775;
   padding:10px;
+  flex: 0 0 auto;
 }
 
 .column-header > * {
@@ -300,13 +300,18 @@ main {
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   padding:5px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  height: 100%;
+  max-height: 100%;
 }
 
 .column-menu {
   background: #f1f1ee;
   box-shadow: 0 3px 3px #47474775;
   position: relative;
-  margin-top:-1px;
+  margin-top:-10px;
 }
 
 .column-menu button {
@@ -410,8 +415,32 @@ body:has(.dragged) {
   padding-right:40px;
 }
 
+.task:not(.expanded) .task-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-expand-button {
+  position: absolute;
+  top: 0;
+  right:0;
+  bottom:0;
+  left:0;
+  cursor:pointer;
+  background: transparent;
+}
+
+.task.expanded .task-expand-button {
+  display:none;
+}
+
 .task-title {
   white-space: pre-line;
+  display:block;
+  width:100%;
 }
 
 .task-info-toggle {
@@ -505,7 +534,6 @@ body:has(.dragged) {
   padding:20px 40px 10px 0;
   box-sizing: border-box;
   margin-left:10px;
-  margin-bottom:13px;
   min-height: 1em; 
   overflow-y: hidden; 
   resize: none;
@@ -544,9 +572,13 @@ body:has(.dragged) {
   border-radius: 10px;
   margin-right:10px;
   color:#999;
-  text-align: center;
 }
 
 .colors-list li.current::after {
   content: '✓';
+  display: block;
+  text-align: center;
+  line-height:19px;
+  width: 100%;
+  height: 100%;
 }
