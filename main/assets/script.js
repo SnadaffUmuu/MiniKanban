@@ -58,13 +58,13 @@ function generateUID() {
 
 // Чтение и запись в localStorage
 function saveAppData(data) {
-  Android.saveDataToFile(JSON.stringify(data));
-  // localStorage.setItem('kanbanAppData', JSON.stringify(data));
+  // Android.saveDataToFile(JSON.stringify(data));
+  localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
-  const raw = Android.loadDataFromFile();
-  // const raw = localStorage.getItem('kanbanAppData');
+  // const raw = Android.loadDataFromFile();
+  const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -540,13 +540,13 @@ function blockContextMenuTemporarily() {
 document.body.addEventListener('touchstart', (e) => {
   const task = e.target.closest('.task');
   if (!task) return;
+  if (e.target.classList.contains('task-edit-input')
+    || task.classList.contains('expanded')) return;
   
   longPressTarget = task;
   longPressTimer = setTimeout(() => {
-    if (task.classList.contains('expanded')) {
-      task.querySelector('.task-info-toggle').click();
-      return;
-    }
+    if (e.target.classList.contains('task-edit-input')
+      || task.classList.contains('expanded')) return;
     enableTextSelection(false);
     startDrag(longPressTarget, e); 
     blockContextMenuTemporarily(); 
@@ -562,7 +562,10 @@ document.body.addEventListener('touchend', () => {
   }
 });
 
-document.body.addEventListener('touchmove', () => {
+document.body.addEventListener('touchmove', (e) => {
+  const task = e.target.closest('.task');
+  if (e.target.classList.contains('task-edit-input')
+    || task.classList.contains('expanded')) return;
   if (longPressTimer) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
@@ -691,7 +694,7 @@ function dropTask(event) {
 
     // Добавим карточку в новую колонку
     const insertIndicator = document.querySelector('.task-insert-indicator');
-    let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task:not(.dragged, .dragging)')).findIndex(el =>
+    let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task:not(.dragged):not(.dragging)')).findIndex(el =>
       el.previousElementSibling === insertIndicator) : -1;
     //console.log(insertIndex);
     if (insertIndex === -1) insertIndex = targetColumn.tasks.length;
@@ -943,10 +946,11 @@ function updateSaveButtonState(field, button) {
 function toggleTaskInfo(el) {
   const task = el.closest('.task');
   if (!task) return;
+  const trigger = el.classList.contains('task-info-toggle') ? el : task.querySelector('.task-info-toggle');
   task.classList.toggle('expanded', !el.classList.contains('expanded'));
   task.querySelector('.task-info').classList.toggle('hidden', el.classList.contains('expanded'));
   task.querySelector('.task-header').classList.remove('hidden');
-  el.classList.toggle('expanded');
+  trigger.classList.toggle('expanded');
   task.querySelector('.task-delete-block')?.remove();
   task.querySelector('.task-edit')?.remove();
   task.querySelector('.set-task-colors')?.remove();
