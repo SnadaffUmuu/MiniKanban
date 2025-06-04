@@ -58,13 +58,13 @@ function generateUID() {
 
 // Чтение и запись в localStorage
 function saveAppData(data) {
-  // Android.saveDataToFile(JSON.stringify(data));
-  localStorage.setItem('kanbanAppData', JSON.stringify(data));
+   Android.saveDataToFile(JSON.stringify(data));
+//  localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
-  // const raw = Android.loadDataFromFile();
-  const raw = localStorage.getItem('kanbanAppData');
+   const raw = Android.loadDataFromFile();
+//  const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -168,7 +168,8 @@ function renderBoardsMenu() {
     }
     btn.addEventListener('click', () => {
       console.log(board);
-      switchBoard(board.id)
+      switchBoard(board.id);
+      document.getElementById('close-boards-list').click();
     });
     listEl.appendChild(btn);
   });

@@ -42,16 +42,31 @@ header {
   min-height:23px;
 }
 
-#menu-toggle {
+#top-tools {
+  position: absolute;
+  top:0px;
+  right:0px;
+  z-index: 300;
+  display:flex;
+  flex-flow:row nowrap;
+  justify-content: flex-end;
+}
+
+#top-tools button {
+  width: 40px;
+  height:40px;
+  margin:5px;
   border:none;
   outline: none;
-  width: 23px;
-  height:23px;
-  position: absolute;
-  top:15px;
-  right:5px;
-  z-index: 300;
-  background: url(images/menu_dots.svg) 0 0 no-repeat;
+}
+
+#boards-button {
+  background: url(images/boards.png) 50% no-repeat;
+  background-size: contain;
+}
+
+#menu-toggle {
+  background: url(images/menu_dots.svg) 50% no-repeat;
 }
 
 #menu {
@@ -94,8 +109,8 @@ header {
   top:0;
   right:0;
   z-index: 300;
-  background: url(images/close.svg) 0 0 no-repeat;
-  background-size: contain;  
+  background: url(images/close.svg) 0 0 no-repeat #333533;
+  background-size: contain;
 }
 
 #boards-buttons {
