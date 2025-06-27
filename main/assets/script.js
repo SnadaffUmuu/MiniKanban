@@ -22,24 +22,24 @@ const renderedEvents = {
     '.add-task': showAddTaskUi,
     '.task-edit-cancel': hideAddTaskUi,
     '.task-edit-save': addTask,
-    '.task .task-info-toggle' : toggleTaskInfo,
-    '.task-expand-button' : toggleTaskInfo,
+    '.task .task-info-toggle': toggleTaskInfo,
+    '.task-expand-button': toggleTaskInfo,
     '.task-delete': showDeleteTaskUi,
     '.cancel-delete-task': removeDeleteTaskUi,
     '.task .task-title': showEditTaskUi,
     '.task .confirm-delete-task': deleteTask,
-    '.task-change-color' : showSetColorUI,
-    '.cancel-set-color' : removeSetColorUI,
-    '.colors-list li' : previewTaskColor,
-    '.save-set-color' : saveColor,
-    '.task-edit-button' : showEditTaskUi,
-    '.new-task-cancel' : hideAddTaskUi,
+    '.task-change-color': showSetColorUI,
+    '.cancel-set-color': removeSetColorUI,
+    '.colors-list li': previewTaskColor,
+    '.save-set-color': saveColor,
+    '.task-edit-button': showEditTaskUi,
+    '.new-task-cancel': hideAddTaskUi,
   }
 
 }
 
 function focusAndPlaceCursorAtEnd(input) {
-  input.addEventListener('focus', function() {
+  input.addEventListener('focus', function () {
     setTimeout(() => {
       this.setSelectionRange(this.value.length, this.value.length);
     }, 0);
@@ -47,7 +47,7 @@ function focusAndPlaceCursorAtEnd(input) {
   input.focus();
 }
 
-function preventDefault (e) {
+function preventDefault(e) {
   e.preventDefault();
 }
 
@@ -58,13 +58,13 @@ function generateUID() {
 
 // Чтение и запись в localStorage
 function saveAppData(data) {
-   Android.saveDataToFile(JSON.stringify(data));
-//  localStorage.setItem('kanbanAppData', JSON.stringify(data));
+  Android.saveDataToFile(JSON.stringify(data));
+  // localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
-   const raw = Android.loadDataFromFile();
-//  const raw = localStorage.getItem('kanbanAppData');
+  const raw = Android.loadDataFromFile();
+  // const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -76,14 +76,14 @@ function createDefaultBoard() {
     id: generateUID(),
     name: 'Kanban Board',
     columns: [
-      { id: generateUID(), name: 'To Do', tasks: [] },
-      { id: generateUID(), name: 'In Progress', tasks: [] },
-      { id: generateUID(), name: 'Done', tasks: [] }
+      {id: generateUID(), name: 'To Do', tasks: []},
+      {id: generateUID(), name: 'In Progress', tasks: []},
+      {id: generateUID(), name: 'Done', tasks: []}
     ]
   };
 }
 
-if (!appData) {
+if(!appData) {
   appData = {};
   const defaultBoard = createDefaultBoard();
   saveBoards([defaultBoard], defaultBoard.id);
@@ -108,7 +108,7 @@ function getCurrentTaskByElement(el) {
 function renderHeader() {
   const titleEl = document.getElementById('board-title');
   const currentBoard = getCurrentBoard();
-  if (titleEl && currentBoard) {
+  if(titleEl && currentBoard) {
     titleEl.textContent = currentBoard.name;
     document.getElementById('rename-board').classList.remove('hidden');
     document.getElementById('delete-board').classList.remove('hidden');
@@ -121,7 +121,7 @@ function renderHeader() {
 
 // Переключение доски
 function switchBoard(boardId) {
-  if (appData.boards.find(b => b.id == boardId)) {
+  if(appData.boards.find(b => b.id == boardId)) {
     appData.currentBoardId = boardId;
     saveAppData(appData);
     renderBoardsMenu();
@@ -132,7 +132,7 @@ function switchBoard(boardId) {
 
 // Создание новой доски
 function createBoard() {
-  if (!appData.boards?.length) {
+  if(!appData.boards?.length) {
     removeNoBoardsScreen();
   }
   const newId = generateUID();
@@ -140,9 +140,9 @@ function createBoard() {
     id: newId,
     name: "Новая доска",
     columns: [
-      { id: generateUID(), name: "To Do", tasks: [] },
-      { id: generateUID(), name: "In progress", tasks: [] },
-      { id: generateUID(), name: "Done", tasks: [] }
+      {id: generateUID(), name: "To Do", tasks: []},
+      {id: generateUID(), name: "In progress", tasks: []},
+      {id: generateUID(), name: "Done", tasks: []}
     ]
   });
   saveBoards(appData.boards, newId)
@@ -156,14 +156,15 @@ function renderBoardsMenu() {
   const listEl = document.getElementById('boards-buttons');
   const parent = listEl.closest('#boards-list');
   let createButton = listEl.querySelector('#create-board') || parent.querySelector('#create-board');
-  if (createButton) {
+  if(createButton) {
     createButton = createButton.parentNode.removeChild(createButton);
   }
   listEl.innerHTML = '';
   appData.boards.forEach(board => {
     const btn = document.createElement('button');
+    btn.dataset.id = board.id;
     btn.textContent = board.name;
-    if (board.id === appData.currentBoardId) {
+    if(board.id === appData.currentBoardId) {
       btn.classList.add('active');
     }
     btn.addEventListener('click', () => {
@@ -185,9 +186,9 @@ function toggleMenu(e) {
 }
 
 function hideMenu(e) {
-  if (!(e.target.id && e.target.id == 'menu' || e.target.closest('#menu') 
+  if(!(e.target.id && e.target.id == 'menu' || e.target.closest('#menu')
     && !document.getElementById('menu').classList.contains('hidden'))) {
-      document.getElementById('menu').classList.add('hidden');
+    document.getElementById('menu').classList.add('hidden');
   }
 }
 
@@ -204,11 +205,11 @@ function renderBoard() {
   const boardContainer = document.getElementById('columns');
   boardContainer.innerHTML = '';
   const currentBoard = getCurrentBoard();
-  if (!currentBoard) {
+  if(!currentBoard) {
     renderNoBoardsScreen();
     return;
   }
-  
+
   currentBoard.columns.forEach(column => {
     // Карточки
     let tasksHtml = [];
@@ -228,7 +229,7 @@ function renderBoard() {
         </div>
       `);
     });
-    if (!tasksHtml.length) {
+    if(!tasksHtml.length) {
       tasksHtml = [`<button class="add-task-button">Click to add first task</button>`];
     }
     const columnHtml = `
@@ -293,9 +294,9 @@ const showBoards = document.getElementById('boards-button');
 const boardsListBlock = document.getElementById('boards-list');
 
 renameBoardInput.addEventListener('input', (e) => {
-    updateSaveButtonState(
+  updateSaveButtonState(
     renameBoardInput,
-    renameBoardButton, 
+    renameBoardButton,
   );
 })
 
@@ -304,7 +305,7 @@ function showRenameBoardUI() {
   renameBlock.classList.remove('hidden');
   deleteBlock.classList.add('hidden');
   document.getElementById("board-title").classList.add('hidden');
-  document.getElementById("menu-toggle").classList.add('hidden');  
+  document.getElementById("menu-toggle").classList.add('hidden');
   renameBoardInput.value = getCurrentBoard().name;
   focusAndPlaceCursorAtEnd(renameBoardInput);
   toggleMenu();
@@ -325,12 +326,12 @@ function hideBoardManagementUI() {
   renameBlock.classList.add('hidden');
   deleteBlock.classList.add('hidden');
   document.getElementById("board-title").classList.remove('hidden');
-  document.getElementById("menu-toggle").classList.remove('hidden');    
+  document.getElementById("menu-toggle").classList.remove('hidden');
 }
 
 function saveBoards(updatedBoards, currentBoardId) {
   appData.boards = updatedBoards;
-  if (currentBoardId === null) {
+  if(currentBoardId === null) {
     delete appData.currentBoardId
   } else {
     appData.currentBoardId = currentBoardId ?? appData.currentBoardId;
@@ -349,7 +350,7 @@ document.querySelectorAll('.js-cancel-current').forEach(el => {
 
 renameBoardButton.addEventListener('click', () => {
   const newName = renameBoardInput.value.trim();
-  if (newName) {
+  if(newName) {
     const board = getCurrentBoard();
     board.name = newName;
     saveBoards(appData.boards);
@@ -364,7 +365,7 @@ document.getElementById('delete-confirm').addEventListener('click', () => {
   const currentIndex = appData.boards.findIndex(b => b.id === appData.currentBoardId);
   const newBoards = appData.boards.filter(b => b.id !== appData.currentBoardId);
 
-  if (newBoards.length > 0) {
+  if(newBoards.length > 0) {
     // Выбираем следующую (или предыдущую, если удалили последнюю)
     const nextIndex = Math.min(currentIndex, newBoards.length - 1);
     const newCurrentBoardId = newBoards[nextIndex].id;
@@ -441,8 +442,8 @@ document.getElementById('add-column').addEventListener('click', function () {
 });
 
 document.addEventListener('click', function (e) {
-  if (e.target.classList.contains('column-menu-toggle')) {
-    if (isColumnUiShown(e.target.closest('.column'))) {
+  if(e.target.classList.contains('column-menu-toggle')) {
+    if(isColumnUiShown(e.target.closest('.column'))) {
       hideColumActionsUi(e.target.closest('.column'));
     } else {
       e.target.closest('.column').querySelector('.column-menu').classList.toggle('hidden');
@@ -453,10 +454,10 @@ document.addEventListener('click', function (e) {
 
 function moveColumn(button, doMoveRight) {
   const currentBoard = getCurrentBoard();
-  if (currentBoard.columns.length == 1) return;
+  if(currentBoard.columns.length == 1) return;
   let currentColumnEl = button.closest('.column');
   const currentColumnIndex = currentBoard.columns.findIndex(col => col.id == currentColumnEl.dataset.id);
-  if ((currentColumnIndex == (currentBoard.columns.length - 1) && doMoveRight)
+  if((currentColumnIndex == (currentBoard.columns.length - 1) && doMoveRight)
     || (currentColumnIndex == 0 && !doMoveRight)) {
     return
   }
@@ -495,7 +496,7 @@ function getTaskEditFormHtml(task) {
       <button class="task-edit-cancel board-management-button">Cancel</button>
     </div>  
   `;
-  if (task) {
+  if(task) {
     return inner;
   } else {
     return `<div class="task">
@@ -539,24 +540,36 @@ function blockContextMenuTemporarily() {
 }
 
 document.body.addEventListener('touchstart', (e) => {
+  if(!document.getElementById('boards-buttons').contains(e.target)
+    || e.target.tagName !== 'BUTTON') return;
+  longPressTarget = e.target;
+  longPressTimer = setTimeout(() => {
+    enableTextSelection(false);
+    boardsStartDrag(longPressTarget);
+    blockContextMenuTemporarily();
+    longPressTimer = null;
+  }, 400);
+})
+
+document.body.addEventListener('touchstart', (e) => {
   const task = e.target.closest('.task');
-  if (!task) return;
-  if (e.target.classList.contains('task-edit-input')
+  if(!task) return;
+  if(e.target.classList.contains('task-edit-input')
     || task.classList.contains('expanded')) return;
-  
+
   longPressTarget = task;
   longPressTimer = setTimeout(() => {
-    if (e.target.classList.contains('task-edit-input')
+    if(e.target.classList.contains('task-edit-input')
       || task.classList.contains('expanded')) return;
     enableTextSelection(false);
-    startDrag(longPressTarget, e); 
-    blockContextMenuTemporarily(); 
+    startDrag(longPressTarget, e);
+    blockContextMenuTemporarily();
     longPressTimer = null;
   }, 400);
 });
 
 document.body.addEventListener('touchend', () => {
-  if (longPressTimer) {
+  if(longPressTimer) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
     enableTextSelection(false);
@@ -565,9 +578,11 @@ document.body.addEventListener('touchend', () => {
 
 document.body.addEventListener('touchmove', (e) => {
   const task = e.target.closest('.task');
-  if (e.target.classList.contains('task-edit-input')
-    || task.classList.contains('expanded')) return;
-  if (longPressTimer) {
+  if(task) {
+    if(e.target.classList.contains('task-edit-input')
+      || task.classList.contains('expanded')) return;
+  }
+  if(longPressTimer) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
   }
@@ -577,7 +592,7 @@ document.body.addEventListener('touchmove', (e) => {
 let dragState = null;
 let colsScroll = {};
 
-function startDrag(taskElement, event) {
+function startDrag(taskElement) {
   taskElement.classList.add('dragged');
   const rect = taskElement.getBoundingClientRect();
   const clone = taskElement.cloneNode(true);
@@ -602,10 +617,10 @@ function startDrag(taskElement, event) {
     clone.style.top = `${y - clone.offsetHeight / 2}px`;
 
     const currentColumn = getColumnAtPoint(x);
-    
+
     autoScrollColumns(x, y, currentColumn);
 
-    if (currentColumn) {
+    if(currentColumn) {
       updateInsertIndicator(currentColumn, e.clientY || e.touches?.[0]?.clientY);
     }
   }
@@ -620,7 +635,7 @@ function startDrag(taskElement, event) {
   }
 
   document.addEventListener('mousemove', onMove);
-  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchmove', onMove, {passive: false});
   document.addEventListener('mouseup', onEnd);
   document.addEventListener('touchend', onEnd);
 
@@ -630,9 +645,9 @@ function startDrag(taskElement, event) {
 function getColumnAtPoint(cursorX) {
   const columnsContainer = document.getElementById('columns');
   const columnElements = Array.from(columnsContainer.querySelectorAll('.column'));
-  for (let i = 0; i < columnElements.length; i++) {
+  for(let i = 0;i < columnElements.length;i++) {
     const rect = columnElements[i].getBoundingClientRect();
-    if (cursorX > rect.left && cursorX < rect.right) {
+    if(cursorX > rect.left && cursorX < rect.right) {
       return columnElements[i];
     }
   }
@@ -645,25 +660,25 @@ function autoScrollColumns(cursorX, cursorY, currentColumn) {
   const scrollSpeed = 7;  // пикселей за кадр
 
   const containerRect = main.getBoundingClientRect();
-  
-  if (cursorX < containerRect.left + scrollMargin) {
+
+  if(cursorX < containerRect.left + scrollMargin) {
     //console.log('left scroll');
     // скроллим влево
     main.scrollLeft -= scrollSpeed;
-  } else if (cursorX > containerRect.right - scrollMargin) {
+  } else if(cursorX > containerRect.right - scrollMargin) {
     //console.log('right scroll');
     // скроллим вправо
     main.scrollLeft += scrollSpeed;
   }
-  
-  if (!currentColumn) return;
+
+  if(!currentColumn) return;
   const columnBody = currentColumn.querySelector('.column-body');
   const colRect = columnBody.getBoundingClientRect();
-  if (cursorY < colRect.top + scrollMargin) {
+  if(cursorY < colRect.top + scrollMargin) {
     //console.log('top scroll');
     columnBody.scrollTop -= scrollSpeed;
     colsScroll[currentColumn.dataset.id] = columnBody.scrollTop;
-  } else if (cursorY > colRect.bottom - scrollMargin) {
+  } else if(cursorY > colRect.bottom - scrollMargin) {
     //console.log('down scroll');
     columnBody.scrollTop += scrollSpeed;
     colsScroll[currentColumn.dataset.id] = columnBody.scrollTop;
@@ -672,33 +687,33 @@ function autoScrollColumns(cursorX, cursorY, currentColumn) {
 }
 
 function dropTask(event) {
-  if (!dragState.draggingTask || !dragState.clone) return;
+  if(!dragState.draggingTask || !dragState.clone) return;
 
   const cursorX = event.clientX || (event.touches && event.changedTouches[0].clientX);
 
   let targetColumnEl = getColumnAtPoint(cursorX);
 
-  if (targetColumnEl) {
+  if(targetColumnEl) {
     const currentBoard = getCurrentBoard();
     const targetColumn = getCurrentColumnByElement(targetColumnEl);
 
-    if (!targetColumn.tasks) targetColumn.tasks = [];
+    if(!targetColumn.tasks) targetColumn.tasks = [];
 
     const sourceColumn = currentBoard.columns.find(col =>
       col.tasks && col.tasks.some(c => c.id === dragState.draggingTask.dataset.id)
     );
     const draggedTask = sourceColumn.tasks.find(c => c.id === dragState.draggingTask.dataset.id);
     // Удалим карточку из старой колонки
-    if (sourceColumn) {
+    if(sourceColumn) {
       sourceColumn.tasks = sourceColumn.tasks.filter(c => c.id !== dragState.draggingTask.dataset.id);
     }
 
     // Добавим карточку в новую колонку
-    const insertIndicator = document.querySelector('.task-insert-indicator');
+    const insertIndicator = document.querySelector('.insert-indicator');
     let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task:not(.dragged):not(.dragging)')).findIndex(el =>
       el.previousElementSibling === insertIndicator) : -1;
     //console.log(insertIndex);
-    if (insertIndex === -1) insertIndex = targetColumn.tasks.length;
+    if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
     targetColumn.tasks.splice(insertIndex, 0, draggedTask);
     saveBoards(appData.boards, appData.currentBoardId);
     renderBoard();
@@ -708,17 +723,40 @@ function dropTask(event) {
   removeInsertIndicators();
   dragState.draggingTask.classList.remove('dragged');
   dragState.draggingTask = null;
-  if (dragState.clone) {
+  if(dragState.clone) {
+    dragState.clone.remove();
+    dragState.clone = null;
+  }
+}
+
+function dropBoardButton() {
+  if(!dragState.draggingTask || !dragState.clone) return;
+  const container = document.getElementById('boards-buttons');
+  const currentBoardId = getCurrentBoard().id;
+  const draggedBoard = appData.boards.find(b => b.id == dragState.draggingTask.dataset.id);
+  appData.boards = appData.boards.filter(b => b.id !== draggedBoard.id);
+  const insertIndicator = container.querySelector('.board-insert-indicator');
+  let insertIndex = insertIndicator ? Array.from(container.querySelectorAll('button:not(.dragged):not(.dragging)')).findIndex(el =>
+    el.previousElementSibling === insertIndicator) : -1;
+  if(insertIndex === -1) insertIndex = appData.boards.length;
+  appData.boards.splice(insertIndex, 0, draggedBoard);
+  saveBoards(appData.boards, currentBoardId);
+  renderBoardsMenu();
+  renderHeader();
+  renderBoard();
+  removeInsertIndicators();
+  dragState.draggingTask.classList.remove('dragged');
+  dragState.draggingTask = null;
+  if(dragState.clone) {
     dragState.clone.remove();
     dragState.clone = null;
   }
 }
 
 function restoreColsVertScroll(colsScroll) {
-  for (colId in colsScroll) {
+  for(colId in colsScroll) {
     const colEl = document.querySelector(`.column[data-id="${colId}"]`);
-    if (colEl) {
-      //console.log(colsScroll[colId])
+    if(colEl) {
       colEl.querySelector('.column-body').scrollTop = colsScroll[colId];
     }
   }
@@ -729,49 +767,145 @@ function updateInsertIndicator(columnEl, y) {
   removeInsertIndicators();
 
   const tasks = Array.from(columnEl.querySelectorAll('.task:not(.dragged)'));
-  if (!tasks.length) return;
+  if(!tasks.length) return;
   let inserted = false;
 
-  for (let i = 0; i < tasks.length; i++) {
+  for(let i = 0;i < tasks.length;i++) {
     const task = tasks[i];
     const rect = task.getBoundingClientRect();
     const midpoint = rect.top + rect.height / 2;
 
-    if (y < midpoint) {
+    if(y < midpoint) {
       const indicator = document.createElement('div');
-      indicator.classList.add('task-insert-indicator');
+      indicator.classList.add('insert-indicator');
       task.parentNode.insertBefore(indicator, task);
       inserted = true;
       break;
     }
   }
 
-  if (!inserted) {
+  if(!inserted) {
     // Если ниже всех — вставим в конец
     const indicator = document.createElement('div');
-    indicator.classList.add('task-insert-indicator');
+    indicator.classList.add('insert-indicator');
     columnEl.appendChild(indicator);
   }
 }
 
+function updateBoardInsertIndicator(x, y) {
+  removeInsertIndicators();
+  const container = document.getElementById('boards-buttons');
+  const siblings = Array.from(container.querySelectorAll('button:not(.dragged)'));
+  if(!siblings.length) return;
+  const afterElement = getDragAfterElement(container, x, y);
+  const indicator = document.createElement('div');
+  indicator.classList.add('board-insert-indicator');
+  if(afterElement) {
+    container.insertBefore(indicator, afterElement);
+  } else {
+    container.appendChild(indicator);
+  }
+}
+
 function removeInsertIndicators() {
-  document.querySelectorAll('.task-insert-indicator').forEach(el => el.remove());
+  document.querySelectorAll('.insert-indicator').forEach(el => el.remove());
+  document.querySelectorAll('.board-insert-indicator').forEach(el => el.remove());
+}
+
+function boardsStartDrag(dragEl) {
+  dragEl.classList.add('dragged');
+  const rect = dragEl.getBoundingClientRect();
+  const clone = dragEl.cloneNode(true);
+  clone.classList.add('dragging');
+  clone.style.position = 'fixed';
+  clone.style.top = `${rect.top}px`;
+  clone.style.left = `${rect.left}px`;
+  clone.style.width = `${rect.width}px`;
+  clone.style.zIndex = 1000;
+  document.body.appendChild(clone);
+
+  dragState = {
+    clone: clone,
+    draggingTask: dragEl,
+  };
+
+  function onMove(e) {
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+    clone.style.left = `${x - clone.offsetWidth / 2}px`;
+    clone.style.top = `${y - clone.offsetHeight / 2}px`;
+
+    updateBoardInsertIndicator(x, y);
+  }
+
+  function onEnd(e) {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchend', onEnd);
+
+    dropBoardButton();
+  }
+
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('touchmove', onMove, {passive: false});
+  document.addEventListener('mouseup', onEnd);
+  document.addEventListener('touchend', onEnd);
+}
+
+function getDragAfterElement(container, x, y) {
+  const draggableElements = [
+    ...container.querySelectorAll("button:not(.dragged)")
+  ];
+  return draggableElements.reduce(
+    (closest, child, index) => {
+      const box = child.getBoundingClientRect();
+      const nextBox = draggableElements[index + 1] && draggableElements[index + 1].getBoundingClientRect();
+      const inRow = y - box.bottom <= 0 && y - box.top >= 0; // check if this is in the same row
+      const offset = x - (box.left + box.width / 2);
+      if(inRow) {
+        if(offset < 0 && offset > closest.offset) {
+          return {
+            offset: offset,
+            element: child
+          };
+        } else {
+          if( // handle row ends, 
+            nextBox && // there is a box after this one. 
+            y - nextBox.top <= 0 && // the next is in a new row
+            closest.offset === Number.NEGATIVE_INFINITY // we didn't find a fit in the current row.
+          ) {
+            return {
+              offset: 0,
+              element: draggableElements[index + 1]
+            };
+          }
+          return closest;
+        }
+      } else {
+        return closest;
+      }
+    }, {
+    offset: Number.NEGATIVE_INFINITY
+  }
+  ).element;
 }
 
 const eventHandler = function (e, eventName) {
   const entry = renderedEvents[eventName];
-  for (let selector in entry) {
+  for(let selector in entry) {
     const callbackObj = entry[selector];
     const method = Array.isArray(callbackObj) ? callbackObj[0] : callbackObj;
     const params = Array.isArray(callbackObj) ? callbackObj[1] : [];
     const skipSelectorCheck = Array.isArray(callbackObj) && callbackObj.length > 2 ? true : false;
-    if (skipSelectorCheck || e.target.matches && e.target.matches(selector)) {
+    if(skipSelectorCheck || e.target.matches && e.target.matches(selector)) {
       method(e.target, params, e);
     }
   }
 };
 
-for (let eventName in renderedEvents) {
+for(let eventName in renderedEvents) {
   document.addEventListener(eventName, (e) => {
     eventHandler.call(this, e, eventName);
   })
@@ -779,7 +913,7 @@ for (let eventName in renderedEvents) {
 
 function toggleMoveColumnUi(el, shouldAdd) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
-  if (typeof doShow !== 'undefined'
+  if(typeof doShow !== 'undefined'
     && !Array.isArray(doShow)) {
     col.querySelector('.column-menu').classList.toggle('hidden', true);
     col.querySelector('.move-column-block').classList.toggle('hidden', shouldAdd);
@@ -793,22 +927,22 @@ function toggleRenameColumnUi(el, shouldShow) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
   const input = col.querySelector('.rename-column-input');
   const renameBlock = col.querySelector('.rename-column-block');
-  if (shouldShow === true) {
+  if(shouldShow === true) {
     col.querySelector('.column-menu').classList.toggle('hidden', true);
     renameBlock.classList.toggle('hidden', false);
     focusAndPlaceCursorAtEnd(input);
-  } else if (shouldShow === false) {
+  } else if(shouldShow === false) {
     col.querySelector('.column-menu').classList.toggle('hidden', false);
     renameBlock.classList.toggle('hidden', true);
     input.value = '';
   } else {
     col.querySelector('.column-menu').classList.toggle('hidden');
     renameBlock.classList.toggle('hidden');
-    if (renameBlock.classList.contains('hidden')) {
+    if(renameBlock.classList.contains('hidden')) {
       input.value = '';
     } else {
       focusAndPlaceCursorAtEnd(input);
-    }    
+    }
   }
 }
 
@@ -816,7 +950,7 @@ function renameColumn(el) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
   const input = col.querySelector('.rename-column-input');
   const newName = input.value.trim();
-  if (newName) {
+  if(newName) {
     const dataCol = getCurrentBoard().columns.find(c => c.id == col.dataset.id);
     dataCol.name = newName;
     saveBoards(appData.boards);
@@ -827,10 +961,10 @@ function renameColumn(el) {
 function toggleDeleteColumnUi(el, shouldShow) {
   const col = el.classList.contains('column') ? el : el.closest('.column');
   const deleteBlock = col.querySelector('.delete-column-block');
-  if (shouldShow === true) {
+  if(shouldShow === true) {
     col.querySelector('.column-menu').classList.toggle('hidden', true);
     deleteBlock.classList.toggle('hidden', false);
-  } else if (shouldShow === false) {
+  } else if(shouldShow === false) {
     col.querySelector('.column-menu').classList.toggle('hidden', false);
     deleteBlock.classList.toggle('hidden', true);
   } else {
@@ -862,7 +996,7 @@ function showAddTaskUi(el) {
 
 function hideAddTaskUi(el) {
   const taskEl = el.closest('.task');
-  if (taskEl.querySelector('.new-task-cancel') != null) {
+  if(taskEl.querySelector('.new-task-cancel') != null) {
     taskEl.remove()
   } else {
     document.querySelector('.task-edit').remove();
@@ -876,7 +1010,7 @@ function addTask(el) {
   const isAdding = !editBlock.dataset || typeof editBlock.dataset.id === 'undefined';
   const input = editBlock.querySelector('.task-edit-input');
   let theId = null;
-  if (isAdding) {
+  if(isAdding) {
     const column = getCurrentColumnByElement(el);
     const newTaskId = generateUID();
     theId = newTaskId;
@@ -899,9 +1033,9 @@ function addTask(el) {
 
 function showEditTaskUi(el) {
   const taskEl = el.closest('.task');
-  if (el.classList.contains('task-title') && taskEl.querySelector('.task-info').classList.contains('hidden')) return;
+  if(el.classList.contains('task-title') && taskEl.querySelector('.task-info').classList.contains('hidden')) return;
   let editBlock = taskEl.querySelector('.task-edit');
-  if (!editBlock) {
+  if(!editBlock) {
     const task = getCurrentTaskByElement(el);
     taskEl.insertAdjacentHTML('beforeend', getTaskEditFormHtml(task));
     taskEl.querySelector('.task-info').classList.add('hidden');
@@ -925,19 +1059,19 @@ function expandInput(el) {
 function updateSaveTaskButtonState(e) {
   updateSaveButtonState(
     e.target,
-    e.target.closest('.task-edit').querySelector('.task-edit-save'), 
+    e.target.closest('.task-edit').querySelector('.task-edit-save'),
   );
 }
 
 function updateSaveColumnButtonState(e) {
   updateSaveButtonState(
     e.target,
-    e.target.closest('.rename-column-block').querySelector('.save-rename-column'), 
+    e.target.closest('.rename-column-block').querySelector('.save-rename-column'),
   );
 }
 
 function updateSaveButtonState(field, button) {
-  if (field.value.trim().length) {
+  if(field.value.trim().length) {
     button.removeAttribute('disabled');
   } else {
     button.setAttribute('disabled', true);
@@ -946,7 +1080,7 @@ function updateSaveButtonState(field, button) {
 
 function toggleTaskInfo(el) {
   const task = el.closest('.task');
-  if (!task) return;
+  if(!task) return;
   const trigger = el.classList.contains('task-info-toggle') ? el : task.querySelector('.task-info-toggle');
   task.classList.toggle('expanded', !el.classList.contains('expanded'));
   task.querySelector('.task-info').classList.toggle('hidden', el.classList.contains('expanded'));
@@ -994,7 +1128,7 @@ function removeSetColorUI(el) {
   taskEl.querySelector('.task-header').classList.remove('hidden');
 }
 
-function getSetColorUI(el)  {
+function getSetColorUI(el) {
   const currentTask = getCurrentTaskByElement(el);
   const currentColor = currentTask.color || '#FFFFFF';
   const colors = tasksColors.map(color => `
@@ -1017,14 +1151,14 @@ function previewTaskColor(el) {
   const taskEl = el.closest('.task');
   const colorEls = el.parentNode.querySelectorAll('li');
   colorEls.forEach(ce => {
-    if (ce != el) {
+    if(ce != el) {
       ce.classList.remove('current');
     }
   })
   el.closest('.task').style.background = el.dataset.color;
   const colorsBlock = el.closest('.set-task-colors');
   const button = taskEl.querySelector('.save-set-color');
-  if (el.dataset.color == colorsBlock.dataset.originalColor) {
+  if(el.dataset.color == colorsBlock.dataset.originalColor) {
     button.setAttribute('disabled', "true");
   } else {
     button.removeAttribute('disabled');

@@ -24,7 +24,7 @@ public class WebAppInterface {
         if (folderUri == null) return;
 
         DocumentFile dir = DocumentFile.fromTreeUri(context, folderUri);
-        Log.d(TAG, "Search Directory res: " + dir);
+        Log.d(TAG, "Search Directory res: " + dir.getUri());
         if (dir == null) return;
 
         DocumentFile existing = dir.findFile(DATA_FILE_NAME);
@@ -51,11 +51,11 @@ public class WebAppInterface {
         if (folderUri == null) return "null";
 
         DocumentFile pickedDir = DocumentFile.fromTreeUri(context, folderUri);
-        Log.d(TAG, "Search Directory res: " + pickedDir);
+        Log.d(TAG, "Search Directory res: " + pickedDir.getUri());
         if (pickedDir == null) return "null";
 
         DocumentFile jsonFile = pickedDir.findFile(DATA_FILE_NAME);
-        Log.d(TAG, "Search file res: " + jsonFile);
+        Log.d(TAG, "Search file res: " + jsonFile.getUri());
         if (jsonFile == null) return "null";
 
         try {

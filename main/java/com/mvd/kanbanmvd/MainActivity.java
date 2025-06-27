@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.content.*;
 import android.net.Uri;
@@ -21,7 +20,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (!prefs.contains("folder_uri")) {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            intent.putExtra("android.provider.extra.INITIAL_URI", Uri.parse("content://com.android.externalstorage.documents/document/primary:KanbanMvd"));
+            intent.putExtra(
+                    "android.provider.extra.INITIAL_URI",
+                    Uri.parse("content://com.android.externalstorage.documents/document/primary:KanbanMvd"));
             startActivityForResult(intent, REQUEST_CODE_OPEN_DOCUMENT_TREE);
         }
 
