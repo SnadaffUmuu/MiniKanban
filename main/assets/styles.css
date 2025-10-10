@@ -595,6 +595,7 @@ body:has(.dragged) {
   list-style: none;
   display:flex;
   flex-flow:row wrap;
+  clear:both;
 }
 
 .colors-list li {

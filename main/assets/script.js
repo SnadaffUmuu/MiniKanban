@@ -59,12 +59,12 @@ function generateUID() {
 // Чтение и запись в localStorage
 function saveAppData(data) {
   Android.saveDataToFile(JSON.stringify(data));
-  // localStorage.setItem('kanbanAppData', JSON.stringify(data));
+  //localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
   const raw = Android.loadDataFromFile();
-  // const raw = localStorage.getItem('kanbanAppData');
+  //const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -992,6 +992,11 @@ function showAddTaskUi(el) {
     updateSaveTaskButtonState(e);
     expandInput(e.target);
   });
+  editBlock.querySelector('.task-edit-input').insertAdjacentHTML('afterend', `
+    <div style="padding-left:10px;">
+      <br>
+      ${getColors('#FFFFFF')}
+    </div>`);
 }
 
 function hideAddTaskUi(el) {
@@ -1014,10 +1019,11 @@ function addTask(el) {
     const column = getCurrentColumnByElement(el);
     const newTaskId = generateUID();
     theId = newTaskId;
+    const color = editBlock.querySelector('li.current').dataset.color;
     const newTask = {
       id: newTaskId,
       description: input.value.trim(),
-      color: '#FFFFFF',
+      color: color ? color : '#FFFFFF',
     };
     column.tasks = column.tasks ? [newTask, ...column.tasks] : [newTask];
   } else {
@@ -1130,20 +1136,28 @@ function removeSetColorUI(el) {
 
 function getSetColorUI(el) {
   const currentTask = getCurrentTaskByElement(el);
-  const currentColor = currentTask.color || '#FFFFFF';
+  const currentColor = currentTask?.color || '#FFFFFF';
   const colors = tasksColors.map(color => `
     <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
   `);
   return `
     <div data-original-color="${currentColor}" class="set-task-colors">
       Choose task color<br><br>
-      <ul class="colors-list">
-        ${colors.join('')}
-      </ul>
+      ${getColors(currentColor)}
       <button class="save-set-color board-management-button" disabled>Save</button>
       <button class="cancel-set-color board-management-button" >Cancel</button>
     </div>
   `;
+}
+
+function getColors(currentColor) {
+  const colors = tasksColors.map(color => `
+    <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
+  `);
+  return `
+    <ul class="colors-list">
+      ${colors.join('')}
+    </ul>`
 }
 
 function previewTaskColor(el) {
@@ -1158,10 +1172,12 @@ function previewTaskColor(el) {
   el.closest('.task').style.background = el.dataset.color;
   const colorsBlock = el.closest('.set-task-colors');
   const button = taskEl.querySelector('.save-set-color');
-  if(el.dataset.color == colorsBlock.dataset.originalColor) {
-    button.setAttribute('disabled', "true");
-  } else {
-    button.removeAttribute('disabled');
+  if (colorsBlock) {
+    if(el.dataset.color == colorsBlock.dataset.originalColor) {
+      button.setAttribute('disabled', "true");
+    } else {
+      button.removeAttribute('disabled');
+    }
   }
 }
 
