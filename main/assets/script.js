@@ -59,12 +59,12 @@ function generateUID() {
 // Чтение и запись в localStorage
 function saveAppData(data) {
   Android.saveDataToFile(JSON.stringify(data));
-  //localStorage.setItem('kanbanAppData', JSON.stringify(data));
+  // localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
   const raw = Android.loadDataFromFile();
-  //const raw = localStorage.getItem('kanbanAppData');
+  // const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -1034,7 +1034,7 @@ function addTask(el) {
   editBlock.remove();
   saveBoards(appData.boards);
   renderBoard();
-  document.querySelector('.task[data-id="' + theId + '"] .task-info-toggle')?.click();
+  //document.querySelector('.task[data-id="' + theId + '"] .task-info-toggle')?.click();
 }
 
 function showEditTaskUi(el) {
