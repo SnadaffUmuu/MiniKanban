@@ -1,10 +1,13 @@
 const tasksColors = [
-  "#FFFFFF",   // white
-  "#DBF6FF",   // light blue
-  "#FFFFB3",    // light yellow
-  "#DFF6A7",   // light green
   "#FFD0D0",   // pink
+  "#FAC7ED",   // plum
   "#DFCFEF",   // light purple
+  "#DBF6FF",   // light blue
+  "#c9fde2",   // teal
+  "#DFF6A7",   // light green
+  "#FFFFB3",   // light yellow
+  "#FFFFFF",   // white
+  "#e5d9d6",   // beige
 ]
 
 const renderedEvents = {

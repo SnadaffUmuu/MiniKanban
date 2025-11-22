@@ -603,7 +603,8 @@ body:has(.dragged) {
   height:20px;
   border:1px solid #999;
   border-radius: 10px;
-  margin-right:10px;
+  margin-right:7px;
+  margin-bottom:7px;
   color:#999;
 }
 
