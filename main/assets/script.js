@@ -1,14 +1,14 @@
-const tasksColors = [
-  "#FFD0D0",   // pink
-  "#FAC7ED",   // plum
-  "#DFCFEF",   // light purple
-  "#DBF6FF",   // light blue
-  "#c9fde2",   // teal
-  "#DFF6A7",   // light green
-  "#FFFFB3",   // light yellow
-  "#FFFFFF",   // white
-  "#e5d9d6",   // beige
-]
+const tasksColors = {
+  PINK : "#FFD0D0",
+  PLUM : "#FAC7ED",
+  PURPLE : "#DFCFEF",
+  BLUE : "#DBF6FF",
+  TEAL : "#c9fde2",
+  GREEN : "#DFF6A7",
+  YELLOW : "#FFFFB3",
+  WHITE : "#FFFFFF",
+  BEIGE : "#e5d9d6"
+}
 
 const renderedEvents = {
   'click': {
@@ -41,6 +41,22 @@ const renderedEvents = {
 
 }
 
+// Структура приложения
+let appData = loadAppData();
+if(!appData) {
+  appData = {};
+  const defaultBoard = createDefaultBoard();
+  saveBoards([defaultBoard], defaultBoard.id);
+}
+
+const menuButton = document.getElementById('menu-toggle');
+const createRanksButton = document.getElementById('create-ranks');
+const ranksEditButton = document.getElementById('ranks-edit');
+const ranksPreviewButton = document.getElementById('ranks-preview');
+const ranksSaveConfirmButton = document.getElementById('ranks-save-confirm');
+const ranksDeleteConfirmButton = document.getElementById('ranks-delete-confirm');
+const ranksDeleteCancelButton = document.getElementById('ranks-delete-cancel');
+
 function focusAndPlaceCursorAtEnd(input) {
   input.addEventListener('focus', function () {
     setTimeout(() => {
@@ -61,18 +77,15 @@ function generateUID() {
 
 // Чтение и запись в localStorage
 function saveAppData(data) {
-  Android.saveDataToFile(JSON.stringify(data));
-  // localStorage.setItem('kanbanAppData', JSON.stringify(data));
+  // Android.saveDataToFile(JSON.stringify(data));
+  localStorage.setItem('kanbanAppData', JSON.stringify(data));
 }
 
 function loadAppData() {
-  const raw = Android.loadDataFromFile();
-  // const raw = localStorage.getItem('kanbanAppData');
+  // const raw = Android.loadDataFromFile();
+  const raw = localStorage.getItem('kanbanAppData');
   return raw ? JSON.parse(raw) : null;
 }
-
-// Структура приложения
-let appData = loadAppData();
 
 function createDefaultBoard() {
   return {
@@ -84,12 +97,6 @@ function createDefaultBoard() {
       {id: generateUID(), name: 'Done', tasks: []}
     ]
   };
-}
-
-if(!appData) {
-  appData = {};
-  const defaultBoard = createDefaultBoard();
-  saveBoards([defaultBoard], defaultBoard.id);
 }
 
 // Получить текущую доску
@@ -115,10 +122,12 @@ function renderHeader() {
     titleEl.textContent = currentBoard.name;
     document.getElementById('rename-board').classList.remove('hidden');
     document.getElementById('delete-board').classList.remove('hidden');
+    document.getElementById('manage-ranks').classList.remove('hidden');
   } else {
     titleEl.innerHTML = '';
     document.getElementById('rename-board').classList.add('hidden');
     document.getElementById('delete-board').classList.add('hidden');
+    document.getElementById('manage-ranks').classList.add('hidden');
   }
 }
 
@@ -180,11 +189,10 @@ function renderBoardsMenu() {
   createButton && listEl.appendChild(createButton);
 }
 
-const menuButton = document.getElementById('menu-toggle');
-
 // Показ/скрытие меню
 function toggleMenu(e) {
   e && e.stopPropagation();
+  console.log('toggle menu')
   document.getElementById('menu').classList.toggle('hidden');
 }
 
@@ -194,15 +202,6 @@ function hideMenu(e) {
     document.getElementById('menu').classList.add('hidden');
   }
 }
-
-// Начальный рендер
-document.addEventListener('DOMContentLoaded', () => {
-  menuButton.addEventListener('click', toggleMenu);
-  document.addEventListener('click', hideMenu);
-  renderHeader();
-  renderBoardsMenu();
-  renderBoard();
-});
 
 function renderBoard() {
   const boardContainer = document.getElementById('columns');
@@ -291,6 +290,7 @@ function renderMoveColumnUi() {
 // Ссылки на блоки
 const renameBlock = document.getElementById('rename-board-block');
 const deleteBlock = document.getElementById('delete-board-block');
+const ranksBlock = document.getElementById('ranks-block');
 const renameBoardInput = document.getElementById('rename-board-input');
 const renameBoardButton = document.getElementById('confirm-rename');
 const showBoards = document.getElementById('boards-button');
@@ -307,8 +307,9 @@ renameBoardInput.addEventListener('input', (e) => {
 function showRenameBoardUI() {
   renameBlock.classList.remove('hidden');
   deleteBlock.classList.add('hidden');
+  ranksBlock.classList.add('hidden');
+  menuButton.classList.add('hidden');
   document.getElementById("board-title").classList.add('hidden');
-  document.getElementById("menu-toggle").classList.add('hidden');
   renameBoardInput.value = getCurrentBoard().name;
   focusAndPlaceCursorAtEnd(renameBoardInput);
   toggleMenu();
@@ -318,18 +319,43 @@ function showRenameBoardUI() {
 function showDeleteBoardUI() {
   deleteBlock.classList.remove('hidden');
   renameBlock.classList.add('hidden');
-  //document.getElementById("board-title").classList.add('hidden');
-  document.getElementById("menu-toggle").classList.add('hidden');
+  ranksBlock.classList.add('hidden');
+  menuButton.classList.add('hidden');
+  document.getElementById("board-title").classList.add('hidden');
   toggleMenu();
 }
 
-// Скрыть оба
+function showRanksUI() {
+  ranksBlock.classList.remove('hidden');
+  deleteBlock.classList.add('hidden');
+  renameBlock.classList.add('hidden');
+  menuButton.classList.add('hidden');
+  document.getElementById("board-title").classList.add('hidden');
+  toggleMenu();
+  const currentRanksBlock = document.getElementById('current-ranks')
+  const currentRanksData = getCurrentRanks()
+  if (getCurrentRanks() != null) {
+    currentRanksBlock.classList.remove('hidden')
+    currentRanksBlock.innerHTML = getRanksHtml(currentRanksData)
+  }
+}
+
+function getCurrentRanks() {
+  return getCurrentBoard().ranks
+}
+
+function getRanksHtml(data) {
+  
+}
+
+// Скрыть все
 function hideBoardManagementUI() {
   renameBoardButton.removeAttribute('disabled');
   renameBlock.classList.add('hidden');
   deleteBlock.classList.add('hidden');
+  ranksBlock.classList.add('hidden');
   document.getElementById("board-title").classList.remove('hidden');
-  document.getElementById("menu-toggle").classList.remove('hidden');
+  menuButton.classList.remove('hidden');
 }
 
 function saveBoards(updatedBoards, currentBoardId) {
@@ -344,6 +370,7 @@ function saveBoards(updatedBoards, currentBoardId) {
 
 document.getElementById('rename-board').addEventListener('click', showRenameBoardUI);
 document.getElementById('delete-board').addEventListener('click', showDeleteBoardUI);
+document.getElementById('manage-ranks').addEventListener('click', showRanksUI);
 
 document.querySelectorAll('.js-cancel-current').forEach(el => {
   el.addEventListener('click', () => {
@@ -418,7 +445,7 @@ function toggleBoardsList() {
   boardsListBlock.classList.toggle('hidden');
   toggleMenu();
   document.getElementById("board-title").classList.toggle('hidden');
-  document.getElementById("menu-toggle").classList.toggle('hidden');
+  menuButton.classList.toggle('hidden');
 }
 
 showBoards.addEventListener('click', toggleBoardsList);
@@ -426,7 +453,7 @@ showBoards.addEventListener('click', toggleBoardsList);
 document.getElementById('close-boards-list').addEventListener('click', () => {
   boardsListBlock.classList.toggle('hidden');
   document.getElementById("board-title").classList.toggle('hidden');
-  document.getElementById("menu-toggle").classList.toggle('hidden');
+  menuButton.classList.toggle('hidden');
 })
 
 document.getElementById('create-board').addEventListener('click', createBoard);
@@ -1140,9 +1167,12 @@ function removeSetColorUI(el) {
 function getSetColorUI(el) {
   const currentTask = getCurrentTaskByElement(el);
   const currentColor = currentTask?.color || '#FFFFFF';
-  const colors = tasksColors.map(color => `
-    <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
-  `);
+  const colors = Object.keys(tasksColors).map(name => {
+    const color = tasksColors[name];
+    return `
+      <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>
+    `
+  });
   return `
     <div data-original-color="${currentColor}" class="set-task-colors">
       Choose task color<br><br>
@@ -1154,9 +1184,12 @@ function getSetColorUI(el) {
 }
 
 function getColors(currentColor) {
-  const colors = tasksColors.map(color => `
-    <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
-  `);
+  const colors = tasksColors.map(name => {
+    const color = tasksColors[name];
+    return `
+      <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
+    `
+  });
   return `
     <ul class="colors-list">
       ${colors.join('')}
@@ -1193,3 +1226,12 @@ function saveColor(el) {
   taskEl.querySelector('.task-info').classList.remove('hidden');
   taskEl.querySelector('.task-header').classList.remove('hidden');
 }
+
+// Начальный рендер
+document.addEventListener('DOMContentLoaded', () => {
+  menuButton.addEventListener('click', toggleMenu);
+  document.addEventListener('click', hideMenu);
+  renderHeader();
+  renderBoardsMenu();
+  renderBoard();
+});

@@ -1,0 +1,722 @@
+{
+    "boards": [
+        {
+            "id": "_82cijdew3",
+            "name": "おさらい",
+            "columns": [
+                {
+                    "id": "_jxqwvz5ph",
+                    "name": "Подготовка текста",
+                    "tasks": []
+                },
+                {
+                    "id": "_k6xzuaa3k",
+                    "name": "Чтение",
+                    "tasks": [
+                        {
+                            "id": "_rm2lm0u18",
+                            "description": "日本史 15",
+                            "color": "#DBF6FF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_c6vzsw0os",
+                    "name": "Лексика",
+                    "tasks": []
+                },
+                {
+                    "id": "_k6vjrhlnr",
+                    "name": "Ревью",
+                    "tasks": []
+                },
+                {
+                    "id": "_09ecizwgq",
+                    "name": "Прочитано",
+                    "tasks": [
+                        {
+                            "id": "_bgkt6ilkw",
+                            "description": "日本史 14",
+                            "color": "#DBF6FF"
+                        },
+                        {
+                            "id": "_sioqr4lfw",
+                            "description": "日本史 \n序",
+                            "color": "#DBF6FF"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "_l47w2jq3a",
+            "name": "MvdKanban",
+            "columns": [
+                {
+                    "id": "_hsr12wl7r",
+                    "name": "Бэклог",
+                    "tasks": [
+                        {
+                            "id": "_i8g0r4c5l",
+                            "description": "Prod build, Убрать декларации и код для дебага и пр",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_qjm18wopu",
+                    "name": "Сделать",
+                    "tasks": [
+                        {
+                            "id": "_rp74m4jjq",
+                            "description": "k;lk",
+                            "color": "#DFCFEF"
+                        },
+                        {
+                            "id": "_e40lri6wb",
+                            "description": "fg",
+                            "color": "#DFF6A7"
+                        },
+                        {
+                            "id": "_xfnljxksa",
+                            "description": "fasdfa",
+                            "color": "#FFFFB3"
+                        },
+                        {
+                            "id": "_gav4pwyi9",
+                            "description": "gsdf",
+                            "color": "#FFD0D0"
+                        },
+                        {
+                            "id": "_6skk0honm",
+                            "description": "sdf",
+                            "color": "#DFF6A7"
+                        },
+                        {
+                            "id": "_87ift8ci0",
+                            "description": "777",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_npause5uw",
+                            "description": "444",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_lt5nc83c9",
+                            "description": "Reorder boards",
+                            "color": "#DBF6FF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_nev0t6kyd",
+                    "name": "Готово",
+                    "tasks": []
+                }
+            ]
+        },
+        {
+            "id": "_eya4w92kj",
+            "name": "Satori Reader",
+            "columns": [
+                {
+                    "id": "_2vaqzairj",
+                    "name": "Слушать",
+                    "tasks": [
+                        {
+                            "id": "_havefhyil",
+                            "description": "Subway attack 05 Arms Race",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_kzn6gy4p4",
+                            "description": "Yuyu 03",
+                            "color": "#FFFFB3"
+                        },
+                        {
+                            "id": "_xikcz26mp",
+                            "description": "Nutshell 4",
+                            "color": "#DBF6FF"
+                        },
+                        {
+                            "id": "_v4ijnijgb",
+                            "description": "Kona Download",
+                            "color": "#DFCFEF"
+                        },
+                        {
+                            "id": "_wzai5stq6",
+                            "description": "Kona review all",
+                            "color": "#DFCFEF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_uedeszi28",
+                    "name": "Разбор",
+                    "tasks": [
+                        {
+                            "id": "_cl4mnzrr9",
+                            "description": "Kona 83 Patrol",
+                            "color": "#DFCFEF"
+                        },
+                        {
+                            "id": "_f8zgfjnst",
+                            "description": "Autumn 13 Kimari!",
+                            "color": "#FFD0D0"
+                        }
+                    ]
+                },
+                {
+                    "id": "_spbofu41w",
+                    "name": "Комменты",
+                    "tasks": []
+                },
+                {
+                    "id": "_cy8r6drp3",
+                    "name": "Лексика",
+                    "tasks": []
+                },
+                {
+                    "id": "_rv9w6kocf",
+                    "name": "Ревью",
+                    "tasks": [
+                        {
+                            "id": "_d15lg3q0b",
+                            "description": "Yuyu 02 Introduction part 2",
+                            "color": "#FFFFB3"
+                        }
+                    ]
+                },
+                {
+                    "id": "_36qxu9mia",
+                    "name": "Готово",
+                    "tasks": [
+                        {
+                            "id": "_09elswmoy",
+                            "description": "Autumn 12 Bearbnb",
+                            "color": "#FFD0D0"
+                        },
+                        {
+                            "id": "_qlpub4rl8",
+                            "description": "Autumn 11 No Time Like The Present",
+                            "color": "#FFD0D0"
+                        },
+                        {
+                            "id": "_lndmlierm",
+                            "description": "Yuyu 01 Introduction, Part 1",
+                            "color": "#FFFFB3"
+                        },
+                        {
+                            "id": "_uqe3kcy9n",
+                            "description": "Kona 82 Ore-Sama",
+                            "color": "#DFCFEF"
+                        },
+                        {
+                            "id": "_kvsyryai4",
+                            "description": "Kona 81 Ichi-Ka-Bachi-Ka",
+                            "color": "#DFCFEF"
+                        },
+                        {
+                            "id": "_ejs4yrgr5",
+                            "description": "Kona 80 Shadow",
+                            "color": "#DFCFEF"
+                        },
+                        {
+                            "id": "_3mri2wo0a",
+                            "description": "Subway attack 04 Destructive Plans",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_ziauvo3f6",
+                            "description": "Subway attack 03 Defense Snafu",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_ild6sd2hu",
+                            "description": "Nutshell 3 Similar with You, Part 1",
+                            "color": "#DBF6FF"
+                        },
+                        {
+                            "id": "_j5ehnlaf1",
+                            "description": "Nutshell 2 Different with Chigau",
+                            "color": "#DBF6FF"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "_596qge3pj",
+            "name": "SearchMvd",
+            "columns": [
+                {
+                    "id": "_ia6ztsnqk",
+                    "name": "Backlog",
+                    "tasks": [
+                        {
+                            "id": "_3kgjthnvt",
+                            "description": "Clear frontend",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_5bxvz9c5l",
+                            "description": "Убрать режим дебаг , clearcache и пр, сделать production version",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_1vpsbdba1",
+                    "name": "Todo",
+                    "tasks": []
+                },
+                {
+                    "id": "_ac2qno2th",
+                    "name": "Testing",
+                    "tasks": [
+                        {
+                            "id": "_satqw5zg4",
+                            "description": "padding!\nвлияет ресайз после исчезновения клавиатуры. Ищем つぶる через ввод текста, жмем enter, жмем первый вариант",
+                            "color": "#FFD0D0"
+                        }
+                    ]
+                },
+                {
+                    "id": "_88n5puyd7",
+                    "name": "ГОТОВО",
+                    "tasks": [
+                        {
+                            "id": "_574qgg730",
+                            "description": "Знак 々 не индексится? 堂々 не ищется",
+                            "color": "#FFD0D0"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "_rg7nilzzi",
+            "name": "Review tool",
+            "columns": [
+                {
+                    "id": "_viujl5fuz",
+                    "name": "Бэклог",
+                    "tasks": [
+                        {
+                            "id": "_0idwdvori",
+                            "description": "Доска: shuffle",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_aun6h66zz",
+                            "description": "Таблица. Shuffle rows.",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_phmmpehi4",
+                            "description": "Доска: на инфо задачи кнопку \"в глобал\" (по одной штуке чтобы)",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_0xu538gg4",
+                            "description": "В режимах \"примеры\", \"перевод примеров\", \"перевод\" сделать режим \"only containing\", т.е показывать лишь те, у которых есть эти поля",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_691gdd1v4",
+                            "description": "Доска, режим \"поворот в исходное положение при закрытии карточки\"",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_hbj4yrtjd",
+                            "description": "Filtering by tags, levels",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_8dfhbzojx",
+                            "description": "Slider: slide remove feature. Mark slide as success or fail",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_x5zps7wb4",
+                            "description": "Элемент View Settings, выпадающее меню, в котором все галки и состояния",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_2mw72y9f5",
+                            "description": "Панель: подтверждение очистки блока",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_9ei3tcr22",
+                            "description": "Панель инверсия.\nЗона в центре, 4 дроп-зоны по углам",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_o6pobvtu9",
+                            "description": "Перенесть кнопки видов на гл. экран из меню?..",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_wuuxvmsh9",
+                            "description": "Новый вид: Match",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_1b4vm2vgv",
+                            "description": "Вид поиска вынести иконкой наверх",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_34m36edly",
+                    "name": "Tasks",
+                    "tasks": [
+                        {
+                            "id": "_ncin7h013",
+                            "description": "Доска, панель: При сохранении выборки должен учитываться mode. При возврате в выборку - тот же мод, при котором работали. ЛИБО же повернуть айтемы так, как они были (то есть мод не оверрайдит current line)",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_laoa4xdw4",
+                            "description": "Слайдер: при ресете mode тоже сбрасывать",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_sw8eq374u",
+                            "description": "Доска: логика fix. Если айтем в зеленой колонке вверх не лапснутой стороной, то ему фиксим лапс и возвращаем а общий пул, не удаляя.",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_wp27d8okw",
+                            "description": "Таблица. Переделать обратно в блюр!",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_02aoukre7",
+                            "description": "Table: кнопки движения рядов чуть-чуть поуже, отступы в ячейке тоже",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_qtszr8scl",
+                    "name": "Bugs",
+                    "tasks": [
+                        {
+                            "id": "_57hqis4tb",
+                            "description": "Панель. При рендере боксы не увеличиваются в высоту, айтемы вылезают за пределы",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_y8m0rjt74",
+                            "description": "Панель: при перетаскивании в нижние панели не совпадает позиция с пальцем",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_40bkzlq89",
+                            "description": "Таблица. Review level 100, 300 не особо отличаются..",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_1d1quu4hy",
+                            "description": "[При смене выборки на таблице какая-то ошибка]",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_5qp0m93tc",
+                    "name": "ГОТОВО!",
+                    "tasks": []
+                }
+            ]
+        },
+        {
+            "id": "_xnbqfmxb3",
+            "name": "Light reading",
+            "columns": [
+                {
+                    "id": "_ohjxo3g60",
+                    "name": "Scan",
+                    "tasks": [
+                        {
+                            "id": "_1gh8sqz4r",
+                            "description": "チェルノブイリ 6 - 28",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_yhx0y68th",
+                            "description": "保健体育のおさらい\nчек",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_cjdkvqf8r",
+                            "description": "チェルノブイリ\nПро Алексиевич",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_9a0dmsjys",
+                    "name": "Вычитать читать",
+                    "tasks": [
+                        {
+                            "id": "_qog1gu7o2",
+                            "description": "sex preface",
+                            "color": "#FFD0D0"
+                        },
+                        {
+                            "id": "_tzewd2jc6",
+                            "description": "sex 17-21",
+                            "color": "#FFD0D0"
+                        },
+                        {
+                            "id": "_o9mqx33zt",
+                            "description": "sex kotoba",
+                            "color": "#FFD0D0"
+                        },
+                        {
+                            "id": "_lkxyfkexz",
+                            "description": "sex cover",
+                            "color": "#FFD0D0"
+                        }
+                    ]
+                },
+                {
+                    "id": "_0ptwc9erx",
+                    "name": "Done",
+                    "tasks": [
+                        {
+                            "id": "_ic2arooap",
+                            "description": "チェルノブイリ 1-5",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_8697gqo9z",
+                            "description": "チェルノブイリ 1\nprice sticker, cover back introduction",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "_qcudtd5x8",
+            "name": "IT General",
+            "columns": [
+                {
+                    "id": "_d37nvtcc5",
+                    "name": "Backlog",
+                    "tasks": [
+                        {
+                            "id": "_z4p1vbpfd",
+                            "description": "Веб-приложение, мой собств. write.as\nПоддержка маркап (библ), сохр. в локал сторадж, уник. урлы, сбор в меню",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_op28mia20",
+                    "name": "In progress",
+                    "tasks": []
+                },
+                {
+                    "id": "_dn764535z",
+                    "name": "Done",
+                    "tasks": []
+                }
+            ]
+        },
+        {
+            "id": "_15ma569uj",
+            "name": "Reading in paper",
+            "columns": [
+                {
+                    "id": "_98n4c2fw4",
+                    "name": "Сфотать/Todo",
+                    "tasks": [
+                        {
+                            "id": "_tcis3f3pa",
+                            "description": "味噌汁",
+                            "color": "#DFCFEF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_prontm1bv",
+                    "name": "Отсканить в текст",
+                    "tasks": [
+                        {
+                            "id": "_o7kkd033m",
+                            "description": "ゴーショーグン 287-288",
+                            "color": "#DBF6FF"
+                        },
+                        {
+                            "id": "_d35nchlip",
+                            "description": "仮名 53-55",
+                            "color": "#FFD0D0"
+                        },
+                        {
+                            "id": "_x670ab3ov",
+                            "description": "しろばんば 57-61",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_tvsuiaz23",
+                            "description": "国語 90-101",
+                            "color": "#DFF6A7"
+                        }
+                    ]
+                },
+                {
+                    "id": "_emdbx9l3y",
+                    "name": "Вычитать",
+                    "tasks": [
+                        {
+                            "id": "_kxw4z75ot",
+                            "description": "ゴーショーグン 286",
+                            "color": "#DBF6FF"
+                        },
+                        {
+                            "id": "_k4a11vy1k",
+                            "description": "しろばんば 56",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_8gsp6wgcq",
+                            "description": "国語 86-89",
+                            "color": "#DFF6A7"
+                        },
+                        {
+                            "id": "_uxgomp54n",
+                            "description": "仮名 51-52",
+                            "color": "#FFD0D0"
+                        }
+                    ]
+                },
+                {
+                    "id": "_zaqb3ib9i",
+                    "name": "Чтение, разбор",
+                    "tasks": [
+                        {
+                            "id": "_rmfjzawq9",
+                            "description": "国語 85",
+                            "color": "#DFF6A7"
+                        }
+                    ]
+                },
+                {
+                    "id": "_wd0qftfvl",
+                    "name": "Лексика",
+                    "tasks": [
+                        {
+                            "id": "_asa9ywn1p",
+                            "description": "しろばんば 55",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_xtw0lxgn1",
+                    "name": "Review",
+                    "tasks": [
+                        {
+                            "id": "_4sxfiderx",
+                            "description": "国語 84",
+                            "color": "#DFF6A7"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "_kr7rybiqv",
+            "name": "Дела",
+            "columns": [
+                {
+                    "id": "_aasnl5vk6",
+                    "name": "To Do",
+                    "tasks": [
+                        {
+                            "id": "_iiaya2zwg",
+                            "description": "гермик д тел",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_38qhseen3",
+                            "description": "Паспорт",
+                            "color": "#FFFFFF"
+                        },
+                        {
+                            "id": "_8o5zmina2",
+                            "description": "Гермик дырка",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_3mmmp2bn9",
+                    "name": "In progress",
+                    "tasks": [
+                        {
+                            "id": "_wvgamppib",
+                            "description": "Инструмент для реки",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_a9w0apram",
+                    "name": "Done",
+                    "tasks": []
+                }
+            ]
+        },
+        {
+            "id": "_3dnddhvrv",
+            "name": "Genki",
+            "columns": [
+                {
+                    "id": "_1l1wfx6e7",
+                    "name": "Dialogs",
+                    "tasks": [
+                        {
+                            "id": "_9m6xz67gk",
+                            "description": "Chapter 17\nMake alarm",
+                            "color": "#FFFFFF"
+                        }
+                    ]
+                },
+                {
+                    "id": "_jsqukcs7j",
+                    "name": "Vocab",
+                    "tasks": []
+                },
+                {
+                    "id": "_mjcztjbhl",
+                    "name": "Grammar",
+                    "tasks": []
+                },
+                {
+                    "id": "_ph004i6bz",
+                    "name": "Practice",
+                    "tasks": []
+                },
+                {
+                    "id": "_i9uaaukon",
+                    "name": "Writing practice",
+                    "tasks": []
+                },
+                {
+                    "id": "_f1k2hem6f",
+                    "name": "Workbook",
+                    "tasks": []
+                }
+            ]
+        }
+    ],
+    "currentBoardId": "_l47w2jq3a"
+}

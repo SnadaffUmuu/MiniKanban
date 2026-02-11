@@ -155,7 +155,9 @@ header {
   width: 250px;
 }
 
-#rename-board-block {
+#rename-board-block,
+#delete-board-block,
+#ranks-block {
   position: relative;
 }
 
@@ -200,11 +202,6 @@ header {
   content: '';
   clear:both;
   display:block;
-}
-
-#delete-board-block .button-close {
-  top:15px;
-  right:0;
 }
 
 #delete-board-block p {
