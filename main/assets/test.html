@@ -40,17 +40,22 @@
 
     <div id="ranks-block" class="hidden">
       <h3 class="top-menu-title">Manage the board ranks</h3>
-      <div id="current-colors" class="hidden"></div>
+      <br>
+      <div id="current-colors"></div>
       <div id="current-ranks" class="hidden"></div>
-      <div id="preview-ranks" class="hidden"></div>
-      <textarea id="ranks-raw" class="hidden"></textarea>
+      <textarea id="ranks-input" class="hidden" placeholder="2 blue 
+2 white 
+1 purple 
+1 pink,yellow"></textarea>
+      <div id="ranks-input-errors"></div>
       <button class="js-cancel-current button-close"></button>
       <button id="create-ranks" class="board-management-button hidden">Create</button>
       <button id="ranks-edit" class="board-management-button hidden">Edit</button>
       <button id="ranks-preview" class="board-management-button hidden">👀</button>
       <button id="ranks-save-confirm" class="board-management-button hidden">Save</button>
       <button id="ranks-delete-confirm" class="board-management-button hidden">Delete</button>
-      <button id="ranks-delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
+      <button id="ranks-cancel" class="board-management-button">Cancel</button>
+      <div id="preview-ranks" class="hidden"></div>
     </div>      
 
     <div id="boards-list" class="hidden">

@@ -570,6 +570,7 @@ function blockContextMenuTemporarily() {
 }
 
 document.body.addEventListener('touchstart', (e) => {
+  console.log('touchstart boards list')
   if(!document.getElementById('boards-buttons').contains(e.target)
     || e.target.tagName !== 'BUTTON') return;
   longPressTarget = e.target;
@@ -582,6 +583,7 @@ document.body.addEventListener('touchstart', (e) => {
 })
 
 document.body.addEventListener('touchstart', (e) => {
+  console.log('touchstart tasks')
   const task = e.target.closest('.task');
   if(!task) return;
   if(e.target.classList.contains('task-edit-input')
@@ -599,6 +601,7 @@ document.body.addEventListener('touchstart', (e) => {
 });
 
 document.body.addEventListener('touchend', () => {
+  console.log('touchend')
   if(longPressTimer) {
     clearTimeout(longPressTimer);
     longPressTimer = null;
@@ -607,6 +610,7 @@ document.body.addEventListener('touchend', () => {
 });
 
 document.body.addEventListener('touchmove', (e) => {
+  console.log('touchmove')
   const task = e.target.closest('.task');
   if(task) {
     if(e.target.classList.contains('task-edit-input')
@@ -1184,8 +1188,8 @@ function getSetColorUI(el) {
 }
 
 function getColors(currentColor) {
-  const colors = tasksColors.map(name => {
-    const color = tasksColors[name];
+  const colors = Object.keys(tasksColors).map(key => {
+    const color = tasksColors[key];
     return `
       <li data-color="${color}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
     `

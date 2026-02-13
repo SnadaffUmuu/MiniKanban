@@ -595,7 +595,7 @@ body:has(.dragged) {
   clear:both;
 }
 
-.colors-list li {
+.colors-list li[data-color] {
   width:20px;
   height:20px;
   border:1px solid #999;
@@ -605,6 +605,19 @@ body:has(.dragged) {
   color:#999;
 }
 
+.colors-list.colors-in-use {
+  display: inline-block;
+  margin-bottom:0;
+}
+
+.colors-list.colors-in-use li[data-color] {
+  margin-right:5px; 
+  margin-bottom: 0;
+  width:10px;
+  height:10px;
+  border-radius: 5px;
+}
+
 .colors-list li.current::after {
   content: '✓';
   display: block;
@@ -612,4 +625,39 @@ body:has(.dragged) {
   line-height:19px;
   width: 100%;
   height: 100%;
+}
+
+#ranks-block textarea {
+  width:100%;
+  height:200px;
+}
+
+.ranks-list {
+  padding:0;
+  margin:0 0 10px;
+  list-style: none;
+}
+
+.ranks-list ul {
+  padding:0;
+  margin:0;
+  list-style: none;
+}
+
+.ranks-list ul {
+  padding-left:10px;
+}
+
+.ranks-list span {
+  display:inline-block
+}
+
+.ranks-list span[data-color] {
+  width:15px;
+  height:15px;
+  border:1px solid #999;
+  border-radius: 7px;
+  margin-right:5px;
+  margin-bottom:5px;
+  color:#999;
 }
