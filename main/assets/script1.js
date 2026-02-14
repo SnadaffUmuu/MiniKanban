@@ -109,7 +109,7 @@ const AppUI = {
     this.els.menu.classList.add('hidden');
   },
 
-  toggleMenuByClick(el, params, e) {
+  toggleMenuByClick(el, e, params) {
     e.stopPropagation();
     this.els.menu.classList.toggle('hidden');
   },
@@ -283,7 +283,9 @@ const BoardUI = {
       let tasksHtml = [];
       column.tasks.forEach(task => {
         tasksHtml.push(`
-        <div class="task" style="background:${task.color};" data-id="${task.id}">
+        <div class="task" style="background:${tasksColors[task.color]};" data-id="${task.id}">
+          ${RanksUI.getLevelMarkHtml(task.color)}
+          ${RanksUI.getPassMarkHtml(task, column)}
           <div class="task-expand-button"></div>
           <button class="task-info-toggle"></button>
           <div class="task-header">
@@ -382,71 +384,112 @@ const BoardUI = {
 
 
 const RanksUI = {
+  board: null,
+
   els: {
     ranksBlock: document.getElementById('ranks-block'),
-    createRanksButton: document.getElementById('create-ranks'),
-    ranksEditButton: document.getElementById('ranks-edit'),
-    ranksPreviewButton: document.getElementById('ranks-preview'),
-    ranksSaveConfirmButton: document.getElementById('ranks-save-confirm'),
-    ranksDeleteConfirmButton: document.getElementById('ranks-delete-confirm'),
-    ranksCancelButton: document.getElementById('ranks-cancel'),
+    createButton: document.getElementById('create-ranks'),
+    editButton: document.getElementById('ranks-edit'),
+    previewButton: document.getElementById('ranks-preview'),
+    saveButton: document.getElementById('ranks-save-confirm'),
+    deleteButton: document.getElementById('ranks-delete'),
+    deleteMessage: document.getElementById('ranks-delete-confirm-message'),
+    deleteConfirmButton: document.getElementById('ranks-delete-confirm'),
+    cancelButton: document.getElementById('ranks-cancel'),
     errorsBlock: document.getElementById('ranks-input-errors'),
-    input: document.getElementById('ranks-input'),
+    textarea: document.getElementById('ranks-input'),
     currentColorsBlock: document.getElementById('current-colors'),
     currentRanksBlock: document.getElementById('current-ranks'),
-    previewRanksBlock: document.getElementById('preview-ranks'),
+    previewBlock: document.getElementById('preview-ranks'),
+    resetButton: document.getElementById('ranks-reset'),
+    toggleCountersButton: document.getElementById('ranks-toggle-counters'),
+    countersBlock : document.getElementById('counters'),
   },
 
   showRanksUI() {
-    this.els.ranksBlock.classList.remove('hidden');
-    BoardUI.els.deleteBlock.classList.add('hidden');
-    BoardUI.els.renameBlock.classList.add('hidden');
-    AppUI.els.menuToggle.classList.add('hidden');
-    BoardUI.els.title.classList.add('hidden');
+    Utils.show([
+      this.els.ranksBlock,
+      this.els.cancelButton,
+    ]);
+    Utils.hide([
+      BoardUI.els.deleteBlock,
+      BoardUI.els.title
+    ]);
+
+    Utils.hide(AppUI.els.menuToggle);
     AppUI.closeMenu();
-    const currentRanksData = this.getCurrentRanks();
+    this.board = App.getCurrentBoard();
+    const currentRanksData = this.board.ranks;
     this.renderColorsInUse();
 
+    // HAS DATA
     if(currentRanksData != null) {
       this.els.currentRanksBlock.innerHTML = this.getRanksHtml(currentRanksData);
-      [
+      this.els.countersBlock.innerHTML = JSON.stringify(this.board.rankCounters);
+
+      Utils.show([
         this.els.currentRanksBlock,
-        this.els.ranksEditButton,
-        this.els.createRanksButton,
-      ].forEach(el => el.classList.remove('hidden'));
+        this.els.editButton,
+        this.els.deleteButton,
+      ]);
+
+      Utils.hide([
+        this.els.createButton,
+        this.els.saveButton,
+        this.els.previewButton,
+        this.els.textarea,
+        this.els.previewBlock,
+      ]);
+
     } else {
-      this.els.createRanksButton.classList.remove('hidden');
-      [
+      // NO DATA
+      Utils.hide([
+        this.els.editButton,
+      ]);
+
+      Utils.show([
+        this.els.createButton,
         this.els.currentRanksBlock,
-        this.els.ranksEditButton,
-      ].forEach(el => el.classList.add('hidden'));
+      ]);
+
     }
+
   },
 
-  showCreateRanksUI() {
-    [
-      this.els.input,
-      this.els.ranksPreviewButton,
-    ].forEach(el => el.classList.remove('hidden'));
-    
-    [
-      this.els.ranksEditButton,
-      this.els.createRanksButton,
+  showEditUI() {
+    this.els.textarea.value = this.board.ranksRaw;
+    const members = [
+      this.els.textarea,
+      this.els.previewButton,
+      this.els.saveButton,
+    ];
+    Utils.show(members);
+
+    Utils.hide([
+      this.els.editButton,
+      this.els.deleteButton,
+    ]);
+  },
+
+  showCreateUI() {
+    Utils.show([
+      this.els.textarea,
+      this.els.previewButton,
       this.els.currentRanksBlock,
-      this.els.ranksEditButton,
-    ].forEach(el => el.classList.add('hidden'));
+    ]);
+
+    Utils.hide([
+      this.els.createButton,
+      this.els.editButton,
+    ]);
 
   },
 
-  getCurrentRanks() {
-    return App.getCurrentBoard().ranks
-  },
-
-  parseRanks(text) {
+  parseRanks() {
     this.els.errorsBlock.innerHTML = '';
-    this.els.errorsBlock.classList.add('hidden');
+    Utils.hide(this.els.errorsBlock);
 
-    const lines = text
+    const lines = this.els.textarea.value
       .split('\n')
       .map(l => l.trim())
       .filter(l => l.length > 0);
@@ -454,6 +497,7 @@ const RanksUI = {
     const result = {};
     const usedColors = new Set();
     const validColors = new Set(Object.keys(tasksColors));
+    const colorsInUse = this.getColorsInUse();
 
     let errors = [];
     lines.forEach((line, index) => {
@@ -485,6 +529,10 @@ const RanksUI = {
           errors.push(`Строка ${level}: цвет "${color}" не существует`);
         }
 
+        if(!colorsInUse.includes(color)) {
+          errors.push(`Строка ${level}: цвет "${color}" не используется на доске`);
+        }
+
         if(usedColors.has(color)) {
           errors.push(`Строка ${level}: цвет "${color}" используется повторно`);
         }
@@ -498,7 +546,7 @@ const RanksUI = {
       };
     });
 
-    if (errors.length) {
+    if(errors.length) {
       this.els.errorsBlock.innerHTML = errors.join('<br>');
       this.els.errorsBlock.classList.remove('hidden');
       return null;
@@ -522,14 +570,14 @@ const RanksUI = {
       // генерируем список цветов текущего уровня
       const colorsHtml = c.map(color => {
         const bg = tasksColors[color] || '#ffffff';
-        return `<span data-color="${color}" style="background:${bg}"></span>`;
+        return `<span data-color="${color}" style="background:${bg}">${q}</span>`;
       }).join('');
 
       // если последний уровень — без вложенного ul
       if(levelIndex === levels.length - 1) {
         return `
           <li data-level="${level}">
-            ${colorsHtml} -> <span>${q}</span>
+            ${colorsHtml}
           </li>`;
       }
 
@@ -543,14 +591,15 @@ const RanksUI = {
         </li>`;
     }
 
-    return `<ul class="colors-list ranks-list">
+    return `Current ranks
+    <ul class="colors-list ranks-list">
     ${build(0)}
       </ul>`;
   },
 
   getColorsInUse() {
     const colors = new Set();
-  
+
     App.getCurrentBoard().columns?.forEach(column => {
       column.tasks?.forEach(task => {
         if(task.color) {
@@ -564,56 +613,224 @@ const RanksUI = {
 
   renderColorsInUse() {
     this.els.currentColorsBlock.innerHTML = `
-      Currently used colors: 
+      Currently used colors:&nbsp;
       <ul class="colors-list colors-in-use">${this.getColorsInUse().map(c => `
         <li data-color="${c}" style="background:${tasksColors[c]}"></li>
-        `).join()}
+        `).join('')}
       </ul>
     `;
   },
 
-  preview () {
-    const data = this.parseRanks(this.els.input.value);
-    if (data) {
-      this.els.previewRanksBlock.innerHTML = this.getRanksHtml(data);
-      
-      Utils.show([
-        this.els.previewRanksBlock,
-        this.els.ranksSaveConfirmButton
-      ])
+  preview() {
+    const data = this.parseRanks();
+    if(data) {
+      this.els.previewBlock.innerHTML = this.getRanksHtml(data);
 
-      Utils.hide(this.els.createRanksButton)
+      Utils.show([
+        this.els.previewBlock,
+      ]);
+
+      Utils.hide(this.els.createButton);
+
+      if(this.els.textarea !== this.board.ranksRaw) {
+        Utils.show(this.els.saveButton)
+      }
 
     } else {
 
-      this.els.previewRanksBlock.innerHTML = '';
-      
+      this.els.previewBlock.innerHTML = '';
+
       Utils.hide([
-        this.els.previewRanksBlock,
-        this.els.ranksSaveConfirmButton
+        this.els.previewBlock,
+        this.els.saveButton
       ])
     }
   },
 
-  save () {
-
+  save() {
+    const board = App.getCurrentBoard();
+    board.ranksRaw = this.els.textarea.value;
+    board.ranks = this.parseRanks();
+    App.saveBoards(App.data.boards);
+    BoardUI.renderBoardsMenu();
+    BoardUI.renderHeader();
+    BoardUI.hideBoardManagementUI();
+    BoardUI.renderBoard();
   },
 
-  cancel () {
-    BoardUI.els.title.classList.remove('hidden');
+  cancel() {
     this.els.errorsBlock.innerHTML = '';
-    this.els.input.value = '';
-    Utils.hide([
-      this.els.errorsBlock,
-      this.els.ranksBlock,
-      this.els.input,
-      this.els.ranksPreviewButton,
-    ])
+    this.els.textarea.value = '';
+    this.els.previewBlock.innerHTML = '';
+    Object.values(this.els).forEach(el => Utils.hide(el))
+
+    BoardUI.els.title.classList.remove('hidden');
     AppUI.els.menuToggle.classList.remove('hidden');
   },
 
-};
+  showDeleteUI() {
+    Utils.hide([
+      this.els.currentColorsBlock,
+      this.els.editButton,
+      this.els.deleteButton,
+      this.els.currentRanksBlock,
+      this.els.previewBlock,
+    ]);
 
+    Utils.show([
+      this.els.deleteMessage,
+      this.els.deleteConfirmButton
+    ]);
+  },
+
+  delete() {
+    delete this.board.ranks;
+    delete this.board.ranksRaw;
+    App.saveBoards(App.data.boards);
+    this.cancel();
+    BoardUI.renderBoard();
+    BoardUI.renderBoardsMenu();
+    BoardUI.renderHeader();
+    BoardUI.hideBoardManagementUI();
+  },
+
+  updateSaveButtonState() {
+    const value = this.els.textarea.value;
+    const hasValue = value.trim().length > 0;
+
+    const valueChanged =
+      hasValue &&
+      (!this.board.ranksRaw || value !== this.board.ranksRaw);
+
+    if(valueChanged) {
+      this.els.saveButton.removeAttribute('disabled');
+    } else {
+      this.els.saveButton.setAttribute('disabled', true);
+    }
+  },
+
+  getLevelOfColor(color, ranks) {
+    if(ranks == undefined) {
+      ranks = App.getCurrentBoard().ranks;
+    }
+    if(!ranks) return null;
+    let level = Object.keys(ranks).find(k => ranks[k].c.includes(color));
+    if(!level) {
+      level = Math.max(...Object.keys(ranks).map(o => parseInt(o))) + 1
+    } else {
+      level = parseInt(level);
+    }
+    return level;
+  },
+
+  getLevelMarkHtml(color) {
+    const ranks = App.getCurrentBoard().ranks;
+    if(!ranks) return '';
+    const level = this.getLevelOfColor(color, ranks);
+    return level ? `<div class="cardLevel">L${level}</div>` : '';
+  },
+
+  getPassMarkHtml(card, column) {
+    const ranks = App.getCurrentBoard().ranks;
+    if(!ranks) return '';
+    
+    const board = App.getCurrentBoard();
+
+    const currentColIndex = board.columns.findIndex(col => col.id === column.id);
+
+    //Если последняя колонка, то ничего не отображаем
+    if(currentColIndex == (board.columns.length - 1)) {
+      return '';
+    }
+
+    const level = this.getLevelOfColor(card.color, ranks);
+    if(level == 1) return `<div class="cardPass positive">Go!</div>`; //первый уровень ходит безлимитно
+
+    const quotaOfUpperLevel = parseInt(ranks[level - 1].q);
+
+    let res = null;
+
+    let upperLevelCount = board.rankCounters ? board.rankCounters[level - 1] ? board.rankCounters[level - 1] : null : null;
+    
+    console.log('upperLevelCount', upperLevelCount);
+
+    if (upperLevelCount == null) {
+      res = -quotaOfUpperLevel;
+    } else {
+      res = upperLevelCount - quotaOfUpperLevel;
+    }
+    return res != null ? `<div class="cardPass${res >= 0 ? ' positive' : ''}">${(res >= 0 ? 'Go! ' : '') + (res !== 0 ? res : '')}</div>` : '';
+  },
+
+  makeAMove({color, sourceColumn, targetColumn}) {
+
+    if (sourceColumn.id == targetColumn.id) return;
+
+    const board = App.getCurrentBoard();
+    const ranks = board.ranks;
+    
+    if(!ranks || !color) return;
+
+    const level = this.getLevelOfColor(color, ranks);
+    console.log('makeAMove: the card level', level);
+
+    
+    if (!sourceColumn || !targetColumn) return;
+    
+    if (!board.rankCounters) {
+      board.rankCounters = {};
+    }
+    
+    const sourceColIndex = board.columns.findIndex(col => col.id == sourceColumn.id)
+    const targetColIndex = board.columns.findIndex(col => col.id == targetColumn.id)
+    const isGoingForward = targetColIndex > sourceColIndex;
+    
+    // increment own counter
+    let ownCount = board.rankCounters[level] !== undefined ? board.rankCounters[level] : null;
+    console.log('the card counter', ownCount)
+
+    if(ownCount == null) {
+      console.log('setting own counter to 0')
+      ownCount = 0;
+    } else {
+      ownCount = parseInt(ownCount);
+    }
+
+    console.log(`setting counter to: ${parseInt(ownCount) + 1}`);
+
+    board.rankCounters[level] = isGoingForward ? (ownCount + 1) : (ownCount - 1);
+
+    if(level == 1) return;
+
+    //set upper level's counter
+
+    const quotaOfUpperLevel = parseInt(ranks[level - 1].q);
+
+    let upperCount = board.rankCounters[level - 1] ? parseInt(board.rankCounters[level - 1]) : null;
+
+    if (upperCount == null) {
+      upperCount = 0;
+    }
+    
+    console.log(`resetting parent's level L${level - 1} to ${isGoingForward ? (upperCount - quotaOfUpperLevel) : (upperCount + quotaOfUpperLevel)}`);
+    
+    board.rankCounters[level - 1] = isGoingForward ? (upperCount - quotaOfUpperLevel) : (upperCount + quotaOfUpperLevel);
+
+  },
+
+  resetCounters() {
+    this.board.rankCounters && delete this.board.rankCounters;
+    App.saveBoards(App.data.boards);
+    BoardUI.renderBoard();
+  },
+
+  showCounters() {
+    this.els.countersBlock.innerHTML = this.board.rankCounters ? 
+      Object.keys(this.board.rankCounters).map(k => `L${k}:${counters[k]}`).join('; ')
+        : '';
+  },
+
+};
 
 
 const ColumnUI = {
@@ -729,7 +946,7 @@ const ColumnUI = {
     }
   },
 
-  toggleRenameUi(el, [shouldShow]) {
+  toggleRenameUi(el, e, [shouldShow]) {
     const col = el.classList.contains('column') ? el : el.closest('.column');
     const menu = col.querySelector('.column-menu');
     const input = col.querySelector('.rename-column-input');
@@ -911,6 +1128,7 @@ const TaskUI = {
         color: color ? color : 'white',
       };
       column.tasks = column.tasks ? [newTask, ...column.tasks] : [newTask];
+
     } else {
       const task = this.getCurrentTaskByElement(el);
       task.description = input.value.trim();
@@ -940,6 +1158,8 @@ const TaskUI = {
     task.querySelector('.task-delete-block')?.remove();
     task.querySelector('.task-edit')?.remove();
     task.querySelector('.set-task-colors')?.remove();
+    task.querySelector('.cardLevel').classList.toggle('hidden');
+    task.querySelector('.cardPass')?.classList.toggle('hidden');
   },
 
   showSetColorUI(el) {
@@ -1022,7 +1242,6 @@ const TaskUI = {
   },
 
 };
-
 
 
 const DragDrop = {
@@ -1114,17 +1333,26 @@ const DragDrop = {
     if(targetColumnEl) {
       const currentBoard = App.getCurrentBoard();
       const targetColumn = ColumnUI.getCurrentColumnByElement(targetColumnEl);
+      const targetColumnIndex = currentBoard.columns.findIndex(col => col.id === targetColumn.id);
+      console.log(`targetColumnIndex: ${targetColumnIndex}`)
 
       if(!targetColumn.tasks) targetColumn.tasks = [];
 
       const sourceColumn = currentBoard.columns.find(col =>
         col.tasks && col.tasks.some(c => c.id === this.dragState.draggingTask.dataset.id)
       );
+
+      
       const draggedTask = sourceColumn.tasks.find(c => c.id === this.dragState.draggingTask.dataset.id);
+      let sourceColumnIndex = null;
+      
       // Удалим карточку из старой колонки
       if(sourceColumn) {
+        sourceColumnIndex = currentBoard.columns.findIndex(col => col.id == sourceColumn.id)
         sourceColumn.tasks = sourceColumn.tasks.filter(c => c.id !== this.dragState.draggingTask.dataset.id);
       }
+
+      console.log(`sourceColumnIndex: ${sourceColumnIndex}`)
 
       // Добавим карточку в новую колонку
       const insertIndicator = document.querySelector('.insert-indicator');
@@ -1133,6 +1361,13 @@ const DragDrop = {
       //console.log(insertIndex);
       if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
       targetColumn.tasks.splice(insertIndex, 0, draggedTask);
+
+      RanksUI.makeAMove({
+        color: draggedTask.color,
+        sourceColumn: sourceColumn,
+        targetColumn: targetColumn
+      });
+
       App.saveBoards(App.data.boards, App.data.currentBoardId);
       BoardUI.renderBoard();
       this.restoreColsVertScroll();
@@ -1442,12 +1677,25 @@ const Utils = {
     input.focus();
   },
 
-  hide (el) {
-    [...(el.length ? el : [el])].forEach(o => o.classList.add('hidden'))
+  hide(el) {
+    [...(el.length ? el : [el])].forEach(o => {
+      o.classList && o.classList.add('hidden');
+      //console.log('el hidden', o, o.classList)
+    })
   },
 
-  show (el) {
-    [...(el.length ? el : [el])].forEach(o => o.classList.remove('hidden'))
+  show(el) {
+    [...(el.length ? el : [el])].forEach(o => {
+      o.classList && o.classList.remove('hidden');
+      //console.log('el revealed', o, o.classList)
+    })
+  },
+
+  toggle(el, toShow) {
+    [...(el.length ? el : [el])].forEach(o => {
+      o.classList && o.classList.toggle('hidden', !toShow);
+      //console.log('el revealed', o, o.classList)
+    })
   },
 };
 
@@ -1484,11 +1732,16 @@ const Events = {
       '#boards-button': 'BoardUI.toggleList',
       '#confirm-rename': 'BoardUI.rename',
       '#manage-ranks': 'RanksUI.showRanksUI',
-      '#create-ranks': 'RanksUI.showCreateRanksUI',
-      '#ranks-preview' : 'RanksUI.preview',
-      '#ranks-save-confirm' : 'RanksUI.save',
+      '#create-ranks': 'RanksUI.showCreateUI',
+      '#ranks-preview': 'RanksUI.preview',
+      '#ranks-save-confirm': 'RanksUI.save',
       '#add-column': 'ColumnUI.create',
       '#ranks-cancel': 'RanksUI.cancel',
+      '#ranks-edit': 'RanksUI.showEditUI',
+      '#ranks-delete': 'RanksUI.showDeleteUI',
+      '#ranks-delete-confirm': 'RanksUI.delete',
+      '#ranks-reset': 'RanksUI.resetCounters',
+      '#ranks-toggle-counters': 'RanksUI.showCounters',
       '.move-column-left': ['ColumnUI.move', [false]],
       '.move-column-right': ['ColumnUI.move', [true]],
       '.move-column': 'ColumnUI.toggleMoveUi',
@@ -1519,6 +1772,7 @@ const Events = {
       '#rename-board-input': 'BoardUI.renameInputCallback',
       '.rename-column-input': 'ColumnUI.updateSaveButtonState',
       '.task-edit-input': 'TaskUI.nameInputCallback',
+      '#ranks-input': 'RanksUI.updateSaveButtonState',
     },
     'contextmenu': {
       '##': ['DragDrop.preventOnce', [true]],
@@ -1558,35 +1812,51 @@ const Events = {
     const entry = this.map[eventName];
     if(!entry) return;
 
-    for(let selector in entry) {
-      // ## — глобальные, без проверки селектора
-      if(selector === '##') continue
+    const selectors = Object.keys(entry);
+    const normals = selectors.filter(s => s !== '##');
+    const globals = selectors.filter(s => s === '##');
 
+    [...normals, ...globals].forEach(selector => {
       const callbackObj = entry[selector];
-      const methodPath = Array.isArray(callbackObj) ? callbackObj[0] : callbackObj;
-      const params = Array.isArray(callbackObj) ? callbackObj[1] : [];
-      const skipSelectorCheck =
-        Array.isArray(callbackObj) && callbackObj.length > 2;
 
-      if(
-        skipSelectorCheck ||
-        (e.target.matches && e.target.matches(selector))
-      ) {
-        const resolved = this.resolveMethod(methodPath);
-        if(!resolved) return;
+      let callbacks = [];
 
-        resolved.fn.call(resolved.ctx, e.target, params, e);
+      // 1) строка
+      if(typeof callbackObj === 'string') {
+        callbacks = [[callbackObj, []]];
       }
-    }
 
-    if(entry['##']) {
-      [...entry['##']].forEach(methodPath => {
+      // 2) массив
+      else if(Array.isArray(callbackObj)) {
+
+        // случай [method, params]
+        if(
+          typeof callbackObj[0] === 'string' &&
+          Array.isArray(callbackObj[1])
+        ) {
+          callbacks = [[callbackObj[0], callbackObj[1]]];
+        }
+
+        // случай ['m1', 'm2', ...]
+        else {
+          callbacks = callbackObj.map(method => [method, []]);
+        }
+      }
+
+      callbacks.forEach(([methodPath, params]) => {
+
+        const shouldRun =
+          selector === '##' ||
+          (e.target.matches && e.target.matches(selector));
+
+        if(!shouldRun) return;
+
         const resolved = this.resolveMethod(methodPath);
         if(!resolved) return;
 
-        resolved.fn.call(resolved.ctx, e.target, e);
+        resolved.fn.call(resolved.ctx, e.target, e, params);
       });
-    }
+    });
   },
 
   init() {
@@ -1612,77 +1882,3 @@ function init() {
 document.addEventListener('DOMContentLoaded', () => {
   init();
 });
-
-
-
-/*
-
-Задачка. Добавь в функцию ниже еще проверку. Мы проверяем, не повторяются ли цвета и нет ли названий цветов, которых нет в мапе tasksColors. У нас теперь есть метод this.getColorsInUse(), он возвращает массив уникальных строк - названий цветов, карточки с которыми есть сейчас на доске. Строки - это те же ключи как в tasksColors. То есть this.getColorsInUse() вернет типа ["pink", "white"]. Так вот, добавь в метод ниже еще одну проверку. В строке, которую мы парсим, должны использоваться только цвета из числа используемых. То есть мы не строим иерархию не будущее с какими-то цветами, которых на доске еще нет. Это сделает логику слишком сложной. 
-
-parseRanks(text) {
-    this.els.errorsBlock.innerHTML = '';
-    this.els.errorsBlock.classList.add('hidden');
-
-    const lines = text
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 0);
-
-    const result = {};
-    const usedColors = new Set();
-    const validColors = new Set(Object.keys(tasksColors));
-
-    let errors = [];
-    lines.forEach((line, index) => {
-      const level = index + 1;
-
-      const firstSpace = line.indexOf(' ');
-      if(firstSpace === -1) {
-        errors.push(`Строка ${level}: отсутствует пробел после квоты`);
-      }
-
-      const quota = parseInt(line.slice(0, firstSpace), 10);
-      if(isNaN(quota) || quota <= 0) {
-        errors.push(`Строка ${level}: некорректная квота`);
-      }
-
-      const colorsPart = line.slice(firstSpace + 1);
-
-      const colors = colorsPart
-        .split(',')
-        .map(c => c.trim())
-        .filter(c => c.length > 0);
-
-      if(colors.length === 0) {
-        errors.push(`Строка ${level}: не указаны цвета`);
-      }
-
-      colors.forEach(color => {
-        if(!validColors.has(color)) {
-          errors.push(`Строка ${level}: цвет "${color}" не существует`);
-        }
-
-        if(usedColors.has(color)) {
-          errors.push(`Строка ${level}: цвет "${color}" используется повторно`);
-        }
-
-        usedColors.add(color);
-      });
-
-      result[level] = {
-        q: quota,
-        c: colors
-      };
-    });
-
-    if (errors.length) {
-      this.els.errorsBlock.innerHTML = errors.join('<br>');
-      this.els.errorsBlock.classList.remove('hidden');
-      return null;
-    } else {
-      return result;
-    }
-
-  }
-
-*/
