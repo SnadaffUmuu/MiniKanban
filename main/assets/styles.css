@@ -157,7 +157,8 @@ header {
 
 #rename-board-block,
 #delete-board-block,
-#ranks-block {
+#ranks-block,
+#statsUI {
   position: relative;
 }
 
@@ -605,23 +606,33 @@ body:has(.dragged) {
   color:#999;
 }
 
-#current-colors {
+/* #current-colors {
   display: flex;
   align-items: stretch;
-}
+} */
 
 .colors-list.colors-in-use {
-  display: inline-block;
   margin-bottom:0;
+  margin-top:10px;
+  display:flex;
+  flex-flow:column nowrap;
+  justify-content: space-between;
 }
 
 .colors-list.colors-in-use li[data-color] {
   margin-right:5px; 
-  margin-bottom: 0;
-  width:10px;
-  height:10px;
-  border-radius: 5px;
+  margin-bottom: 5px;
+  width:15px;
+  height:15px;
+  border-radius: 7px;
   display: inline-block;
+  position:relative;
+}
+
+.colors-list.colors-in-use li[data-color] .label {
+  position: absolute;
+  left: 20px;
+  top:-1px;
 }
 
 .colors-list li.current::after {
@@ -638,8 +649,16 @@ body:has(.dragged) {
 }
 
 #ranks-block textarea {
-  width:100%;
-  height:200px;
+  height:100px;
+  width:fit-content;
+  background:transparent;
+  color:white;
+  padding:10px;
+  box-sizing: border-box;
+  border-bottom:2px solid #f79d35;
+  display:block;
+  font-size:14px;
+  margin-top:10px;
 }
 
 #ranks-input-errors {
@@ -649,7 +668,7 @@ body:has(.dragged) {
 
 .ranks-list {
   padding:0;
-  margin:0 0 10px;
+  margin:10px 0 0;
   list-style: none;
 }
 
@@ -679,18 +698,20 @@ body:has(.dragged) {
   text-align: center;
 }
 
-.cardLevel {
-  position: absolute;
-  right: 43px;
-  bottom: 5px;
-  color:#a3a0a1;
-  font-size:12px;
-}
-
-.cardPass {
+.ranks-info {
   position: absolute;
   right: 13px;
   bottom: 5px;
+  display:flex;
+}
+
+.cardLevel {
+  color:#a3a0a1;
+  font-size:12px;
+  padding-right:5px;
+}
+
+.cardPass {
   color:red;
   font-size:12px;
 }
@@ -701,4 +722,82 @@ body:has(.dragged) {
 
 #counters {
   padding: 8px;
+}
+
+#preview-ranks, #current-ranks, #abs-counters, #current-colors {
+  /* padding:10px; */
+  padding-bottom:0;
+}
+
+.rank-level-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  display: inline-block;
+  border: 1px solid #999;
+  margin-left:5px;
+}
+
+.ranks-info .red-cross {
+  font-size:6px;
+  vertical-align: middle;
+}
+
+.own-rank-count-mark {
+  font-size: 12px;
+  color:#a3a0a1;
+  padding-right: 5px;
+}
+
+#ranks-panels-container {
+  padding-top:10px;
+  display: flex;
+  flex-flow: row wrap;
+}
+
+#ranks-buttons-container {
+  display:flex;
+  flex-flow: row wrap;
+  justify-content: flex-end;
+}
+
+#ranks-delete-confirm-message {
+  flex: 1 0 auto;
+  width:100%;
+}
+
+#ranks-block .board-management-button {
+  padding:10px;
+  float:none;
+}
+
+#current-colors {
+  display:flex;
+  flex-flow:column nowrap;
+}
+
+#current-colors span {
+  flex: 0 1 auto;
+}
+
+#current-colors .colors-in-use {
+  flex: 1 0 auto;
+}
+
+.ranks-title {
+  padding:10px;
+  display:block;
+}
+
+#current-ranks {
+  display:flex;
+  flex-flow: column nowrap;
+}
+
+#stats {
+  padding:10px;
+}
+
+#statsUI {
+  color:white;
 }

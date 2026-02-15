@@ -63,8 +63,17 @@ const App = {
     }
   },
 
+  getBoard(id) {
+    return this.data.boards.find(b => b.id == id);
+  },
+
   getCurrentBoard() {
     return this.data.boards.find(b => b.id == this.data.currentBoardId);
+  },
+
+  getBoardsCounters() {
+    const bc = this.data.boardsCounters;
+    return bc != null ? bc : {};
   },
 
   switchBoard(boardId) {
@@ -86,7 +95,18 @@ const App = {
       this.data.currentBoardId = currentBoardId ? currentBoardId : this.data.currentBoardId;
     }
     Storage.save(this.data);
-  }
+  },
+
+  saveCounters(counters) {
+    this.data.boardsCounters = counters;
+    Storage.save(this.data);
+  },
+
+  resetCounters() {
+    delete this.data.boardsCounters;
+    Storage.save(this.data);
+    BoardUI.showStatsUI();
+  },
 
 };
 
@@ -140,9 +160,15 @@ const BoardUI = {
     boardsListBlock: document.getElementById('boards-list'),
     renameInput: document.getElementById('rename-board-input'),
     renameConfirmButton: document.getElementById('confirm-rename'),
-    currentRanksBlock: document.getElementById('current-ranks'),
+    //currentRanksBlock: document.getElementById('current-ranks'),
     closeListButton: document.getElementById('close-boards-list'),
     boardsListButtonsContainer: document.getElementById('boards-buttons'),
+    statsButton : document.getElementById('show-stats'),
+    resetStatsButton: document.getElementById('reset-stats'),
+    resetStatsMessage : document.getElementById('reset-message'),
+    resetStats: document.getElementById('reset-stats-confirm'),
+    statsContentBlock: document.getElementById('stats'),
+    statsBlock: document.getElementById('statsUI'),
   },
 
   toggleList() {
@@ -167,14 +193,20 @@ const BoardUI = {
     const currentBoard = App.getCurrentBoard();
     if(currentBoard) {
       this.els.title.textContent = currentBoard.name;
-      this.els.renameButton.classList.remove('hidden');
-      this.els.deleteButton.classList.remove('hidden');
-      this.els.ranksButton.classList.remove('hidden');
+      Utils.show([
+        this.els.renameButton,
+        this.els.ranksButton,
+        this.els.deleteButton,
+        this.els.statsButton
+      ]);
     } else {
       this.els.title.innerHTML = '';
-      this.els.renameButton.classList.add('hidden');
-      this.els.deleteButton.classList.add('hidden');
-      this.els.ranksButton.classList.add('hidden');
+      Utils.hide([
+        this.els.renameButton,
+        this.els.ranksButton,
+        this.els.deleteButton,
+        this.els.statsButton
+      ]);
     }
   },
 
@@ -182,10 +214,11 @@ const BoardUI = {
     this.els.renameBlock.classList.remove('hidden');
     this.els.deleteBlock.classList.add('hidden');
     RanksUI.els.ranksBlock.classList.add('hidden');
-    AppUI.els.menuToggle.classList.add('hidden');
+    this.els.statsBlock.classList.add('hidden');
     this.els.title.classList.add('hidden');
     this.els.renameInput.value = App.getCurrentBoard().name;
     Utils.focusAndPlaceCursorAtEnd(this.els.renameInput);
+    AppUI.els.menuToggle.classList.add('hidden');
     AppUI.closeMenu();
   },
 
@@ -256,6 +289,7 @@ const BoardUI = {
     this.els.deleteBlock.classList.remove('hidden');
     this.els.renameBlock.classList.add('hidden');
     RanksUI.els.ranksBlock.classList.add('hidden');
+    this.els.statsBlock.classList.add('hidden');
     AppUI.els.menuToggle.classList.add('hidden');
     this.els.title.classList.add('hidden');
     AppUI.closeMenu();
@@ -265,6 +299,7 @@ const BoardUI = {
     this.els.renameConfirmButton.setAttribute('disabled', true);
     this.els.renameBlock.classList.add('hidden');
     this.els.deleteBlock.classList.add('hidden');
+    this.els.statsBlock.classList.add('hidden');
     RanksUI.els.ranksBlock.classList.add('hidden');
     this.els.title.classList.remove('hidden');
     AppUI.els.menuToggle.classList.remove('hidden');
@@ -272,20 +307,25 @@ const BoardUI = {
 
   renderBoard() {
     AppUI.els.columns.innerHTML = '';
+    const board = App.getCurrentBoard();
 
-    if(!App.getCurrentBoard()) {
+    if(!board) {
       this.renderNoBoardsScreen();
       return;
     }
 
-    App.getCurrentBoard().columns.forEach(column => {
+    board.columns.forEach(column => {
       // Карточки
       let tasksHtml = [];
       column.tasks.forEach(task => {
         tasksHtml.push(`
         <div class="task" style="background:${tasksColors[task.color]};" data-id="${task.id}">
-          ${RanksUI.getLevelMarkHtml(task.color)}
-          ${RanksUI.getPassMarkHtml(task, column)}
+          <div class="ranks-info">
+            ${RanksUI.getLevelMarkHtml(task.color)}
+            ${RanksUI.getOwnCount(board, task.color)}
+            ${RanksUI.getPassMarkHtml(task, column)}
+            ${RanksUI.getUpperLevelMarkHtml(task.color)}
+          </div>
           <div class="task-expand-button"></div>
           <button class="task-info-toggle"></button>
           <div class="task-header">
@@ -380,10 +420,47 @@ const BoardUI = {
     this.els.closeListButton.click();
   },
 
+  showStatsUI() {
+    Utils.hide([
+      this.els.resetStatsMessage,
+      this.els.resetStats,
+      this.els.deleteBlock,
+      RanksUI.els,
+      this.els.title,
+      AppUI.els.menuToggle
+    ]);
+
+    Utils.show([
+      this.els.statsBlock,
+      this.els.resetStatsButton,
+      this.els.statsContentBlock,
+    ]);
+
+    AppUI.closeMenu();
+
+    const stats = App.getBoardsCounters();
+    if (stats) {
+      this.els.statsContentBlock.innerHTML = Object.keys(stats).map(boardId =>
+        `${App.getBoard(boardId).name}: ${stats[boardId]}<br>`
+      )
+    }
+  },
+
+  showResetUI() {
+    Utils.show([
+      this.els.resetStatsMessage,
+      this.els.resetStats,
+    ]);
+    Utils.hide([
+      this.els.resetStatsButton,
+    ]);    
+  },
+
 };
 
 
 const RanksUI = {
+
   board: null,
 
   els: {
@@ -395,25 +472,31 @@ const RanksUI = {
     deleteButton: document.getElementById('ranks-delete'),
     deleteMessage: document.getElementById('ranks-delete-confirm-message'),
     deleteConfirmButton: document.getElementById('ranks-delete-confirm'),
+    deleteCancelButton: document.getElementById('ranks-delete-cancel'),
     cancelButton: document.getElementById('ranks-cancel'),
     errorsBlock: document.getElementById('ranks-input-errors'),
     textarea: document.getElementById('ranks-input'),
     currentColorsBlock: document.getElementById('current-colors'),
     currentRanksBlock: document.getElementById('current-ranks'),
+    absCountersBlock: document.getElementById('abs-counters'),
     previewBlock: document.getElementById('preview-ranks'),
-    resetButton: document.getElementById('ranks-reset'),
-    toggleCountersButton: document.getElementById('ranks-toggle-counters'),
-    countersBlock : document.getElementById('counters'),
+    resetCountersButton: document.getElementById('ranks-counters-reset'),
+    renderCountersButton: document.getElementById('ranks-toggle-counters'),
+    infoContainer: document.getElementById('ranks-panels-container'),
   },
 
   showRanksUI() {
+
     Utils.show([
       this.els.ranksBlock,
       this.els.cancelButton,
+      this.els.currentColorsBlock,
+      this.els.infoContainer,
     ]);
+
     Utils.hide([
       BoardUI.els.deleteBlock,
-      BoardUI.els.title
+      BoardUI.els.title,
     ]);
 
     Utils.hide(AppUI.els.menuToggle);
@@ -424,13 +507,15 @@ const RanksUI = {
 
     // HAS DATA
     if(currentRanksData != null) {
-      this.els.currentRanksBlock.innerHTML = this.getRanksHtml(currentRanksData);
-      this.els.countersBlock.innerHTML = JSON.stringify(this.board.rankCounters);
+      this.renderCounters();
 
       Utils.show([
         this.els.currentRanksBlock,
+        this.els.absCountersBlock,
         this.els.editButton,
         this.els.deleteButton,
+        this.els.resetCountersButton,
+        this.els.renderCountersButton,
       ]);
 
       Utils.hide([
@@ -445,11 +530,14 @@ const RanksUI = {
       // NO DATA
       Utils.hide([
         this.els.editButton,
+        this.els.resetCountersButton,
+        this.els.renderCountersButton,
       ]);
 
       Utils.show([
         this.els.createButton,
         this.els.currentRanksBlock,
+        this.els.absCountersBlock
       ]);
 
     }
@@ -468,6 +556,24 @@ const RanksUI = {
     Utils.hide([
       this.els.editButton,
       this.els.deleteButton,
+      this.els.resetCountersButton,
+      this.els.renderCountersButton,
+    ]);
+  },
+
+  hideEditUI() {
+    Utils.hide([
+      this.els.textarea,
+      this.els.previewButton,
+      this.els.saveButton,
+      this.els.previewBlock,
+    ]);
+
+    Utils.show([
+      this.els.editButton,
+      this.els.deleteButton,
+      this.els.resetCountersButton,
+      this.els.renderCountersButton,
     ]);
   },
 
@@ -481,6 +587,8 @@ const RanksUI = {
     Utils.hide([
       this.els.createButton,
       this.els.editButton,
+      this.els.resetCountersButton,
+      this.els.renderCountersButton,
     ]);
 
   },
@@ -497,7 +605,6 @@ const RanksUI = {
     const result = {};
     const usedColors = new Set();
     const validColors = new Set(Object.keys(tasksColors));
-    const colorsInUse = this.getColorsInUse();
 
     let errors = [];
     lines.forEach((line, index) => {
@@ -529,10 +636,6 @@ const RanksUI = {
           errors.push(`Строка ${level}: цвет "${color}" не существует`);
         }
 
-        if(!colorsInUse.includes(color)) {
-          errors.push(`Строка ${level}: цвет "${color}" не используется на доске`);
-        }
-
         if(usedColors.has(color)) {
           errors.push(`Строка ${level}: цвет "${color}" используется повторно`);
         }
@@ -556,7 +659,14 @@ const RanksUI = {
 
   },
 
-  getRanksHtml(ranks) {
+  getRanksHtml(
+    board,
+    ranks,
+    title = 'Current ranks',
+    showCounters = false,
+    showAbsCounters = false,
+    hideList = false,
+  ) {
     const levels = Object.keys(ranks)
       .map(Number)
       .sort((a, b) => a - b);
@@ -573,26 +683,33 @@ const RanksUI = {
         return `<span data-color="${color}" style="background:${bg}">${q}</span>`;
       }).join('');
 
+      let counter = '';
+      if(showCounters == true && board.rankCounters && board.rankCounters[level] != null) {
+        counter = '&nbsp;&nbsp;' + board.rankCounters[level];
+      } else if(showAbsCounters == true && board.rankCountersAbs && board.rankCountersAbs[level] != null) {
+        counter = '&nbsp;&nbsp;' + board.rankCountersAbs[level];
+      }
+
       // если последний уровень — без вложенного ul
       if(levelIndex === levels.length - 1) {
         return `
           <li data-level="${level}">
-            ${colorsHtml}
+            ${colorsHtml}${counter}
           </li>`;
       }
 
       // иначе добавляем вложенный уровень
       return `
         <li data-level="${level}">
-          ${colorsHtml} -> <span>${q}</span>
+          ${colorsHtml}${counter}
           <ul>
             ${build(levelIndex + 1)}
           </ul>
         </li>`;
     }
 
-    return `Current ranks
-    <ul class="colors-list ranks-list">
+    return `<span class="ranks-title">${title}</span>
+    <ul class="colors-list ranks-list ${hideList == true ? 'hidden' : ''}">
     ${build(0)}
       </ul>`;
   },
@@ -613,9 +730,9 @@ const RanksUI = {
 
   renderColorsInUse() {
     this.els.currentColorsBlock.innerHTML = `
-      Currently used colors:&nbsp;
-      <ul class="colors-list colors-in-use">${this.getColorsInUse().map(c => `
-        <li data-color="${c}" style="background:${tasksColors[c]}"></li>
+      <span class="ranks-title">Colors in use</span>
+      <ul class="colors-list colors-in-use hidden">${this.getColorsInUse().map(c => `
+        <li data-color="${c}" style="background:${tasksColors[c]}"><span class="label">${c}</div></li> 
         `).join('')}
       </ul>
     `;
@@ -624,7 +741,14 @@ const RanksUI = {
   preview() {
     const data = this.parseRanks();
     if(data) {
-      this.els.previewBlock.innerHTML = this.getRanksHtml(data);
+      this.els.previewBlock.innerHTML = this.getRanksHtml(
+        this.board,
+        data,
+        'Preview',
+        null,
+        null,
+        null
+      );
 
       Utils.show([
         this.els.previewBlock,
@@ -652,17 +776,16 @@ const RanksUI = {
     board.ranksRaw = this.els.textarea.value;
     board.ranks = this.parseRanks();
     App.saveBoards(App.data.boards);
-    BoardUI.renderBoardsMenu();
-    BoardUI.renderHeader();
-    BoardUI.hideBoardManagementUI();
     BoardUI.renderBoard();
+    this.hideEditUI();
   },
 
   cancel() {
     this.els.errorsBlock.innerHTML = '';
     this.els.textarea.value = '';
     this.els.previewBlock.innerHTML = '';
-    Object.values(this.els).forEach(el => Utils.hide(el))
+
+    Utils.hide(Object.values(this.els));
 
     BoardUI.els.title.classList.remove('hidden');
     AppUI.els.menuToggle.classList.remove('hidden');
@@ -674,18 +797,45 @@ const RanksUI = {
       this.els.editButton,
       this.els.deleteButton,
       this.els.currentRanksBlock,
+      this.els.absCountersBlock,
       this.els.previewBlock,
+      this.els.resetCountersButton,
+      this.els.renderCountersButton,
+      this.els.cancelButton,
     ]);
 
     Utils.show([
       this.els.deleteMessage,
-      this.els.deleteConfirmButton
+      this.els.deleteConfirmButton,
+      this.els.deleteCancelButton,
+    ]);
+  },
+
+  hideDeleteUI() {
+    Utils.show([
+      this.els.currentColorsBlock,
+      this.els.editButton,
+      this.els.deleteButton,
+      this.els.currentRanksBlock,
+      this.els.absCountersBlock,
+      this.els.previewBlock,
+      this.els.resetCountersButton,
+      this.els.renderCountersButton,
+      this.els.cancelButton,
+    ]);
+
+    Utils.hide([
+      this.els.deleteMessage,
+      this.els.deleteConfirmButton,
+      this.els.deleteCancelButton,
     ]);
   },
 
   delete() {
     delete this.board.ranks;
     delete this.board.ranksRaw;
+    delete this.board.rankCounters;
+    delete this.board.rankCountersAbs;
     App.saveBoards(App.data.boards);
     this.cancel();
     BoardUI.renderBoard();
@@ -733,7 +883,7 @@ const RanksUI = {
   getPassMarkHtml(card, column) {
     const ranks = App.getCurrentBoard().ranks;
     if(!ranks) return '';
-    
+
     const board = App.getCurrentBoard();
 
     const currentColIndex = board.columns.findIndex(col => col.id === column.id);
@@ -751,54 +901,116 @@ const RanksUI = {
     let res = null;
 
     let upperLevelCount = board.rankCounters ? board.rankCounters[level - 1] ? board.rankCounters[level - 1] : null : null;
-    
-    console.log('upperLevelCount', upperLevelCount);
 
-    if (upperLevelCount == null) {
+    console.log('upperLevelCount', upperLevelCount);
+    console.log('quotaOfUpperLevel', quotaOfUpperLevel);
+
+    if(upperLevelCount == null) {
       res = -quotaOfUpperLevel;
     } else {
       res = upperLevelCount - quotaOfUpperLevel;
     }
-    return res != null ? `<div class="cardPass${res >= 0 ? ' positive' : ''}">${(res >= 0 ? 'Go! ' : '') + (res !== 0 ? res : '')}</div>` : '';
+    console.log(`card L${level} "${card.description}" (color: ${card.color})`, res);
+
+    // const text = (res > 0 ? 'Go! ' : res === 0 ? '<span class="red-cross">❌</span>' : '') 
+    //   + (
+    //     res !== 0 ? 
+    //       (res > 0 ? '+' : '') + res 
+    //       : ''
+    //   );
+
+    const text = (res >= 0 ? 'Go! ' : '')
+      + (
+        res !== 0 ?
+          (res >= 0 ? '+' : '') + res
+          : ''
+      );
+
+    return res != null ?
+      `<div class="cardPass${res >= 0 ? ' positive' : ''}">${text}</div>`
+      : '';
+  },
+
+  getUpperLevelMarkHtml(color) {
+    const ranks = App.getCurrentBoard().ranks;
+    if(!ranks) return '';
+    const level = this.getLevelOfColor(color, ranks);
+    if(level) {
+      const upperLevel = ranks[level - 1];
+      return upperLevel ? upperLevel.c.map(c => `<div class="rank-level-mark" style="background:${tasksColors[c]}"></div>`).join('') : '';
+    } else {
+      return '';
+    }
+  },
+
+  getOwnCount(board, color) {
+    let res = '';
+    if(board && board.rankCounters) {
+      const count = board.rankCounters[this.getLevelOfColor(color)];
+      res = count != null ? `<span class="own-rank-count-mark">${count}</span>` : '';
+    }
+    return res;
   },
 
   makeAMove({color, sourceColumn, targetColumn}) {
 
-    if (sourceColumn.id == targetColumn.id) return;
+    if(sourceColumn.id == targetColumn.id) return;
 
     const board = App.getCurrentBoard();
     const ranks = board.ranks;
-    
+
     if(!ranks || !color) return;
 
     const level = this.getLevelOfColor(color, ranks);
     console.log('makeAMove: the card level', level);
 
-    
-    if (!sourceColumn || !targetColumn) return;
-    
-    if (!board.rankCounters) {
+    if(!sourceColumn || !targetColumn) return;
+
+    if(!board.rankCounters) {
       board.rankCounters = {};
     }
-    
+
+    if(!board.rankCountersAbs) {
+      board.rankCountersAbs = {};
+    }
+
     const sourceColIndex = board.columns.findIndex(col => col.id == sourceColumn.id)
     const targetColIndex = board.columns.findIndex(col => col.id == targetColumn.id)
     const isGoingForward = targetColIndex > sourceColIndex;
-    
+
     // increment own counter
     let ownCount = board.rankCounters[level] !== undefined ? board.rankCounters[level] : null;
-    console.log('the card counter', ownCount)
+    console.log('Make move: the card own count', ownCount)
 
     if(ownCount == null) {
-      console.log('setting own counter to 0')
       ownCount = 0;
     } else {
       ownCount = parseInt(ownCount);
     }
 
-    console.log(`setting counter to: ${parseInt(ownCount) + 1}`);
+    const newOwnValue = isGoingForward ? (ownCount + 1) : (ownCount - 1);
 
-    board.rankCounters[level] = isGoingForward ? (ownCount + 1) : (ownCount - 1);
+    console.log(`Make move: setting counter to: ${newOwnValue}`);
+
+    board.rankCounters[level] = newOwnValue;
+
+    let absCount = board.rankCountersAbs[level];
+    if(absCount == null) {
+      absCount = 0;
+    } else {
+      absCount = parseInt(absCount);
+    }
+    board.rankCountersAbs[level] = isGoingForward ? (absCount + 1) : (absCount - 1)
+
+    const boardsCounters = App.getBoardsCounters();
+    let theBoardCounter = boardsCounters[board.id] == null
+        ? 0
+        : parseInt(boardsCounters[board.id], 10);
+    
+    theBoardCounter = isGoingForward ? (theBoardCounter + 1) : (theBoardCounter - 1);
+    boardsCounters[board.id] = theBoardCounter;
+
+    App.saveCounters(boardsCounters);
 
     if(level == 1) return;
 
@@ -807,27 +1019,52 @@ const RanksUI = {
     const quotaOfUpperLevel = parseInt(ranks[level - 1].q);
 
     let upperCount = board.rankCounters[level - 1] ? parseInt(board.rankCounters[level - 1]) : null;
+    console.log(`Make move: upper level count: ${upperCount}`);
 
-    if (upperCount == null) {
+    if(upperCount == null) {
       upperCount = 0;
     }
-    
-    console.log(`resetting parent's level L${level - 1} to ${isGoingForward ? (upperCount - quotaOfUpperLevel) : (upperCount + quotaOfUpperLevel)}`);
-    
+
+    console.log(`Make move: resetting upper level L${level - 1} to ${isGoingForward ? (upperCount - quotaOfUpperLevel) : (upperCount + quotaOfUpperLevel)}`);
+
     board.rankCounters[level - 1] = isGoingForward ? (upperCount - quotaOfUpperLevel) : (upperCount + quotaOfUpperLevel);
 
   },
 
   resetCounters() {
-    this.board.rankCounters && delete this.board.rankCounters;
+    delete this.board.rankCounters;
+    delete this.board.rankCountersAbs;
     App.saveBoards(App.data.boards);
     BoardUI.renderBoard();
+    RanksUI.showRanksUI();
   },
 
-  showCounters() {
-    this.els.countersBlock.innerHTML = this.board.rankCounters ? 
-      Object.keys(this.board.rankCounters).map(k => `L${k}:${counters[k]}`).join('; ')
-        : '';
+  renderCounters() {
+    this.els.currentRanksBlock.innerHTML = this.getRanksHtml(
+      this.board,
+      this.board.ranks,
+      undefined,
+      true,
+      null,
+      true
+    );
+
+    if(this.board.rankCountersAbs != null) {
+      this.els.absCountersBlock.innerHTML = this.getRanksHtml(
+        this.board,
+        this.board.ranks,
+        'Abs counters',
+        null,
+        true,
+        true
+      );
+    }
+  },
+
+  toggleInfo(el, e) {
+    [...this.els.infoContainer.querySelectorAll('div > ul')].forEach(el =>
+      el.classList.toggle('hidden')
+    );
   },
 
 };
@@ -1056,6 +1293,7 @@ const TaskUI = {
       document.querySelector('.task-edit').remove();
       taskEl.querySelector('.task-info').classList.remove('hidden');
       taskEl.querySelector('.task-header').classList.remove('hidden');
+      Utils.show(task.querySelector('.ranks-info'));
     }
   },
 
@@ -1072,6 +1310,7 @@ const TaskUI = {
       const input = editBlock.querySelector('.task-edit-input');
       Utils.expandInput(input);
       Utils.focusAndPlaceCursorAtEnd(input);
+      Utils.hide(task.querySelector('.ranks-info'));
     }
   },
 
@@ -1080,6 +1319,7 @@ const TaskUI = {
     task.insertAdjacentHTML('beforeend', this.getDeleteUi());
     task.querySelector('.task-info').classList.add('hidden');
     task.querySelector('.task-header').classList.add('hidden');
+    Utils.hide(task.querySelector('.ranks-info'));
   },
 
   removeDeleteUi(el) {
@@ -1087,6 +1327,7 @@ const TaskUI = {
     task.querySelector('.task-delete-block')?.remove();
     task.querySelector('.task-info').classList.remove('hidden');
     task.querySelector('.task-header').classList.remove('hidden');
+    Utils.show(task.querySelector('.ranks-info'));
   },
 
   updateSaveButtonState(el) {
@@ -1158,8 +1399,7 @@ const TaskUI = {
     task.querySelector('.task-delete-block')?.remove();
     task.querySelector('.task-edit')?.remove();
     task.querySelector('.set-task-colors')?.remove();
-    task.querySelector('.cardLevel').classList.toggle('hidden');
-    task.querySelector('.cardPass')?.classList.toggle('hidden');
+    Utils.toggle(task.querySelector('.ranks-info'));
   },
 
   showSetColorUI(el) {
@@ -1342,10 +1582,10 @@ const DragDrop = {
         col.tasks && col.tasks.some(c => c.id === this.dragState.draggingTask.dataset.id)
       );
 
-      
+
       const draggedTask = sourceColumn.tasks.find(c => c.id === this.dragState.draggingTask.dataset.id);
       let sourceColumnIndex = null;
-      
+
       // Удалим карточку из старой колонки
       if(sourceColumn) {
         sourceColumnIndex = currentBoard.columns.findIndex(col => col.id == sourceColumn.id)
@@ -1693,7 +1933,11 @@ const Utils = {
 
   toggle(el, toShow) {
     [...(el.length ? el : [el])].forEach(o => {
-      o.classList && o.classList.toggle('hidden', !toShow);
+      if(toShow == undefined) {
+        o.classList && o.classList.toggle('hidden');
+      } else {
+        o.classList && o.classList.toggle('hidden', !toShow);
+      }
       //console.log('el revealed', o, o.classList)
     })
   },
@@ -1739,9 +1983,11 @@ const Events = {
       '#ranks-cancel': 'RanksUI.cancel',
       '#ranks-edit': 'RanksUI.showEditUI',
       '#ranks-delete': 'RanksUI.showDeleteUI',
+      '#ranks-delete-cancel': 'RanksUI.hideDeleteUI',
       '#ranks-delete-confirm': 'RanksUI.delete',
-      '#ranks-reset': 'RanksUI.resetCounters',
-      '#ranks-toggle-counters': 'RanksUI.showCounters',
+      '#ranks-counters-reset': 'RanksUI.resetCounters',
+      '#ranks-toggle-counters': 'RanksUI.renderCounters',
+      '#ranks-panels-container .ranks-title': 'RanksUI.toggleInfo',
       '.move-column-left': ['ColumnUI.move', [false]],
       '.move-column-right': ['ColumnUI.move', [true]],
       '.move-column': 'ColumnUI.toggleMoveUi',
@@ -1767,6 +2013,9 @@ const Events = {
       '.save-set-color': 'TaskUI.saveColor',
       '.task-edit-button': 'TaskUI.showEditUi',
       '.new-task-cancel': 'TaskUI.hideAddUi',
+      '#show-stats' : 'BoardUI.showStatsUI',
+      '#reset-stats' : 'BoardUI.showResetUI',
+      '#reset-stats-confirm' : 'App.resetCounters',
     },
     'input': {
       '#rename-board-input': 'BoardUI.renameInputCallback',
