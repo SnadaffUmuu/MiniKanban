@@ -761,8 +761,6 @@ const RanksUI = {
     board.ranks = ranks;
     console.log('ranks', board.ranks);
     console.log('ranksRaw', board.ranksRaw);
-    // board.ranksRaw = this.els.textarea.value;
-    // board.ranks = this.parseRanks();
   },
 
   getRanksHtml(
@@ -1192,7 +1190,6 @@ const RanksUI = {
   refreshCounters() {
     this.renderCounters(),
     this.toggleInfo(null, null, [true]);
-    //this.toggleColorsInUse(null, null, [true]);
   },
 
   renderCounters() {
@@ -1349,7 +1346,6 @@ const ColumnUI = {
   },
 
   hideColumActionsUi(column) {
-    //column.querySelector('.save-rename-column').removeAttribute('disabled');
     column.querySelector('.rename-column-block').classList.add('hidden');
     column.querySelector('.delete-column-block').classList.add('hidden');
     column.querySelector('.move-column-block').classList.add('hidden');
