@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mvd Kanban App</title>
+ <link rel="stylesheet" href="./styles.css">
+  <!-- <link rel="stylesheet" href="styles.css"> -->
+</head>
+<body>
+  <header>
+    <h1 id="board-title" class="top-menu-title"></h1>
+    <div id="top-tools">
+      <button id="boards-button"></button>
+      <button id="menu-toggle"></button>
+    </div>
+    <section id="menu" class="hidden">
+      <div id="menu-content">
+        <button id="rename-board" class="hidden">Rename board</button>
+        <button id="delete-board" class="hidden">Delete board</button>
+        <button id="manage-ranks" class="hidden">Manage ranks</button>
+      </div>
+    </section>
+
+    <div id="rename-board-block" class="hidden">
+      <h3 class="top-menu-title">Rename board</h3>
+      <button class="js-cancel-current button-close"></button>
+      <input type="search" id="rename-board-input" />
+      <button id="confirm-rename" class="board-management-button" disabled>Save</button>
+      <button id="cancel-rename" class="js-cancel-current board-management-button">Cancel</button>
+    </div>
+
+    <div id="delete-board-block" class="hidden">
+      <h3 class="top-menu-title">Delete board</h3>
+      <button class="js-cancel-current button-close"></button>
+      <p>Delete this board with all columns and tasks?</p>
+      <button id="delete-confirm" class="board-management-button">Delete</button>
+      <button id="delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
+    </div>      
+
+    <div id="ranks-block" class="hidden">
+      <h3 class="top-menu-title">Manage the board ranks</h3>
+      <div id="current-colors" class="hidden"></div>
+      <div id="current-ranks" class="hidden"></div>
+      <div id="preview-ranks" class="hidden"></div>
+      <textarea id="ranks-raw" class="hidden"></textarea>
+      <button class="js-cancel-current button-close"></button>
+      <button id="create-ranks" class="board-management-button hidden">Create</button>
+      <button id="ranks-edit" class="board-management-button hidden">Edit</button>
+      <button id="ranks-preview" class="board-management-button hidden">👀</button>
+      <button id="ranks-save-confirm" class="board-management-button hidden">Save</button>
+      <button id="ranks-delete-confirm" class="board-management-button hidden">Delete</button>
+      <button id="ranks-delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
+    </div>      
+
+    <div id="boards-list" class="hidden">
+      <h3 class="top-menu-title">Boards</h3>
+      <div id="boards-buttons"></div>
+      <button id="create-board">Create board</button>
+      <button id="close-boards-list" class="button-close"></button>
+    </div>
+  </header>
+
+
+  <main>
+    <div id="columns"></div>
+    <button id="add-column"></button>
+  </main>
+
+ <script src="./script.js"></script>
+ <!-- <script src="script.js"></script> -->
+</body>
+</html>
