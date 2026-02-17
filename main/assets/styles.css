@@ -103,14 +103,14 @@ header {
 .button-close {
   border:none;
   outline: none;
-  width: 20px;
-  height:20px;
+  width: 40px;
+  height:40px;
   position: absolute;
-  top:0;
-  right:0;
+  top:-10px;
+  right:-10px;
   z-index: 300;
-  background: url(images/close.svg) 0 0 no-repeat #333533;
-  background-size: contain;
+  background: url(images/close.svg) 50% no-repeat #333533;
+  background-size: 20px;
 }
 
 #boards-buttons {
@@ -498,6 +498,7 @@ body:has(.dragged) {
 }
 
 .task-delete,
+.task-clone,
 .task-change-color,
 .task-info-toggle,
 .add-task,
@@ -512,6 +513,11 @@ body:has(.dragged) {
 
 .task-delete {
   background: transparent url(images/trash.svg) 50% no-repeat;
+  background-size: 23px;
+}
+
+.task-clone {
+  background: transparent url(images/copy.svg) 50% no-repeat;
   background-size: 23px;
 }
 
@@ -606,33 +612,22 @@ body:has(.dragged) {
   color:#999;
 }
 
-/* #current-colors {
-  display: flex;
-  align-items: stretch;
-} */
-
 .colors-list.colors-in-use {
   margin-bottom:0;
-  margin-top:10px;
   display:flex;
-  flex-flow:column nowrap;
-  justify-content: space-between;
+  flex-flow:row wrap;
+  font-size:11px;
 }
 
-.colors-list.colors-in-use li[data-color] {
+.colors-list.colors-in-use div:has(span[data-color]) {
   margin-right:5px; 
-  margin-bottom: 5px;
-  width:15px;
-  height:15px;
-  border-radius: 7px;
-  display: inline-block;
-  position:relative;
+  display:flex;
+  flex-flow:row nowrap;
+  flex:1 0 auto;
 }
 
-.colors-list.colors-in-use li[data-color] .label {
-  position: absolute;
-  left: 20px;
-  top:-1px;
+.colors-list.colors-in-use .label {
+  padding-left:3px;
 }
 
 .colors-list li.current::after {
@@ -649,12 +644,12 @@ body:has(.dragged) {
 }
 
 #ranks-block textarea {
+  box-sizing: border-box;
   height:100px;
-  width:fit-content;
+  width:100%;
   background:transparent;
   color:white;
   padding:10px;
-  box-sizing: border-box;
   border-bottom:2px solid #f79d35;
   display:block;
   font-size:14px;
@@ -670,6 +665,7 @@ body:has(.dragged) {
   padding:0;
   margin:10px 0 0;
   list-style: none;
+  font-size:12px;
 }
 
 .ranks-list ul {
@@ -679,22 +675,22 @@ body:has(.dragged) {
 }
 
 .ranks-list ul {
-  padding-left:10px;
+  padding-left:14px;
 }
 
 .ranks-list span {
   display:inline-block
 }
 
-.ranks-list span[data-color] {
+.ranks-list span[data-color],
+.colors-in-use span[data-color] {
   width:15px;
   height:15px;
   border:1px solid #999;
   border-radius: 7px;
-  margin-right:5px;
-  margin-bottom:5px;
+  margin-right:6px;
+  margin-bottom:6px;
   color:#000;
-  font-size:12px;
   text-align: center;
 }
 
@@ -750,9 +746,16 @@ body:has(.dragged) {
 }
 
 #ranks-panels-container {
-  padding-top:10px;
   display: flex;
-  flex-flow: row wrap;
+  flex-flow: row nowrap;
+}
+
+#ranks-panels-container > div {
+  flex: 1 1 auto;
+}
+
+#ranks-panels-container > div:not(:first-child) {
+  padding-left:7px;
 }
 
 #ranks-buttons-container {
@@ -776,16 +779,9 @@ body:has(.dragged) {
   flex-flow:column nowrap;
 }
 
-#current-colors span {
-  flex: 0 1 auto;
-}
-
-#current-colors .colors-in-use {
-  flex: 1 0 auto;
-}
-
 .ranks-title {
-  padding:10px;
+  padding:7px;
+  padding-left:0;
   display:block;
 }
 
@@ -795,9 +791,13 @@ body:has(.dragged) {
 }
 
 #stats {
-  padding:10px;
+  padding:10px 10px 10px 0;
 }
 
 #statsUI {
   color:white;
+}
+
+.ranks-message {
+  padding:10px 0;
 }
