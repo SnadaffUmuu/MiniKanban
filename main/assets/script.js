@@ -354,7 +354,7 @@ const BoardUI = {
           <button class="rename-column">Rename column</button>
           <button class="move-column">Move column</button>
           <button class="delete-column">Delete column</button>
-          <label for="skipMove"><input type="checkbox" name="skipMove">Skip move</label>
+          <label for="skipMove"><input type="checkbox"${column.skipMove ? 'checked' : ''} name="skipMove">Skip move</label>
         </div>
         ${ColumnUI.renderRenameUi(column.name)}
         ${ColumnUI.renderDeleteUi()}
