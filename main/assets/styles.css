@@ -344,7 +344,8 @@ main {
   margin-top:-10px;
 }
 
-.column-menu button {
+.column-menu button,
+.column-menu label {
   background: transparent;
   border:0;
   border-top:1px solid #cfcfcf;
@@ -354,18 +355,27 @@ main {
   text-align: left;
   position: relative;
   color:#3b3b3b;
+  display:block;
 }
 
 .column-menu button:first-child {
   border-top:none;
 }
 
-.column-menu button::before {
+.column-menu button::before,
+.column-menu label input[type="checkbox"] {
   position: absolute;
   left:-40px;
   height:20px;
   width:20px;
   content:'';
+}
+
+.column-menu label input[type="checkbox"] {
+  height:15px;
+  width:15px;
+  left:-42px;
+  top: 10px;
 }
 
 .rename-column::before {
@@ -780,7 +790,7 @@ body:has(.dragged) {
 }
 
 .ranks-title {
-  padding:7px;
+  padding:12px;
   padding-left:0;
   display:block;
 }

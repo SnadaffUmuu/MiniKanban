@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mvd Kanban App</title>
- <link rel="stylesheet" href="./styles.css">
-  <!-- <link rel="stylesheet" href="styles.css"> -->
+  <title>333Mvd Kanban App</title>
+ <!-- <link rel="stylesheet" href="./styles.css"> -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header>
@@ -19,8 +19,19 @@
         <button id="rename-board" class="hidden">Rename board</button>
         <button id="delete-board" class="hidden">Delete board</button>
         <button id="manage-ranks" class="hidden">Manage ranks</button>
+        <button id="show-stats" class="hidden">Show stats</button>
       </div>
     </section>
+
+    <div id="statsUI" class="hidden">
+      <h3 class="top-menu-title">Counters</h3>
+      <div id="stats"></div>
+      <div id="reset-message" class="hidden">Сбросить счетчики досок?</div>
+      <button id="reset-stats-confirm" class="board-management-button hidden">Yes</button>
+      <button id="reset-stats-cancel" class="board-management-button hidden">Нет</button>
+      <button class="js-cancel-current button-close"></button>
+      <button id="reset-stats" class="board-management-button">Reset</button>
+    </div>
 
     <div id="rename-board-block" class="hidden">
       <h3 class="top-menu-title">Rename board</h3>
@@ -40,17 +51,38 @@
 
     <div id="ranks-block" class="hidden">
       <h3 class="top-menu-title">Manage the board ranks</h3>
-      <div id="current-colors" class="hidden"></div>
-      <div id="current-ranks" class="hidden"></div>
+      <div id="current-colors"></div>
+      <div id="ranks-panels-container">
+        <div id="current-ranks" class="hidden"></div>
+        <div id="abs-counters" class="hidden"></div>
+      </div>
+      <textarea id="ranks-input" class="hidden" placeholder="2 blue 
+2 white 
+1 purple 
+1 pink,yellow"></textarea>
+      <div id="ranks-input-errors" class="hidden"></div>
       <div id="preview-ranks" class="hidden"></div>
-      <textarea id="ranks-raw" class="hidden"></textarea>
-      <button class="js-cancel-current button-close"></button>
-      <button id="create-ranks" class="board-management-button hidden">Create</button>
-      <button id="ranks-edit" class="board-management-button hidden">Edit</button>
-      <button id="ranks-preview" class="board-management-button hidden">👀</button>
-      <button id="ranks-save-confirm" class="board-management-button hidden">Save</button>
-      <button id="ranks-delete-confirm" class="board-management-button hidden">Delete</button>
-      <button id="ranks-delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
+      <div id="ranks-delete-confirm-message" class="ranks-message hidden">Really delete ranks for this board?</div>
+      <div id="ranks-counters-reset-message" class="ranks-message hidden">Really reset abs.counters for this board?</div>
+      <div id="ranks-buttons-container">
+        <button class="js-cancel-current button-close"></button>
+
+        <button id="ranks-counters-reset" class="board-management-button">Reset c-s</button>
+        <button id="ranks-counters-reset-confirm" class="board-management-button hidden">Reset</button>
+        <button id="ranks-counters-reset-cancel" class="board-management-button hidden">Cancel</button>
+        
+        <button id="ranks-toggle-counters" class="board-management-button">Refresh c-s</button>
+        <button id="create-ranks" class="board-management-button hidden">Create</button>
+        <button id="create-ranks-cancel" class="board-management-button hidden">Cancel</button>
+        <button id="ranks-edit" class="board-management-button hidden">Edit</button>
+        <button id="ranks-preview" class="board-management-button hidden">👀</button>
+        <button id="ranks-save-confirm" disabled class="board-management-button hidden">Save</button>
+        <button id="ranks-edit-cancel" class="board-management-button hidden">Cancel</button>
+        <button id="ranks-delete" class="board-management-button hidden">Delete</button>
+        <button id="ranks-delete-confirm" class="board-management-button hidden">Delete</button>
+        <button id="ranks-delete-cancel" class="board-management-button hidden">Cancel</button>
+        <button id="ranks-cancel" class="board-management-button">Cancel</button>
+      </div>
     </div>      
 
     <div id="boards-list" class="hidden">
@@ -67,7 +99,7 @@
     <button id="add-column"></button>
   </main>
 
- <script src="./script.js"></script>
- <!-- <script src="script.js"></script> -->
+ <!-- <script src="./script.js"></script> -->
+ <script src="script.js"></script>
 </body>
 </html>
