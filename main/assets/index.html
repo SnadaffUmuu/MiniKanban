@@ -11,19 +11,19 @@
   <header>
     <h1 id="board-title" class="top-menu-title"></h1>
     <div id="top-tools">
-      <button id="boards-button"></button>
+      <button id="boards-button" data-header-mode-trigger="boardsList"></button>
       <button id="menu-toggle"></button>
     </div>
     <section id="menu" class="hidden">
       <div id="menu-content">
-        <button id="rename-board" class="hidden">Rename board</button>
-        <button id="delete-board" class="hidden">Delete board</button>
-        <button id="manage-ranks" class="hidden">Manage ranks</button>
-        <button id="show-stats" class="hidden">Show stats</button>
+        <button id="rename-board" data-header-mode-trigger="renameBoard" class="hidden">Rename board</button>
+        <button id="delete-board" data-header-mode-trigger="deleteBoard" class="hidden">Delete board</button>
+        <button id="manage-ranks"  data-header-mode-trigger="ranks" class="hidden">Manage ranks</button>
+        <button id="show-stats" class="hidden" data-header-mode-trigger="stats">Show stats</button>
       </div>
     </section>
 
-    <div id="statsUI" class="hidden">
+    <div id="statsUI" data-header-mode="stats" class="hidden">
       <h3 class="top-menu-title">Counters</h3>
       <div id="stats"></div>
       <div id="reset-message" class="hidden">Сбросить счетчики досок?</div>
@@ -33,7 +33,7 @@
       <button id="reset-stats" class="board-management-button">Reset</button>
     </div>
 
-    <div id="rename-board-block" class="hidden">
+    <div id="rename-board-block" data-header-mode="renameBoard" class="hidden">
       <h3 class="top-menu-title">Rename board</h3>
       <button class="js-cancel-current button-close"></button>
       <input type="search" id="rename-board-input" />
@@ -41,7 +41,7 @@
       <button id="cancel-rename" class="js-cancel-current board-management-button">Cancel</button>
     </div>
 
-    <div id="delete-board-block" class="hidden">
+    <div id="delete-board-block" data-header-mode="deleteBoard" class="hidden">
       <h3 class="top-menu-title">Delete board</h3>
       <button class="js-cancel-current button-close"></button>
       <p>Delete this board with all columns and tasks?</p>
@@ -49,7 +49,7 @@
       <button id="delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
     </div>      
 
-    <div id="ranks-block" class="hidden">
+    <div id="ranks-block" data-header-mode="ranks" class="hidden">
       <h3 class="top-menu-title">Manage the board ranks</h3>
       <div id="current-colors"></div>
       <div id="ranks-panels-container">
@@ -85,11 +85,11 @@
       </div>
     </div>      
 
-    <div id="boards-list" class="hidden">
+    <div id="boards-list" data-header-mode="boardsList" class="hidden">
       <h3 class="top-menu-title">Boards</h3>
       <div id="boards-buttons"></div>
       <button id="create-board">Create board</button>
-      <button id="close-boards-list" class="button-close"></button>
+      <button id="close-boards-list" class="js-cancel-current button-close"></button>
     </div>
   </header>
 
@@ -99,7 +99,8 @@
     <button id="add-column"></button>
   </main>
 
- <script src="./script.js"></script>
+ <script src="./script1.js"></script>
+ <!-- <script src="./script.js"></script> -->
  <!-- <script src="script.js"></script> -->
 </body>
 </html>

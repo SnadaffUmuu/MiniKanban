@@ -10,7 +10,6 @@ const tasksColors = {
   beige: "#e5d9d6"
 };
 
-
 const Storage = {
   load() {
     if(typeof Android !== 'undefined') {
