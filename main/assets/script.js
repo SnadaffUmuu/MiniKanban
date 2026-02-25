@@ -754,13 +754,20 @@ const RanksUI = {
 
   },
 
-  setRanksData(board) {
-    if(board == null) {
-      board = App.getCurrentBoard();
-    }
-    const {ranks, ranksRaw} = this.parseRanks();
+  setRanksData(board, {ranks, ranksRaw}) {
     board.ranksRaw = ranksRaw;
     board.ranks = ranks;
+
+    /* normalizing */
+    const counters = board.rankCounters || {};
+    const absCounters = board.rankCountersAbs || {};
+    Object.keys(ranks).forEach(level => {
+      if (!counters[level]) counters[level] = 0;
+      if (!absCounters[level]) absCounters[level] = 0;
+    });
+    board.rankCounters = counters;
+    board.rankCountersAbs = absCounters;
+
     console.log('ranks', board.ranks);
     console.log('ranksRaw', board.ranksRaw);
   },
@@ -888,11 +895,10 @@ const RanksUI = {
 
   save() {
     const board = App.getCurrentBoard();
-    this.setRanksData(board);
-    this.resetCounters();
-    //App.saveBoards(App.data.boards);
-    //BoardUI.renderBoard();
-    //this.renderCounters();
+    this.setRanksData(board, this.parseRanks());
+    App.saveBoards(App.data.boards);
+    BoardUI.renderBoard();
+    this.showRanksUI();
     this.hideEditUI();
   },
 
@@ -1106,7 +1112,7 @@ const RanksUI = {
     boardsCounters[board.id] = boardTotal + delta;
     App.saveCounters(boardsCounters);
 
-    // --- 3. Если skipMove — логика рангов не трогаем
+    // --- 3. Если skipMove — логику рангов не трогаем
     if(skipMove) {
       RanksUI.refreshCounters();
       return;
@@ -1119,22 +1125,32 @@ const RanksUI = {
       return;
     }
 
-    // --- 5. Проверка “в долг”
-    // Ход вперёд в долг = у верхнего уровня нет ресурса
-    // Ход назад в долг = у верхнего уровня был компенсирующий долг
+    const quotaOwn = toInt(ranks[level].q);
+    const isLastLevel = level === Object.keys(ranks).length;
+    
+    if (isLastLevel && ownCount >= quotaOwn) {
+      
+      // --- 5. В последнем уровне не накапливаем счет сверх квоты
+      // (т.к. нет потомков и его никто не обнуляет)
+      board.rankCounters[level] = quotaOwn;
 
-    const quotaUpper = toInt(ranks[level - 1].q);
+    } else {
 
-    const affectsOwn =
-      isGoingForward
-        ? upperCount > 0
-        : true; // назад всегда восстанавливаем симметрично
-
-    if(affectsOwn) {
-      board.rankCounters[level] = ownCount + delta;
+      // --- 6. Проверка “в долг”
+      // Ход вперёд в долг = у верхнего уровня нет ресурса
+      // Ход назад в долг = у верхнего уровня был компенсирующий долг
+      const affectsOwn =
+        isGoingForward
+          ? upperCount > 0
+          : true; // назад всегда восстанавливаем симметрично
+  
+      if(affectsOwn) {
+        board.rankCounters[level] = ownCount + delta;
+      }
     }
 
-    // --- 6. Корректировка верхнего уровня
+    // --- 7. Корректировка верхнего уровня
+    const quotaUpper = toInt(ranks[level - 1].q);
     board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
 
     RanksUI.refreshCounters();
