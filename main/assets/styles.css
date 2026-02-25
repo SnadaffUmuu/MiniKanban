@@ -394,7 +394,7 @@ main {
   background-position: 50% -1px;
 }
 
-.move-column-block button {
+.move-column-block [data-move-direction] {
   width:20px;
   height:20px;
   border-radius: 10px;
@@ -403,8 +403,15 @@ main {
   background-repeat: no-repeat;
   background-color: #f79d352c;
   border: 1px solid #f79d3585;
-  margin:0 15px 15px 0;
+  margin-right:15px;
   padding:0;
+}
+
+.col-move-block-container {
+  display:flex;
+  flex-flow:row nowrap;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .move-column-right {
