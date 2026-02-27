@@ -52,6 +52,7 @@ const Bus = {
     columnHeaderUIChanged: 'columnHeaderUIChanged',
     columnAdded: 'columnAdded',
     columnMoved: 'columnMoved',
+    boardUiChanged: 'boardUiChanged',
   },
 
   listeners: {},
@@ -70,26 +71,64 @@ const Bus = {
   emit(event, payload) {
     const handlers = this.listeners[event];
     if(!handlers) return;
-
-    handlers.forEach(handler => {
-      this.queue.add(() => handler(payload));
-    });
-
-    this.schedule();
+    setTimeout(() => {
+      handlers.forEach(h => h(payload));
+    }, 0)
   },
+
+  // emit(event, payload) {
+  //   const handlers = this.listeners[event];
+  //   if(!handlers) return;
+
+  //   handlers.forEach(handler => {
+  //     this.queue.add(() => handler(payload));
+  //   });
+
+  //   this.schedule();
+  // },
 
   schedule() {
     if(this.scheduled) return;
     this.scheduled = true;
 
-    queueMicrotask(() => this.flush());
+    const scheduleMicrotask =
+      typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : (cb) => Promise.resolve().then(cb);
+
+    scheduleMicrotask(() => this.flush());
   },
 
   flush() {
     this.queue.forEach(fn => fn());
     this.queue.clear();
     this.scheduled = false;
-  }
+  },
+
+  scheduleMicrotask:
+    typeof queueMicrotask === 'function'
+      ? queueMicrotask
+      : (cb) => Promise.resolve().then(cb),
+
+  createBatched(fn) {
+    let scheduled = false;
+    const schedule = this.scheduleMicrotask;
+
+    return function batched(...args) {
+      if(scheduled) return;
+
+      scheduled = true;
+
+      schedule(() => {
+        scheduled = false;
+        fn.apply(this, args);
+      });
+    };
+  },
+
+  batchedMethod(obj, methodName) {
+    obj[methodName] = this.createBatched(obj[methodName].bind(obj));
+  },
 };
 
 const State = {
@@ -99,6 +138,7 @@ const State = {
   boardUi: {
     columnUi: {}, //default, menu, rename, move, delete
   },
+  afterRender : [],
 
   setState(patch) {
     Object.assign(this, patch);
@@ -215,7 +255,7 @@ const BoardDomain = {
   },
 
   renameColumn(id, name) {
-    if (!name) return;
+    if(!name) return;
     this.getColumn(id).name = name;
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
@@ -233,10 +273,20 @@ const BoardUI = {
   dom: {},
 
   init() {
-    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.boardsChanged, this.render);
+    Bus.on(Bus.events.boardUiChanged, this.render);
     Bus.on(Bus.events.columnAdded, (newUid) => {
       this.render();
-      this.dom.main.scrollLeft = document.querySelector(`.column[data-id=${newUid}]`).offsetLeft - 30;
+      State.afterRender.push(() => {
+        const col = document.querySelector(
+          `.column[data-id="${newUid}"]`
+        );
+
+        if (!col) return;
+
+        this.dom.main.scrollLeft = col.offsetLeft - 30;
+      });
     });
   },
 
@@ -287,15 +337,19 @@ const BoardUI = {
       });
 
       if(!tasksHtml.length) {
-        tasksHtml = [`<button class="add-task-button">Click to add first task</button>`];
+        tasksHtml = [`<button class="js-add-task add-task-button">Click to add first task</button>`];
       }
-
+      const formsForColumn = Object.entries(State.boardUi.taskForms || {})
+        .filter(([id, form]) => form.columnId === column.id);
+      const formsHtml = formsForColumn.map(([formId, form]) => {
+        return TaskUI.getFormHtml(formId, form);
+      });
       const columnHtml = `
       <div class="column" data-id="${column.id}">
         <div class="column-header">
           <h3 class="column-title">${column.name}</h3>
           <span class="task-count">${column.tasks.length}</span>
-          <button class="add-task"></button>
+          <button class="js-add-task add-task"></button>
           <button class="column-menu-toggle"></button>
         </div>
         <div class="column-menu hidden">
@@ -318,18 +372,24 @@ const BoardUI = {
         <div class="move-column-block hidden" data-header-mode="move">
           <div>Move column</div>
           <div class="col-move-block-container">
-            <button class="js-back board-management-button">Cancel</button>
             <button data-move-direction="left" class="move-column-left board-management-button"></button>
             <button data-move-direction="right" class="move-column-right board-management-button"></button>
           </div>
         </div>
         <div class="column-body">
+          ${formsHtml.join('')}
           ${tasksHtml.join('')}
         </div>
       </div>
     `;
       this.dom.columnsContainer.insertAdjacentHTML('beforeend', columnHtml);
+
     });
+
+    while(State.afterRender.length) {
+      const effect = State.afterRender.shift();
+      effect();
+    }    
   },
 
   createColumn() {
@@ -340,7 +400,9 @@ const BoardUI = {
 };
 
 const HeaderUI = {
+
   board: null,
+
   selectors: {
     title: '#board-title',
     boardsButton: '#boards-button',
@@ -349,8 +411,11 @@ const HeaderUI = {
     changeHeaderModeTriggers: 'header [data-header-mode-trigger]',
     reset: '.js-cancel-current',
   },
+
   dom: {},
+
   init() {
+    Bus.batchedMethod(this, 'render');
     Bus.on(Bus.events.boardsChanged, this.render.bind(this));
     Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
   },
@@ -384,7 +449,7 @@ const HeaderUI = {
   },
 
   render() {
-    console.log('Header render');
+    //console.log('Header render');
     this.board = BoardDomain.getCurrentBoard();
     this.dom.title.classList.toggle('hidden', State.headerUiMode !== 'default');
     this.dom.title.innerHTML = this.board.name;
@@ -399,13 +464,17 @@ const HeaderUI = {
 };
 
 const BoardsList = {
+
   selectors: {
     createButton: '#create-board',
     boardsListButtonsContainer: '#boards-buttons',
     boardsButtons: '#boards-buttons button:not([id="create-board"])',
   },
+
   dom: {},
+
   init() {
+    Bus.batchedMethod(this, 'render');
     Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
     Bus.on(Bus.events.boardsChanged, this.render.bind(this));
   },
@@ -442,7 +511,8 @@ const BoardsList = {
     }
     BoardDomain.create();
     Bus.emit(Bus.events.boardsChanged);
-  }
+  },
+
 };
 
 const RenameUI = {
@@ -455,6 +525,7 @@ const RenameUI = {
   dom: {},
 
   init() {
+    Bus.batchedMethod(this, 'render');
     Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
   },
 
@@ -483,22 +554,25 @@ const RenameUI = {
 };
 
 const DeleteUI = {
+
   selectors: {
     deleteBoardConfirmButton: '#delete-confirm',
   },
+
   dom: {},
+
   deleteBoard() {
     BoardDomain.delete();
     State.headerUiMode = 'default';
     Bus.emit(Bus.events.headerUIChanged);
     Bus.emit(Bus.events.boardsChanged);
   },
+
 };
 
 const ColumnHeaderUI = {
 
   selectors: {
-    column: '.column',
     columnMenuTrigger: '.column-menu-toggle',
     columnMenuBlock: '.column-menu',
     changeHeaderModeTriggers: '.column [data-header-mode-trigger]',
@@ -512,14 +586,15 @@ const ColumnHeaderUI = {
   },
 
   init() {
+    Bus.batchedMethod(this, 'render');
     Bus.on(Bus.events.boardsChanged, () => {
-      State.columnHeaders = {};
+      State.boardUi.columnUi = {};
     });
     Bus.on(Bus.events.columnHeaderUIChanged, this.render.bind(this));
     Bus.on(Bus.events.columnMoved, (id) => {
       this.setColumnHeaderMode(id, 'move');
       const movedCol = document.querySelector(`[data-id="${id}"]`);
-      movedCol.closest('main').scrollLeft = movedCol.offsetLeft - 30;
+      movedCol.closest('main').scrollLeft = document.querySelector(`[data-id="${id}"]`).offsetLeft - 30;
     });
   },
 
@@ -527,7 +602,7 @@ const ColumnHeaderUI = {
     const headers = document.querySelectorAll('.column-header');
 
     headers.forEach(header => {
-      const columnEl = this.getColumnEl(header);
+      const columnEl = Utils.getColumnEl(header);
       const id = columnEl.dataset.id;
       const mode = State.boardUi.columnUi[id] || 'default';
       header.querySelector(this.selectors.columnMenuTrigger).classList.toggle('expanded', mode !== 'default');
@@ -541,7 +616,7 @@ const ColumnHeaderUI = {
 
   renderRenameUi(mode, colEl) {
     const input = colEl.querySelector('.rename-column-input');
-    if (mode === 'rename') {
+    if(mode === 'rename') {
       Utils.focusAndPlaceCursorAtEnd(input);
     } else {
       input.value = input.dataset.originalValue;
@@ -551,7 +626,7 @@ const ColumnHeaderUI = {
 
   toggleColumnMenu(el) {
     let state = this.getColHeaderCurrentState(el);
-    State.boardUi.columnUi[this.getColumnEl(el).dataset.id] = state !== undefined && state !== 'default' ? 'default' : 'menu';
+    State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id] = state !== undefined && state !== 'default' ? 'default' : 'menu';
     Bus.emit(Bus.events.columnHeaderUIChanged);
   },
 
@@ -561,16 +636,12 @@ const ColumnHeaderUI = {
   },
 
   changeColumnHeaderMode(el) {
-    State.boardUi.columnUi[this.getColumnEl(el).dataset.id] = el.dataset.headerModeTrigger;
+    State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id] = el.dataset.headerModeTrigger;
     Bus.emit(Bus.events.columnHeaderUIChanged);
   },
 
   getColHeaderCurrentState(el) {
-    return State.boardUi.columnUi[this.getColumnEl(el).dataset.id];
-  },
-
-  getColumnEl(el) {
-    return el.closest(this.selectors.column);
+    return State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id];
   },
 
   updateButtonState(renameInput) {
@@ -581,31 +652,190 @@ const ColumnHeaderUI = {
   },
 
   cancelModeUi(el) {
-    State.boardUi.columnUi[this.getColumnEl(el).dataset.id] = 'menu';
+    State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id] = 'menu';
     Bus.emit(Bus.events.columnHeaderUIChanged);
   },
 
   deleteColumn(el) {
-    BoardDomain.deleteColumn(this.getColumnEl(el).dataset.id);
+    BoardDomain.deleteColumn(Utils.getColumnEl(el).dataset.id);
     Bus.emit(Bus.events.boardsChanged);
   },
 
   moveColumn(el, e, [doMoveRight]) {
-    const column = this.getColumnEl(el);
+    const column = Utils.getColumnEl(el);
     BoardDomain.moveColumn(column.dataset.id, doMoveRight);
     Bus.emit(Bus.events.boardsChanged);
     Bus.emit(Bus.events.columnMoved, column.dataset.id);
   },
 
   renameColumn(el, e) {
-    const column = this.getColumnEl(el);
+    const column = Utils.getColumnEl(el);
     const input = column.querySelector('.rename-column-input');
     BoardDomain.renameColumn(column.dataset.id, input.value.trim());
     Bus.emit(Bus.events.boardsChanged);
   },
 
   setSkipMove(el, e) {
-    BoardDomain.setColumnSkipMove(this.getColumnEl(el).dataset.id, el.checked);
+    BoardDomain.setColumnSkipMove(Utils.getColumnEl(el).dataset.id, el.checked);
+  },
+
+};
+
+const ColumnUI = {
+
+  selectors: {
+    cancelAddTaskButton: '.js-cancel-add-task',
+    addTask: '.js-add-task',
+  },
+
+  showAddTaskForm(el) {
+    if(!State.boardUi.taskForms) {
+      State.boardUi.taskForms = {};
+    }
+
+    State.boardUi.taskForms[Utils.generateUID()] = {
+      mode: 'create',
+      columnId: Utils.getColumnEl(el).dataset.id,
+      title: '',
+      color: Colors.white,
+    };
+
+    Bus.emit(Bus.events.boardUiChanged);
+
+    // const columnBody = el.closest('.column').querySelector('.column-body');
+    // columnBody.insertAdjacentHTML('afterbegin', TaskUI.getAddTaskHtml());
+    // const editBlock = columnBody.querySelector('.task-edit');
+    // const input = editBlock.querySelector('.task-edit-input');
+    // input.focus();
+    // editBlock.querySelector('.task-edit-input').insertAdjacentHTML('afterend', `
+    // <div style="padding-left:10px;">
+    //   <br>
+    //   ${TaskUI.getColors(Colors.white)}
+    // </div>`);
+  },
+
+  hideAddTaskUi(el) {
+    delete State.boardUi.taskForms[el.closest('.task').dataset.id];
+    Bus.emit(Bus.events.boardUiChanged);
+    // const taskEl = el.closest('.task');
+    // if(taskEl.querySelector('.new-task-cancel') != null) {
+    //   taskEl.remove();
+    // }
+  },
+};
+
+const TaskUI = {
+
+  selectors: {
+    taskEditInput: '.task-edit-input',
+    colorsListItem: '.colors-list li',
+  },
+
+  // showAddTaskForm(el) {
+  //   if(!State.boardUi.taskForms) {
+  //     State.boardUi.taskForms = {};
+  //   }
+
+  //   State.boardUi.taskForms[Utils.generateUID()] = {
+  //     mode: 'create',
+  //     columnId: Utils.getColumnEl(el).dataset.id,
+  //     title: '',
+  //     color: Colors.white,
+  //   };
+
+  //   Bus.emit(Bus.events.boardUiChanged);
+
+  //   // const columnBody = el.closest('.column').querySelector('.column-body');
+  //   // columnBody.insertAdjacentHTML('afterbegin', TaskUI.getAddTaskHtml());
+  //   // const editBlock = columnBody.querySelector('.task-edit');
+  //   // const input = editBlock.querySelector('.task-edit-input');
+  //   // input.focus();
+  //   // editBlock.querySelector('.task-edit-input').insertAdjacentHTML('afterend', `
+  //   // <div style="padding-left:10px;">
+  //   //   <br>
+  //   //   ${TaskUI.getColors(Colors.white)}
+  //   // </div>`);
+  // },  
+
+
+
+  getAddTaskHtml() {
+    return `
+      <div class="task">
+        <button class="js-cancel-add-task new-task-cancel"></button>
+        <div class="task-edit">
+          <textarea rows="1" placeholder="Description" class="task-edit-input"></textarea>
+          <button class="task-edit-save board-management-button" disabled>Save</button>
+          <button class="js-cancel-add-task task-edit-cancel board-management-button">Cancel</button>
+        </div>
+      </div>
+    `
+  },
+
+  getFormHtml(id, {mode, columnId, title, color, originalTitle}) {
+    const task = BoardDomain.getCurrentBoard().columns.find(col => col.id == columnId).tasks.find(t => t.id == id);
+    const inner = `
+      <div class="task-edit"${task ? ' data-id="' + task.id + '"' : ''}>
+        <textarea rows="1" ${task ? ' data-original-value="' + task.description + '"' : ' placeholder="Description"'} class="task-edit-input">${task ? task.description : ''}</textarea>
+        <button class="task-edit-save board-management-button" disabled>Save</button>
+        <button class="task-edit-cancel board-management-button">Cancel</button>
+      </div>  
+    `;
+    if(task) {
+      return inner;
+    } else {
+      return `
+        <div class="task">
+          <button class="new-task-cancel"></button>
+          ${inner}
+        </div>
+      `
+    }
+  },
+
+  taskDescrInputHandler(el) {
+    Utils.updateButtonState(
+      el,
+      el.closest('.task-edit').querySelector('.task-edit-save')
+    );
+    Utils.expandInput(el);
+  },
+
+  previewColor(el) {
+    const formId = el.closest('.task').dataset.id;
+    State.boardUi.taskForms[formId].color = el.dataset.color;
+    Bus.emit(Bus.events.boardUiChanged);
+    // el.classList.add('current');
+    // const taskEl = el.closest('.task');
+    // const colorEls = el.parentNode.querySelectorAll('li');
+    // colorEls.forEach(ce => {
+    //   if(ce != el) {
+    //     ce.classList.remove('current');
+    //   }
+    // });
+    // el.closest('.task').style.background = tasksColors[el.dataset.color];
+    // const colorsBlock = el.closest('.set-task-colors');
+    // const button = taskEl.querySelector('.save-set-color');
+    // if(colorsBlock) {
+    //   if(el.dataset.color == colorsBlock.dataset.originalColor) {
+    //     button.setAttribute('disabled', "true");
+    //   } else {
+    //     button.removeAttribute('disabled');
+    //   }
+    // }
+  },
+
+  getColors(currentColor) {
+    const colors = Object.keys(Colors).map(key => {
+      const color = Colors[key];
+      return `
+        <li data-color="${key}" style="background:${color}" ${currentColor == color ? ' class="current"' : ''}></li>  
+      `
+    });
+    return `
+      <ul class="colors-list">
+        ${colors.join('')}
+      </ul>`
   },
 
 };
@@ -655,17 +885,27 @@ const Utils = {
         }
       })
     }
-  }
+  },
+
+  getColumnEl(el) {
+    return el.closest('.column');
+  },
 };
 
 const DragDrop = {
+
   selectors: {
     main: 'main',
   },
+
   dom: {},
+
   longPressTimer: null,
+
   longPressTarget: null,
+
   dragState: null,
+
   colsScroll: {},
 
   // Определяем колонку, над которой сейчас находится курсор/палец
@@ -1075,6 +1315,8 @@ const Events = {
     'DeleteUI': DeleteUI,
     'DragDrop': DragDrop,
     'ColumnHeaderUI': ColumnHeaderUI,
+    'ColumnUI': ColumnUI,
+    'TaskUI': TaskUI,
     // 'Utils': Utils
   },
 
@@ -1098,10 +1340,16 @@ const Events = {
       [ColumnHeaderUI.selectors.renameColumn]: 'ColumnHeaderUI.renameColumn',
       [ColumnHeaderUI.selectors.moveColumnRightButton]: ['ColumnHeaderUI.moveColumn', [true]],
       [ColumnHeaderUI.selectors.moveColumnLeftButton]: ['ColumnHeaderUI.moveColumn', [false]],
+
+      [ColumnUI.selectors.addTask]: 'ColumnUI.showAddTaskForm',
+      [ColumnUI.selectors.cancelAddTaskButton]: 'ColumnUI.hideAddTaskUi',
+
+      [TaskUI.selectors.colorsListItem]: 'TaskUI.previewColor',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
       [ColumnHeaderUI.selectors.renameColumnInput]: 'ColumnHeaderUI.updateButtonState',
+      [TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
       [ColumnHeaderUI.selectors.skipMoveCheckbox]: 'ColumnHeaderUI.setSkipMove',
     },
     'contextmenu': {

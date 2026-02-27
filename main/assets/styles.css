@@ -195,6 +195,7 @@ header {
 #rename-board-block::after,
 #delete-board-block::after,
 .task-edit::after,
+.add-task::after,
 .task-delete-block::after,
 .set-task-colors::after,
 .delete-column-block::after,
@@ -412,6 +413,7 @@ main {
   flex-flow:row nowrap;
   align-items: center;
   justify-content: flex-end;
+  padding-bottom:15px;
 }
 
 .move-column-right {
