@@ -52,7 +52,7 @@ const Bus = {
     columnHeaderUIChanged: 'columnHeaderUIChanged',
     columnAdded: 'columnAdded',
     columnMoved: 'columnMoved',
-    boardUiChanged: 'boardUiChanged',
+    taskUiChanged: 'taskUiChanged',
   },
 
   listeners: {},
@@ -132,17 +132,21 @@ const Bus = {
 };
 
 const State = {
+
   screen: 'board', //books
   headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard
   menuOpen: false,
   boardUi: {
     columnUi: {}, //default, menu, rename, move, delete
+    taskUi: {},
   },
+
   afterRender : [],
 
   setState(patch) {
     Object.assign(this, patch);
   },
+
 };
 
 const BoardDomain = {
@@ -153,6 +157,12 @@ const BoardDomain = {
 
   getColumn(id) {
     return this.getCurrentBoard().columns.find(c => c.id == id);
+  },
+
+  getTask(id) {
+    return this.getCurrentBoard().columns
+      .map(col => col.tasks.find(t => t.id === id))
+      .find(task => task !== undefined) || null;
   },
 
   switchBoard(boardId) {
@@ -275,7 +285,7 @@ const BoardUI = {
   init() {
     Bus.batchedMethod(this, 'render');
     Bus.on(Bus.events.boardsChanged, this.render);
-    Bus.on(Bus.events.boardUiChanged, this.render);
+    //Bus.on(Bus.events.boardUiChanged, this.render);
     Bus.on(Bus.events.columnAdded, (newUid) => {
       this.render();
       State.afterRender.push(() => {
@@ -316,34 +326,35 @@ const BoardUI = {
       ${RanksUI.getUpperLevelMarkHtml(task.color)}
       */
       column.tasks.forEach(task => {
-        tasksHtml.push(`
-        <div class="task" style="background:${Colors[task.color]};" data-id="${task.id}">
-          <div class="ranks-info">
-          //todo ranks
-          </div>
-          <div class="task-expand-button"></div>
-          <button class="task-info-toggle"></button>
-          <div class="task-header">
-            <span class="task-title">${task.description}</span>
-          </div>
-          <div class="task-info hidden">
-            <button class="task-change-color"></button>
-            <button class="task-delete"></button>
-            <button class="task-clone"></button>
-            <button class="task-edit-button"></button>
-          </div>
-        </div>
-      `);
+        tasksHtml.push(TaskUI.getTaskHtml(task.id));
+      //   tasksHtml.push(`
+      //   <div class="task" style="background:${Colors[task.color]};" data-id="${task.id}">
+      //     <div class="ranks-info">
+      //     //todo ranks
+      //     </div>
+      //     <div class="task-expand-button"></div>
+      //     <button class="task-info-toggle"></button>
+      //     <div class="task-header">
+      //       <span class="task-title">${task.description}</span>
+      //     </div>
+      //     <div class="task-info hidden">
+      //       <button class="task-change-color"></button>
+      //       <button class="task-delete"></button>
+      //       <button class="task-clone"></button>
+      //       <button class="task-edit-button"></button>
+      //     </div>
+      //   </div>
+      // `);
       });
 
       if(!tasksHtml.length) {
         tasksHtml = [`<button class="js-add-task add-task-button">Click to add first task</button>`];
       }
-      const formsForColumn = Object.entries(State.boardUi.taskForms || {})
-        .filter(([id, form]) => form.columnId === column.id);
-      const formsHtml = formsForColumn.map(([formId, form]) => {
-        return TaskUI.getFormHtml(formId, form);
-      });
+      // const formsForColumn = Object.entries(State.boardUi.taskForms || {})
+      //   .filter(([id, form]) => form.columnId === column.id);
+      // const formsHtml = formsForColumn.map(([formId, form]) => {
+      //   return TaskUI.getFormHtml(formId, form);
+      // });
       const columnHtml = `
       <div class="column" data-id="${column.id}">
         <div class="column-header">
@@ -377,7 +388,6 @@ const BoardUI = {
           </div>
         </div>
         <div class="column-body">
-          ${formsHtml.join('')}
           ${tasksHtml.join('')}
         </div>
       </div>
@@ -681,70 +691,90 @@ const ColumnHeaderUI = {
 
 };
 
-const ColumnUI = {
-
-  selectors: {
-    cancelAddTaskButton: '.js-cancel-add-task',
-    addTask: '.js-add-task',
-  },
-
-  showAddTaskForm(el) {
-    if(!State.boardUi.taskForms) {
-      State.boardUi.taskForms = {};
-    }
-
-    State.boardUi.taskForms[Utils.generateUID()] = {
-      mode: 'create',
-      columnId: Utils.getColumnEl(el).dataset.id,
-      title: '',
-      color: Colors.white,
-    };
-
-    Bus.emit(Bus.events.boardUiChanged);
-
-    // const columnBody = el.closest('.column').querySelector('.column-body');
-    // columnBody.insertAdjacentHTML('afterbegin', TaskUI.getAddTaskHtml());
-    // const editBlock = columnBody.querySelector('.task-edit');
-    // const input = editBlock.querySelector('.task-edit-input');
-    // input.focus();
-    // editBlock.querySelector('.task-edit-input').insertAdjacentHTML('afterend', `
-    // <div style="padding-left:10px;">
-    //   <br>
-    //   ${TaskUI.getColors(Colors.white)}
-    // </div>`);
-  },
-
-  hideAddTaskUi(el) {
-    delete State.boardUi.taskForms[el.closest('.task').dataset.id];
-    Bus.emit(Bus.events.boardUiChanged);
-    // const taskEl = el.closest('.task');
-    // if(taskEl.querySelector('.new-task-cancel') != null) {
-    //   taskEl.remove();
-    // }
-  },
-};
-
 const TaskUI = {
 
   selectors: {
     taskEditInput: '.task-edit-input',
     colorsListItem: '.colors-list li',
+    addTask: '.js-add-task',
+    cancelAddTaskButton: '.js-cancel-add-task',
+    taskEditInput: '.js-task-add-input',
+    taskInfoToggle : '.task-info-toggle',
   },
 
+  init() {
+    Bus.on(Bus.events.taskUiChanged, (id) => {
+      this.render(id);
+    })
+  },
+
+  toggleTaskInfo(el) {
+    const id = el.closest('.task').dataset.id;
+    const obj = State.boardUi.taskUi[id] || {};
+    obj.mode = obj.mode === 'menuOpened' ? 'default' : 'menuOpened';
+    State.boardUi.taskUi[id] = obj;
+    Bus.emit(Bus.events.taskUiChanged, id);
+  },
+
+  showAddTaskForm(el) {
+    const id = Utils.generateUID();
+    State.boardUi.taskUi[id] = {
+      mode : 'create',
+      columnId: Utils.getColumnEl(el).dataset.id,
+      description: '',
+      color: Colors.white,
+    };
+
+    Bus.emit(Bus.events.taskUiChanged, id);
+  },
+
+  hideAddTaskUi(el) {
+    const id = el.closest('.task').dataset.id;
+    delete State.boardUi.taskUi[id];
+    Bus.emit(Bus.events.taskUiChanged, id);
+  },
+
+  updateDescription(el) {
+    const id = el.closest('.task').dataset.id;
+    State.boardUi.taskUi[id].description = el.value;
+    Bus.emit(Bus.events.taskUiChanged, id);
+  },
+
+  render(id) {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    const uiTask = State.boardUi.taskUi[id];
+    if (el && !uiTask) {
+      el.remove();
+    } else {
+      // const html = `
+      // <div class="task" data-form-id="${id}" style="background-color:${formData ? Colors[formData.color] : 'white'}">
+      //   <button class="js-cancel-add-task new-task-cancel"></button>
+      //   <div class="task-edit">
+      //     <textarea rows="1" placeholder="Description" class="js-task-add-input task-edit-input">${formData ? formData.title : ''}</textarea>
+      //     <div style="padding-left:10px;">
+      //       <br>
+      //       ${TaskUI.getTaskColorPicker(Colors.white)}
+      //     </div>
+      //     <button class="task-edit-save board-management-button" ${formData && formData.title.trim() !== '' ? "" : " disabled"}>Save</button>
+      //     <button class="js-cancel-add-task task-edit-cancel board-management-button">Cancel</button>
+      //   </div>
+      // </div>
+      // `;
+      const html = this.getTaskHtml(id);
+      if (el) {
+        el.outerHTML = html;
+      } else {
+        document.querySelector(`.column[data-id="${uiTask.columnId}"] .column-body`).insertAdjacentHTML('afterbegin', html);
+      }
+      if (uiTask.mode === 'create' || uiTask.mode === 'edit') {
+        const input = document.querySelector(`[data-id="${id}"] .task-edit-input`);
+        Utils.expandInput(input);
+        Utils.focusAndPlaceCursorAtEnd(input);
+      }
+    }
+  },    
+
   // showAddTaskForm(el) {
-  //   if(!State.boardUi.taskForms) {
-  //     State.boardUi.taskForms = {};
-  //   }
-
-  //   State.boardUi.taskForms[Utils.generateUID()] = {
-  //     mode: 'create',
-  //     columnId: Utils.getColumnEl(el).dataset.id,
-  //     title: '',
-  //     color: Colors.white,
-  //   };
-
-  //   Bus.emit(Bus.events.boardUiChanged);
-
   //   // const columnBody = el.closest('.column').querySelector('.column-body');
   //   // columnBody.insertAdjacentHTML('afterbegin', TaskUI.getAddTaskHtml());
   //   // const editBlock = columnBody.querySelector('.task-edit');
@@ -758,53 +788,82 @@ const TaskUI = {
   // },  
 
 
+  // getFormHtml(id, {mode, columnId, title, color, originalTitle}) {
+  //   const task = BoardDomain.getCurrentBoard().columns.find(col => col.id == columnId).tasks.find(t => t.id == id);
+  //   const inner = `
+  //     <div class="task-edit"${task ? ' data-id="' + task.id + '"' : ''}>
+  //       <textarea rows="1" ${task ? ' data-original-value="' + task.description + '"' : ' placeholder="Description"'} class="task-edit-input">${task ? task.description : ''}</textarea>
+  //       <button class="task-edit-save board-management-button" disabled>Save</button>
+  //       <button class="task-edit-cancel board-management-button">Cancel</button>
+  //     </div>  
+  //   `;
+  //   if(task) {
+  //     return inner;
+  //   } else {
+  //     return `
+  //       <div class="task" data-id="${id}">
+  //         <button class="new-task-cancel"></button>
+  //         ${inner}
+  //       </div>
+  //     `
+  //   }
+  // },
 
-  getAddTaskHtml() {
+  getTaskHtml(id) {
+    const domainTask = BoardDomain.getTask(id);
+    const uiTask = State.boardUi.taskUi[id];
+    
+    const isCreate = !domainTask && uiTask && uiTask.mode === 'create';
+    const isEdit = domainTask && uiTask && uiTask.mode === 'edit';
+    const isMenuOpened = domainTask && uiTask && uiTask.mode === 'menuOpened';
+    const isDeleteConfirm = domainTask && uiTask && uiTask.mode === 'deleteConfirm';
+    const isColorPicker = domainTask && uiTask && uiTask.mode === 'colors';
+    const isDefault = !isCreate && !isEdit && !isMenuOpened && !isDeleteConfirm && !isColorPicker;
+    
+    const origColor = domainTask ? domainTask.color : null;
+    const descr = uiTask && uiTask.description ? uiTask.description : (domainTask ? domainTask.description : '');
+    const origDescr = domainTask ? domainTask.origDescr : '';
+    const color = uiTask && uiTask.color ? uiTask.color : (domainTask ? domainTask.color : 'white');
+    
     return `
-      <div class="task">
-        <button class="js-cancel-add-task new-task-cancel"></button>
-        <div class="task-edit">
-          <textarea rows="1" placeholder="Description" class="task-edit-input"></textarea>
-          <button class="task-edit-save board-management-button" disabled>Save</button>
-          <button class="js-cancel-add-task task-edit-cancel board-management-button">Cancel</button>
-        </div>
+    <div class="task" style="background:${Colors[color]};" data-id="${id}">
+      ${isDefault ? `<div class="ranks-info">//todo ranks</div>` : ''}
+      <div class="task-expand-button ${!isDefault ? 'hidden' : ''}"></div>
+      <button class="task-info-toggle ${isEdit || isMenuOpened ? 'expanded' : ''}"></button>
+      <div class="task-header ${!isDefault && !isMenuOpened ? 'hidden' : ''}">
+        <span class="task-title">${descr}</span>
       </div>
+      <div class="task-info ${!isMenuOpened ? 'hidden' : ''}">
+        <button class="task-change-color"></button>
+        <button class="task-delete"></button>
+        <button class="task-clone"></button>
+        <button class="task-edit-button"></button>
+      </div>
+      <div class="task-edit ${isCreate || isEdit ? '' : 'hidden'}">
+        <textarea rows="1" ${origDescr ? ' data-original-value="' + origDescr + '"' : ' placeholder="Description"'} class="task-edit-input">${descr}</textarea>
+        <button class="task-edit-save board-management-button" disabled>Save</button>
+        <button class="js-cancel-add-task task-edit-cancel board-management-button">Cancel</button>
+      </div> 
+    </div>
     `
   },
 
-  getFormHtml(id, {mode, columnId, title, color, originalTitle}) {
-    const task = BoardDomain.getCurrentBoard().columns.find(col => col.id == columnId).tasks.find(t => t.id == id);
-    const inner = `
-      <div class="task-edit"${task ? ' data-id="' + task.id + '"' : ''}>
-        <textarea rows="1" ${task ? ' data-original-value="' + task.description + '"' : ' placeholder="Description"'} class="task-edit-input">${task ? task.description : ''}</textarea>
-        <button class="task-edit-save board-management-button" disabled>Save</button>
-        <button class="task-edit-cancel board-management-button">Cancel</button>
-      </div>  
-    `;
-    if(task) {
-      return inner;
-    } else {
-      return `
-        <div class="task">
-          <button class="new-task-cancel"></button>
-          ${inner}
-        </div>
-      `
-    }
+  getTaskRanksInfo(task) {
+    return ``; //TODO
   },
 
-  taskDescrInputHandler(el) {
-    Utils.updateButtonState(
-      el,
-      el.closest('.task-edit').querySelector('.task-edit-save')
-    );
-    Utils.expandInput(el);
-  },
+  // taskDescrInputHandler(el) {
+  //   Utils.updateButtonState(
+  //     el,
+  //     el.closest('.task-edit').querySelector('.task-edit-save')
+  //   );
+  //   Utils.expandInput(el);
+  // },
 
   previewColor(el) {
-    const formId = el.closest('.task').dataset.id;
-    State.boardUi.taskForms[formId].color = el.dataset.color;
-    Bus.emit(Bus.events.boardUiChanged);
+    const id = el.closest('.task').dataset.id;
+    State.boardUi.taskUi[id].color = el.dataset.color;
+    Bus.emit(Bus.events.taskUiChanged, id);
     // el.classList.add('current');
     // const taskEl = el.closest('.task');
     // const colorEls = el.parentNode.querySelectorAll('li');
@@ -825,7 +884,7 @@ const TaskUI = {
     // }
   },
 
-  getColors(currentColor) {
+  getTaskColorPicker(currentColor) {
     const colors = Object.keys(Colors).map(key => {
       const color = Colors[key];
       return `
@@ -991,7 +1050,7 @@ const DragDrop = {
 
     if(targetColumnEl) {
       const currentBoard = App.getCurrentBoard();
-      const targetColumn = ColumnUI.getCurrentColumnByElement(targetColumnEl);
+      const targetColumn = AddTaskUI.getCurrentColumnByElement(targetColumnEl);
       const targetColumnIndex = currentBoard.columns.findIndex(col => col.id === targetColumn.id);
       //console.log(`targetColumnIndex: ${targetColumnIndex}`)
 
@@ -1301,6 +1360,7 @@ const Components = [
   DeleteUI,
   BoardUI,
   ColumnHeaderUI,
+  TaskUI,
   DragDrop,
 ];
 
@@ -1315,7 +1375,6 @@ const Events = {
     'DeleteUI': DeleteUI,
     'DragDrop': DragDrop,
     'ColumnHeaderUI': ColumnHeaderUI,
-    'ColumnUI': ColumnUI,
     'TaskUI': TaskUI,
     // 'Utils': Utils
   },
@@ -1341,16 +1400,17 @@ const Events = {
       [ColumnHeaderUI.selectors.moveColumnRightButton]: ['ColumnHeaderUI.moveColumn', [true]],
       [ColumnHeaderUI.selectors.moveColumnLeftButton]: ['ColumnHeaderUI.moveColumn', [false]],
 
-      [ColumnUI.selectors.addTask]: 'ColumnUI.showAddTaskForm',
-      [ColumnUI.selectors.cancelAddTaskButton]: 'ColumnUI.hideAddTaskUi',
-
+      [TaskUI.selectors.taskInfoToggle]: 'TaskUI.toggleTaskInfo',
+      [TaskUI.selectors.addTask]: 'TaskUI.showAddTaskForm',
+      [TaskUI.selectors.cancelAddTaskButton]: 'TaskUI.hideAddTaskUi',
       [TaskUI.selectors.colorsListItem]: 'TaskUI.previewColor',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
       [ColumnHeaderUI.selectors.renameColumnInput]: 'ColumnHeaderUI.updateButtonState',
-      [TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
       [ColumnHeaderUI.selectors.skipMoveCheckbox]: 'ColumnHeaderUI.setSkipMove',
+      [TaskUI.selectors.taskEditInput]: 'TaskUI.updateTitle',
+      //[TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
     },
     'contextmenu': {
       '##': ['DragDrop.preventOnce', [true]],

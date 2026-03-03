@@ -355,9 +355,9 @@ const BoardUI = {
           <button class="delete-column">Delete column</button>
           <label for="skipMove"><input type="checkbox"${column.skipMove ? 'checked' : ''} name="skipMove">Skip move</label>
         </div>
-        ${ColumnUI.renderRenameUi(column.name)}
-        ${ColumnUI.renderDeleteUi()}
-        ${ColumnUI.renderMoveUi()}
+        ${AddTaskUI.renderRenameUi(column.name)}
+        ${AddTaskUI.renderDeleteUi()}
+        ${AddTaskUI.renderMoveUi()}
         <div class="column-body">
           ${tasksHtml.join('')}
         </div>
@@ -774,7 +774,7 @@ const RanksUI = {
 
   setSkipMove(el) {
     const columnEl = el.closest('.column');
-    const column = ColumnUI.getCurrentColumnByElement(columnEl);
+    const column = AddTaskUI.getCurrentColumnByElement(columnEl);
     if(!column) return;
     column['skipMove'] = columnEl.querySelector('[name="skipMove"]').checked;
     App.saveBoards(App.data.boards, App.data.currentBoardId);
@@ -1447,7 +1447,7 @@ const TaskUI = {
 
   getCurrentTaskByElement(el) {
     const currentTaskEl = el.closest('.task');
-    return ColumnUI.getCurrentColumnByElement(el).tasks.find(task => task.id == currentTaskEl.dataset.id);
+    return AddTaskUI.getCurrentColumnByElement(el).tasks.find(task => task.id == currentTaskEl.dataset.id);
   },
 
   getEditFormHtml(task) {
@@ -1526,7 +1526,7 @@ const TaskUI = {
   },
 
   cloneTask(el) {
-    const currentColumn = ColumnUI.getCurrentColumnByElement(el);
+    const currentColumn = AddTaskUI.getCurrentColumnByElement(el);
     const task = this.getTaskByElement(el);
     if(!task) return;
     const {id, color, description} = task;
@@ -1587,7 +1587,7 @@ const TaskUI = {
     let theId = null;
     let newColor = null;
     if(isAdding) {
-      const column = ColumnUI.getCurrentColumnByElement(el);
+      const column = AddTaskUI.getCurrentColumnByElement(el);
       const newTaskId = Utils.generateUID();
       theId = newTaskId;
       newColor = editBlock.querySelector('li.current').dataset.color || 'white';
@@ -1611,7 +1611,7 @@ const TaskUI = {
   },
 
   delete(el) {
-    const col = ColumnUI.getCurrentColumnByElement(el);
+    const col = AddTaskUI.getCurrentColumnByElement(el);
     col.tasks = col.tasks.filter(task => task.id != el.closest('.task').dataset.id);
     App.saveBoards(App.data.boards);
     BoardUI.renderBoard();
@@ -1803,7 +1803,7 @@ const DragDrop = {
 
     if(targetColumnEl) {
       const currentBoard = App.getCurrentBoard();
-      const targetColumn = ColumnUI.getCurrentColumnByElement(targetColumnEl);
+      const targetColumn = AddTaskUI.getCurrentColumnByElement(targetColumnEl);
       const targetColumnIndex = currentBoard.columns.findIndex(col => col.id === targetColumn.id);
       //console.log(`targetColumnIndex: ${targetColumnIndex}`)
 
@@ -2181,7 +2181,7 @@ const Events = {
     'AppUI': AppUI,
     'BoardUI': BoardUI,
     'RanksUI': RanksUI,
-    'ColumnUI': ColumnUI,
+    'ColumnUI': AddTaskUI,
     'TaskUI': TaskUI,
     'DragDrop': DragDrop,
     'Utils': Utils
