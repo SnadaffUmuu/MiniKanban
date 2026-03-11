@@ -384,7 +384,38 @@ const BoardDomain = {
     });
 
     return [...colors]
-  },  
+  },
+  
+  setRanksData({ranks, ranksRaw}) {
+    const board = this.getCurrentBoard();
+    board.ranksRaw = ranksRaw;
+    board.ranks = ranks;
+
+    /* normalizing */
+    const counters = board.rankCounters || {};
+    const absCounters = board.rankCountersAbs || {};
+    Object.keys(ranks).forEach(level => {
+      if (!counters[level]) counters[level] = 0;
+      if (!absCounters[level]) absCounters[level] = 0;
+    });
+    board.rankCounters = counters;
+    board.rankCountersAbs = absCounters;
+
+    console.log('ranks', board.ranks);
+    console.log('ranksRaw', board.ranksRaw);
+
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  deleteRanks() {
+    const board = this.getCurrentBoard();
+    delete board.ranks;
+    delete board.ranksRaw;
+    delete board.rankCounters;
+    delete board.rankCountersAbs;
+
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
 
 };
 
@@ -1094,6 +1125,7 @@ const RanksUI = {
     absCountersBlock: '#abs-counters',
     previewBlock: '#preview-ranks',
     colorsInUseToggle: '#current-colors .ranks-title',
+    countersToggle: '#ranks-panels-container .ranks-title',
 
     resetCountersButton: '#ranks-counters-reset',
     resetCountersMessage: '#ranks-counters-reset-message',
@@ -1103,12 +1135,15 @@ const RanksUI = {
     renderCountersButton: '#ranks-toggle-counters',
     infoContainer: '#ranks-panels-container',
   },
+
+  dom : {},
   
   createDefaultState() {
     return {
       mode : 'default',
       errors : [],
       draft : null,
+      draftRaw : null,
       colorsInUseShown: false,
       countersShown: false,
     }
@@ -1126,48 +1161,55 @@ const RanksUI = {
     const board = BoardDomain.getCurrentBoard();
     if(!board) return;
     const ranks = board.ranks;
+    const raw = board.ranksRaw;
     if (State.ranksUi === null) {
       State.ranksUi = this.createDefaultState();
     }
     const mode = State.ranksUi.mode;
-    const parsedDraft = State.ranksUi.draft ? this.parseRanks(State.ranksUi.draft) : null;
+    const draft = State.ranksUi.draft;
+    const draftRaw = State.ranksUi.draftRaw;
+    const errors = State.ranksUi.errors;
+
+    const saveButtonVisible = [this.modes.create, this.modes.edit].includes(mode) 
+      && !State.ranksUi.errors.length 
+      && State.ranksUi.draft 
+      && State.ranksUi.draftRaw !== raw;
 
     document.querySelector(this.selectors.ranksBlock).innerHTML = `
       <h3 class="top-menu-title">Manage the board ranks</h3>
-      <div id="current-colors">${this.getColorsInUseHtml()}</div>
-      <div id="ranks-panels-container" ${ranks ? '' : 'class="hidden"'}>
+      <div id="current-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getColorsInUseHtml()}</div>
+      <div id="ranks-panels-container" ${ranks && ![this.modes.delete].includes(mode)  ? '' : 'class="hidden"'}>
         ${this.getCountersHtml(board)}
       </div>
       <textarea id="ranks-input" ${[this.modes.create, this.modes.edit].includes(mode) ? '' : ' class="hidden"'} placeholder="2 blue 
 2 white 
 1 purple 
-1 pink,yellow"></textarea>
-      <div id="ranks-input-errors" ${State.ranksUi.errors.length ? '' : 'class="hidden"'}>${State.ranksUi.errors.join('<br>')}</div>
-      <div id="preview-ranks" ${State.ranksUi.draft ? '' : 'class="hidden"'}>
-        ${this.getRanksHtml(
+1 pink,yellow">${draftRaw ? draftRaw : raw ? raw : ''}</textarea>
+      <div id="ranks-input-errors" ${errors.length ? '' : 'class="hidden"'}>${errors.join('<br>')}</div>
+      <div id="preview-ranks" ${draft ? '' : 'class="hidden"'}>
+        ${draft ? this.getRanksHtml(
           board,
-          parsedDraft,
+          draft.ranks,
           'Preview',
           null,
           null,
-          null
-        )}
+          true
+        ) : ''}
       </div>
       <div id="ranks-delete-confirm-message" class="ranks-message ${mode == this.modes.delete ? '' : 'hidden'}">Really delete ranks for this board?</div>
       <div id="ranks-counters-reset-message" class="ranks-message ${mode == this.modes.reset ? '' : 'hidden'}">Really reset abs.counters for this board?</div>
       <div id="ranks-buttons-container">
         <button class="js-cancel-current button-close"></button>
 
-        <button id="ranks-counters-reset" class="board-management-button ${ranks ? '' : 'hidden'}">Reset c-s</button>
+        <button id="ranks-counters-reset" class="board-management-button ${ranks && ![this.modes.delete, this.modes.edit].includes(mode) ? '' : 'hidden'}">Reset c-s</button>
         <button id="ranks-counters-reset-confirm" class="board-management-button ${mode === this.modes.reset ? '' : 'hidden'}">Reset</button>
         <button id="ranks-counters-reset-cancel" class="board-management-button ${mode === this.modes.reset ? '' : 'hidden'}">Cancel</button>
         
-        <!-- <button id="ranks-toggle-counters" class="board-management-button">Refresh c-s</button> -->
         <button id="create-ranks" class="board-management-button ${!ranks && mode !== this.modes.create ? '' : 'hidden'}">Create</button>
         <button id="create-ranks-cancel" class="board-management-button ${!ranks && mode == this.modes.create ? '' : 'hidden'}">Cancel</button>
         <button id="ranks-edit" class="board-management-button ${ranks && mode == this.modes.default ? '' : 'hidden'}">Edit</button>
         <button id="ranks-preview" class="board-management-button ${[this.modes.create, this.modes.edit].includes(mode) ? '' : 'hidden'}">👀</button>
-        <button id="ranks-save-confirm" disabled class="board-management-button ${[this.modes.create, this.modes.edit].includes(mode) && !State.ranksUi.errors ? '' : 'hidden'}">Save</button>
+        <button id="ranks-save-confirm" ${!raw || draft !== raw ? '' : 'disabled'} class="board-management-button ${saveButtonVisible ? '' : 'hidden'}">Save</button>
         <button id="ranks-edit-cancel" class="board-management-button ${mode == this.modes.edit ? '' : 'hidden'}">Cancel</button>
         <button id="ranks-delete" class="board-management-button ${ranks && mode == this.modes.default ? '' : 'hidden'}">Delete</button>
         <button id="ranks-delete-confirm" class="board-management-button ${mode == this.modes.delete ? '' : 'hidden'}">Delete</button>
@@ -1184,7 +1226,7 @@ const RanksUI = {
       undefined,
       true,
       null,
-      true
+      State.ranksUi.countersShown
     ) : '';
     const absCounters = board.ranks ? this.getRanksHtml(
         board,
@@ -1192,7 +1234,7 @@ const RanksUI = {
         'Abs counters',
         null,
         true,
-        true
+        State.ranksUi.countersShown
       ) : '';
     return counters || absCounters ? `<div id="current-ranks">${counters}</div>
         <div id="abs-counters">${absCounters}</div>` : '';
@@ -1255,26 +1297,27 @@ const RanksUI = {
     });
 
     console.log('usedColors', usedColors);
-    console.log('colorsOnBoard', this.getColorsInUse());
+    console.log('colorsOnBoard', BoardDomain.getColorsInUse());
 
     /* 
       цвета, которые есть на доске, но не указаны в поле,
       автоматом приписываются как последний добавочный уровень
     */
-    const notMentionedColors = this.getColorsInUse().filter(c => ![...usedColors].includes(c));
+    const notMentionedColors = BoardDomain.getColorsInUse().filter(c => ![...usedColors].includes(c));
     console.log('notMentionedColors', notMentionedColors);
 
     if(notMentionedColors && notMentionedColors.length) {
       const lowestLevel = Math.max(0, ...Object.keys(ranks));
       ranks[lowestLevel].c = [...ranks[lowestLevel].c, ...notMentionedColors];
-      ranksRaw += `,${notMentionedColors.join(',')}`;
+      raw += `,${notMentionedColors.join(',')}`;
     }
 
-    if(!errors.length) {
+    if(!State.ranksUi.errors.length) {
       result.ranks = ranks;
-      result.ranksRaw = ranksRaw;
+      result.ranksRaw = raw;
       return result;
     } 
+    return null;
   },  
 
   getRanksHtml(
@@ -1283,7 +1326,7 @@ const RanksUI = {
     title = 'Current ranks',
     showCounters = false,
     showAbsCounters = false,
-    hideList = false,
+    showList = false,
   ) {
     
     if (!ranks) return '';
@@ -1330,7 +1373,7 @@ const RanksUI = {
     }
 
     return `<span class="ranks-title">${title}</span>
-    <ul class="colors-list ranks-list ${hideList == true ? 'hidden' : ''}">
+    <ul class="colors-list ranks-list ${showList == true ? '' : 'hidden'}">
     ${build(0)}
       </ul>`;
   },  
@@ -1434,7 +1477,15 @@ const RanksUI = {
   /* handlers */
 
   preview() {
-    
+    const newValue = this.dom.ranksBlock.querySelector(this.selectors.textarea).value;
+    const parsedRanks = this.parseRanks(newValue);
+    if (!State.ranksUi.errors.length && parsedRanks) {
+      State.ranksUi.draft = parsedRanks;
+      State.ranksUi.draftRaw = parsedRanks.ranksRaw;
+    } else {
+      State.ranksUi.draftRaw = newValue;
+    }
+    Bus.emit(Bus.events.ranksUiChanged);
   },
 
   showCreateUi(el) {
@@ -1442,13 +1493,40 @@ const RanksUI = {
     Bus.emit(Bus.events.ranksUiChanged);
   },
 
-  toggleColorsInUse(el) {
+  showDeleteUi() {
+    State.ranksUi.mode = 'delete';
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  toggleColorsInUse() {
     State.ranksUi.colorsInUseShown = !State.ranksUi.colorsInUseShown;
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  toggleCounters() {
+    State.ranksUi.countersShown = !State.ranksUi.countersShown;
     Bus.emit(Bus.events.ranksUiChanged);
   },
 
   resetUi() {
     State.ranksUi = this.createDefaultState();
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  save() {
+    BoardDomain.setRanksData(State.ranksUi.draft);
+    State.ranksUi = this.createDefaultState();
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  delete() {
+    BoardDomain.deleteRanks();
+    State.ranksUi = this.createDefaultState();
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  edit() {
+    State.ranksUi.mode = 'edit';
     Bus.emit(Bus.events.ranksUiChanged);
   },
 
@@ -1942,9 +2020,15 @@ const Events = {
 
       [RanksUI.selectors.createButton]: 'RanksUI.showCreateUi',
       [RanksUI.selectors.colorsInUseToggle]: 'RanksUI.toggleColorsInUse',
-      [RanksUI.selectors.createCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.countersToggle]: 'RanksUI.toggleCounters',
       [RanksUI.selectors.createCancelButton]: 'RanksUI.resetUi',
       [RanksUI.selectors.previewButton]: 'RanksUI.preview',
+      [RanksUI.selectors.saveButton]: 'RanksUI.save',
+      [RanksUI.selectors.deleteButton]: 'RanksUI.showDeleteUi',
+      [RanksUI.selectors.deleteCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.deleteConfirmButton]: 'RanksUI.delete',
+      [RanksUI.selectors.editButton]: 'RanksUI.edit',
+      [RanksUI.selectors.editCancelButton]: 'RanksUI.resetUi',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
