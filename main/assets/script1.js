@@ -177,6 +177,11 @@ const BoardDomain = {
     );
   },
 
+  getBoardsCounters() {
+    const bc = App.data.boardsCounters;
+    return bc != null ? bc : {};
+  },  
+
   switchBoard(boardId) {
     if(App.data.boards.find(b => b.id == boardId)) {
       App.data.currentBoardId = boardId;
@@ -192,6 +197,23 @@ const BoardDomain = {
       App.data.currentBoardId = currentBoardId ? currentBoardId : App.data.currentBoardId;
     }
     Storage.save(App.data);
+  },
+
+  saveCounters(counters) {
+    App.data.boardsCounters = counters;
+    Storage.save(App.data);
+  },
+
+  resetBoardsCounters() {
+    App.data.boardsCounters = {};
+    Storage.save(App.data);
+  },
+
+  resetCounters() {
+    const board = this.getCurrentBoard();
+    board.rankCounters = {};
+    board.rankCountersAbs = {};
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
 
   create() {
@@ -346,12 +368,11 @@ const BoardDomain = {
     if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
     targetColumn.tasks.splice(insertIndex, 0, task);
 
-    //ranks logic went here
-    // RanksUI.makeAMove({
-    //   color: draggedTask.color,
-    //   sourceColumn: sourceColumn,
-    //   targetColumn: targetColumn
-    // });    
+    this.makeAMove({
+      color: task.color,
+      sourceColumn: sourceColumn,
+      targetColumn: targetColumn
+    });    
 
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
@@ -415,6 +436,90 @@ const BoardDomain = {
     delete board.rankCountersAbs;
 
     this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  makeAMove({color, sourceColumn, targetColumn}) {
+
+    if(!sourceColumn || !targetColumn) return;
+    if(sourceColumn.id === targetColumn.id) return;
+
+    const board = this.getCurrentBoard();
+    const ranks = board.ranks;
+    if(!ranks || !color) return;
+
+    const level = RanksUI.getLevelOfColor(color, ranks);
+    if(!level) return;
+
+    board.rankCounters = board.rankCounters || {};
+    board.rankCountersAbs = board.rankCountersAbs || {};
+
+    const toInt = (v) => v == null ? 0 : parseInt(v, 10);
+
+    const sourceIndex = board.columns.findIndex(c => c.id === sourceColumn.id);
+    const targetIndex = board.columns.findIndex(c => c.id === targetColumn.id);
+    const isGoingForward = targetIndex > sourceIndex;
+    const delta = isGoingForward ? 1 : -1;
+
+    const sourceCol = board.columns[sourceIndex];
+    const targetCol = board.columns[targetIndex];
+
+    const skipMove =
+      (isGoingForward && sourceCol.skipMove) ||
+      (!isGoingForward && targetCol.skipMove);
+
+    const ownCount = toInt(board.rankCounters[level]);
+    const absCount = toInt(board.rankCountersAbs[level]);
+    const upperCount = level > 1 ? toInt(board.rankCounters[level - 1]) : 0;
+
+    // --- 1. Абсолютный счётчик — всегда меняется
+    board.rankCountersAbs[level] = absCount + delta;
+
+    // --- 2. Глобальный счётчик доски — всегда меняется
+    const boardsCounters = this.getBoardsCounters();
+    const boardTotal = toInt(boardsCounters[board.id]);
+    boardsCounters[board.id] = boardTotal + delta;
+
+    this.saveCounters(boardsCounters);
+
+    // --- 3. Если skipMove — логику рангов не трогаем
+    if(skipMove) {
+      return;
+    }
+
+    // --- 4. Первый уровень — всегда меняет свой счётчик
+    if(level === 1) {
+      board.rankCounters[level] = ownCount + delta;
+      return;
+    }
+
+    const quotaOwn = toInt(ranks[level].q);
+    const isLastLevel = level === Object.keys(ranks).length;
+    
+    if (isLastLevel && ownCount >= quotaOwn) {
+      
+      // --- 5. В последнем уровне не накапливаем счет сверх квоты
+      // (т.к. нет потомков и его никто не обнуляет)
+      board.rankCounters[level] = quotaOwn;
+
+    } else {
+
+      // --- 6. Проверка “в долг”
+      // Ход вперёд в долг = у верхнего уровня нет ресурса
+      // Ход назад в долг = у верхнего уровня был компенсирующий долг
+      const affectsOwn =
+        isGoingForward
+          ? upperCount > 0
+          : true; // назад всегда восстанавливаем симметрично
+  
+      if(affectsOwn) {
+        board.rankCounters[level] = ownCount + delta;
+      }
+    }
+
+    // --- 7. Корректировка верхнего уровня
+    const quotaUpper = toInt(ranks[level - 1].q);
+    board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
+
   },
 
 };
@@ -699,6 +804,24 @@ const DeleteUI = {
     State.headerUiMode = 'default';
     Bus.emit(Bus.events.headerUIChanged);
     Bus.emit(Bus.events.boardsChanged);
+  },
+
+};
+
+const Stats = {
+  
+  selectors: {},
+
+  dom : {},
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
+    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+  },
+
+  render() {
+    if(State.headerUiMode !== 'stats') return;
   },
 
 };
@@ -1161,7 +1284,7 @@ const RanksUI = {
     const board = BoardDomain.getCurrentBoard();
     if(!board) return;
     const ranks = board.ranks;
-    const raw = board.ranksRaw;
+    const raw = board.ranksRaw || '';
     if (State.ranksUi === null) {
       State.ranksUi = this.createDefaultState();
     }
@@ -1171,9 +1294,7 @@ const RanksUI = {
     const errors = State.ranksUi.errors;
 
     const saveButtonVisible = [this.modes.create, this.modes.edit].includes(mode) 
-      && !State.ranksUi.errors.length 
-      && State.ranksUi.draft 
-      && State.ranksUi.draftRaw !== raw;
+      && !errors.length && (draft && JSON.stringify(draft.ranks) !== JSON.stringify(ranks));
 
     document.querySelector(this.selectors.ranksBlock).innerHTML = `
       <h3 class="top-menu-title">Manage the board ranks</h3>
@@ -1197,19 +1318,19 @@ const RanksUI = {
         ) : ''}
       </div>
       <div id="ranks-delete-confirm-message" class="ranks-message ${mode == this.modes.delete ? '' : 'hidden'}">Really delete ranks for this board?</div>
-      <div id="ranks-counters-reset-message" class="ranks-message ${mode == this.modes.reset ? '' : 'hidden'}">Really reset abs.counters for this board?</div>
+      <div id="ranks-counters-reset-message" class="ranks-message ${mode == this.modes.reset ? '' : 'hidden'}">Really reset  all counters for this board?</div>
       <div id="ranks-buttons-container">
         <button class="js-cancel-current button-close"></button>
 
-        <button id="ranks-counters-reset" class="board-management-button ${ranks && ![this.modes.delete, this.modes.edit].includes(mode) ? '' : 'hidden'}">Reset c-s</button>
-        <button id="ranks-counters-reset-confirm" class="board-management-button ${mode === this.modes.reset ? '' : 'hidden'}">Reset</button>
+        <button id="ranks-counters-reset" class="board-management-button ${ranks && mode === this.modes.default ? '' : 'hidden'}">Reset</button>
+        <button id="ranks-counters-reset-confirm" class="board-management-button ${mode === this.modes.reset ? '' : 'hidden'}">Yes</button>
         <button id="ranks-counters-reset-cancel" class="board-management-button ${mode === this.modes.reset ? '' : 'hidden'}">Cancel</button>
         
         <button id="create-ranks" class="board-management-button ${!ranks && mode !== this.modes.create ? '' : 'hidden'}">Create</button>
-        <button id="create-ranks-cancel" class="board-management-button ${!ranks && mode == this.modes.create ? '' : 'hidden'}">Cancel</button>
         <button id="ranks-edit" class="board-management-button ${ranks && mode == this.modes.default ? '' : 'hidden'}">Edit</button>
-        <button id="ranks-preview" class="board-management-button ${[this.modes.create, this.modes.edit].includes(mode) ? '' : 'hidden'}">👀</button>
-        <button id="ranks-save-confirm" ${!raw || draft !== raw ? '' : 'disabled'} class="board-management-button ${saveButtonVisible ? '' : 'hidden'}">Save</button>
+        <button id="ranks-preview" class="board-management-button hidden">👀</button>
+        <button id="create-ranks-cancel" class="board-management-button ${!ranks && mode == this.modes.create ? '' : 'hidden'}">Cancel</button>
+        <button id="ranks-save-confirm" class="board-management-button ${saveButtonVisible ? '' : 'hidden'}">Save</button>
         <button id="ranks-edit-cancel" class="board-management-button ${mode == this.modes.edit ? '' : 'hidden'}">Cancel</button>
         <button id="ranks-delete" class="board-management-button ${ranks && mode == this.modes.default ? '' : 'hidden'}">Delete</button>
         <button id="ranks-delete-confirm" class="board-management-button ${mode == this.modes.delete ? '' : 'hidden'}">Delete</button>
@@ -1217,6 +1338,12 @@ const RanksUI = {
         <button id="ranks-cancel" class="js-cancel-current board-management-button ${mode == this.modes.default ? '' : 'hidden'}">Cancel</button>
       </div>    
     `;
+
+    this.dom.previewButton = document.querySelector(this.selectors.previewButton);
+    this.dom.textarea = document.querySelector(this.selectors.textarea);
+    this.dom.previewBlock = document.querySelector(this.selectors.previewBlock);
+    this.dom.saveButton = document.querySelector(this.selectors.saveButton);
+
   },
 
   getCountersHtml(board) {
@@ -1316,7 +1443,9 @@ const RanksUI = {
       result.ranks = ranks;
       result.ranksRaw = raw;
       return result;
-    } 
+    } else {
+      delete State.ranksUi.draft;
+    }
     return null;
   },  
 
@@ -1508,6 +1637,17 @@ const RanksUI = {
     Bus.emit(Bus.events.ranksUiChanged);
   },
 
+  showResetUi() {
+    State.ranksUi.mode = 'reset';
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  resetCounters() {
+    BoardDomain.resetCounters();
+    State.ranksUi.mode = this.modes.default;
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
   resetUi() {
     State.ranksUi = this.createDefaultState();
     Bus.emit(Bus.events.ranksUiChanged);
@@ -1528,6 +1668,22 @@ const RanksUI = {
   edit() {
     State.ranksUi.mode = 'edit';
     Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  updateButtonState() {
+    const to = State.ranksUi.draftRaw || '';
+    const noPreview = this.dom.textarea.value == to;
+    this.dom.previewButton.classList.toggle(
+      'hidden',
+      noPreview
+    );
+
+    if (!noPreview) {
+      this.dom.saveButton.classList.toggle('hidden', true);
+    }
+    this.dom.previewBlock.classList.toggle('hidden', noPreview);
+
+    this.dom.previewBlock.innerHTML = '';
   },
 
 };
@@ -2029,12 +2185,16 @@ const Events = {
       [RanksUI.selectors.deleteConfirmButton]: 'RanksUI.delete',
       [RanksUI.selectors.editButton]: 'RanksUI.edit',
       [RanksUI.selectors.editCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.resetCountersButton]: 'RanksUI.showResetUi',
+      [RanksUI.selectors.resetCountersCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.resetCountersConfirmButton]: 'RanksUI.resetCounters',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
       [ColumnHeaderUI.selectors.renameColumnInput]: 'ColumnHeaderUI.updateButtonState',
       [ColumnHeaderUI.selectors.skipMoveCheckbox]: 'ColumnHeaderUI.setSkipMove',
       [TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
+      [RanksUI.selectors.textarea]: 'RanksUI.updateButtonState',
     },
     'contextmenu': {
       '##': ['DragDrop.preventOnce', [true]],
