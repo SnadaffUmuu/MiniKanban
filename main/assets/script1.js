@@ -53,7 +53,7 @@ const Bus = {
     columnAdded: 'columnAdded',
     columnMoved: 'columnMoved',
     taskUiChanged: 'taskUiChanged',
-    ranksUiChanged : 'ranksUiChanged',
+    ranksUiChanged: 'ranksUiChanged',
   },
 
   listeners: {},
@@ -138,13 +138,14 @@ const State = {
   screen: 'board', //books
   headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard
   menuOpen: false,
+  statsUiMode: null,
   boardUi: {
     columnUi: {}, //default, menu, rename, move, delete
     taskUi: {},
   },
-  ranksUi : null,
+  ranksUi: null,
 
-  afterRender : [],
+  afterRender: [],
 
   setState(patch) {
     Object.assign(this, patch);
@@ -153,6 +154,10 @@ const State = {
 };
 
 const BoardDomain = {
+
+  getBoard(id) {
+    return App.data.boards.find(b => b.id == id);
+  },
 
   getCurrentBoard() {
     return App.data.boards.find(b => b.id == App.data.currentBoardId);
@@ -169,7 +174,7 @@ const BoardDomain = {
   },
 
   getColumnByTaskId(id, board) {
-    if (!board) {
+    if(!board) {
       board = this.getCurrentBoard();
     }
     return board.columns.find(col =>
@@ -180,7 +185,7 @@ const BoardDomain = {
   getBoardsCounters() {
     const bc = App.data.boardsCounters;
     return bc != null ? bc : {};
-  },  
+  },
 
   switchBoard(boardId) {
     if(App.data.boards.find(b => b.id == boardId)) {
@@ -306,9 +311,9 @@ const BoardDomain = {
 
   deleteTask(id) {
     const board = this.getCurrentBoard();
-    for (const col of board.columns) {
+    for(const col of board.columns) {
       const index = col.tasks.findIndex(task => task.id === id);
-      if (index !== -1) {
+      if(index !== -1) {
         col.tasks.splice(index, 1);
         this.saveBoards(App.data.boards, App.data.currentBoardId);
         return;
@@ -323,23 +328,23 @@ const BoardDomain = {
 
     board.columns.forEach(col => {
       const task = col.tasks.find(task => task.id === id);
-      if (task) {
+      if(task) {
         theTask = task;
         theCol = col;
       }
     });
 
-    if (theTask) {
-      
+    if(theTask) {
+
       theTask.color = color;
       theTask.description = description;
 
     } else {
-      
+
       theTask = {
-        id : id,
+        id: id,
         color: color,
-        description : description
+        description: description
       };
 
       theCol = board.columns.find(col => col.id === colId);
@@ -372,7 +377,7 @@ const BoardDomain = {
       color: task.color,
       sourceColumn: sourceColumn,
       targetColumn: targetColumn
-    });    
+    });
 
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
@@ -406,7 +411,7 @@ const BoardDomain = {
 
     return [...colors]
   },
-  
+
   setRanksData({ranks, ranksRaw}) {
     const board = this.getCurrentBoard();
     board.ranksRaw = ranksRaw;
@@ -416,8 +421,8 @@ const BoardDomain = {
     const counters = board.rankCounters || {};
     const absCounters = board.rankCountersAbs || {};
     Object.keys(ranks).forEach(level => {
-      if (!counters[level]) counters[level] = 0;
-      if (!absCounters[level]) absCounters[level] = 0;
+      if(!counters[level]) counters[level] = 0;
+      if(!absCounters[level]) absCounters[level] = 0;
     });
     board.rankCounters = counters;
     board.rankCountersAbs = absCounters;
@@ -494,9 +499,9 @@ const BoardDomain = {
 
     const quotaOwn = toInt(ranks[level].q);
     const isLastLevel = level === Object.keys(ranks).length;
-    
-    if (isLastLevel && ownCount >= quotaOwn) {
-      
+
+    if(isLastLevel && ownCount >= quotaOwn) {
+
       // --- 5. В последнем уровне не накапливаем счет сверх квоты
       // (т.к. нет потомков и его никто не обнуляет)
       board.rankCounters[level] = quotaOwn;
@@ -510,7 +515,7 @@ const BoardDomain = {
         isGoingForward
           ? upperCount > 0
           : true; // назад всегда восстанавливаем симметрично
-  
+
       if(affectsOwn) {
         board.rankCounters[level] = ownCount + delta;
       }
@@ -544,7 +549,7 @@ const BoardUI = {
           `.column[data-id="${newUid}"]`
         );
 
-        if (!col) return;
+        if(!col) return;
 
         this.dom.main.scrollLeft = col.offsetLeft - 30;
       });
@@ -627,7 +632,7 @@ const BoardUI = {
     while(State.afterRender.length) {
       const effect = State.afterRender.shift();
       effect();
-    }    
+    }
   },
 
   createColumn() {
@@ -739,6 +744,7 @@ const BoardsList = {
 
   switchBoard(el, e) {
     BoardDomain.switchBoard(el.dataset.id);
+    State.headerUiMode = 'default';
     Bus.emit(Bus.events.boardsChanged);
   },
 
@@ -809,10 +815,22 @@ const DeleteUI = {
 };
 
 const Stats = {
-  
-  selectors: {},
 
-  dom : {},
+  idealMap: {
+    "Satori Reader": 12,
+    "Reading in paper": 8,
+    "おさらい": 6
+  },
+
+  selectors: {
+    resetButton: '#reset-stats',
+    resetMessage: '#reset-message',
+    content: '#stats',
+    confirmResetButton: '#reset-stats-confirm',
+    cancelResetButton: '#reset-stats-cancel',
+  },
+
+  dom: {},
 
   init() {
     Bus.batchedMethod(this, 'render');
@@ -822,6 +840,74 @@ const Stats = {
 
   render() {
     if(State.headerUiMode !== 'stats') return;
+    this.dom.resetMessage.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
+    this.dom.confirmResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
+    this.dom.cancelResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
+    this.dom.resetButton.classList.toggle('hidden', State.statsUiMode == 'promptReset');
+    const roundUp1 = (num) => Math.ceil(num * 10) / 10;
+    const stats = BoardDomain.getBoardsCounters();
+    const total = Object.values(stats).reduce((a, b) => a + b, 0);
+    const idealTotal = Object.values(this.idealMap).reduce((a, b) => a + b, 0);
+
+    let content = 'No stats';
+
+    if(stats && Object.keys(stats).length) {
+
+      const rows = Object.keys(stats).map(boardId => {
+        const board = BoardDomain.getBoard(boardId);
+        const name = board.name;
+        const value = stats[boardId];
+
+        const realPercent = roundUp1((value / total) * 100);
+        const idealPercent = this.idealMap[name]
+          ? roundUp1((this.idealMap[name] / idealTotal) * 100)
+          : 0;
+
+        return `
+          <tr>
+            <td>${name}</td>
+            <td>${realPercent.toFixed(1)}%</td>
+            <td>${idealPercent.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+
+      content = `
+        <table id="statsData">
+          <thead>
+            <tr>
+              <th></th>
+              <th>real</th>
+              <th>ideal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    this.dom.content.innerHTML = content;
+
+  },
+
+  /* handlers */
+
+  reset() {
+    State.statsUiMode = null;
+    BoardDomain.resetBoardsCounters();
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+  promptReset() {
+    State.statsUiMode = 'promptReset';
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+  resetUi() {
+    State.statsUiMode = null;
+    Bus.emit(Bus.events.headerUIChanged);
   },
 
 };
@@ -947,15 +1033,15 @@ const TaskUI = {
     addTask: '.js-add-task',
     cancelAddTaskButton: '.js-cancel-add-task',
     cancelEditTaskButton: '.js-cancel-edit-task',
-    taskInfoToggle : '.task-info-toggle',
-    taskExpandButton : '.task-expand-button ',
-    taskDeleteButton : '.task-delete',
-    cancelDeleteTaskButton : '.cancel-delete-task',
-    confirmDeleteTaskButton : '.confirm-delete-task',
-    taskEditSaveButton : '.task-edit-save',
-    cloneTask : '.task-clone',
-    colorPickerButton : '.task-change-color',
-    cancelSetColorButton : '.cancel-set-color',
+    taskInfoToggle: '.task-info-toggle',
+    taskExpandButton: '.task-expand-button ',
+    taskDeleteButton: '.task-delete',
+    cancelDeleteTaskButton: '.cancel-delete-task',
+    confirmDeleteTaskButton: '.confirm-delete-task',
+    taskEditSaveButton: '.task-edit-save',
+    cloneTask: '.task-clone',
+    colorPickerButton: '.task-change-color',
+    cancelSetColorButton: '.cancel-set-color',
   },
 
   init() {
@@ -985,27 +1071,27 @@ const TaskUI = {
     const prev = State.boardUi.taskUi[id] || {};
     const next = updater(prev);
 
-    if (next === null) {
+    if(next === null) {
       delete State.boardUi.taskUi[id];
     } else {
       State.boardUi.taskUi[id] = next;
     }
 
     Bus.emit(Bus.events.taskUiChanged, id);
-  },  
+  },
 
   toggleTaskInfo(el) {
     this.setTaskUi(this.getId(el), (prev) => ({
       ...prev,
-      mode : prev.mode === 'menuOpened' || prev.mode === 'edit' ? 'default' : 'menuOpened',
-      description : this.getInput(el).dataset.originalValue
+      mode: prev.mode === 'menuOpened' || prev.mode === 'edit' ? 'default' : 'menuOpened',
+      description: this.getInput(el).dataset.originalValue
     }));
   },
 
   showAddTaskForm(el) {
     const id = Utils.generateUID();
     this.setTaskUi(id, () => ({
-      mode : 'create',
+      mode: 'create',
       columnId: Utils.getColumnEl(el).dataset.id,
       description: '',
       color: 'white',
@@ -1019,8 +1105,8 @@ const TaskUI = {
   hideEditTaskUi(el) {
     this.setTaskUi(this.getId(el), (prev) => ({
       ...prev,
-      mode : 'menuOpened',
-      description : el.dataset.originalValue
+      mode: 'menuOpened',
+      description: el.dataset.originalValue
     }));
   },
 
@@ -1028,12 +1114,12 @@ const TaskUI = {
     this.setTaskUi(this.getId(el), (prev) => ({
       ...prev,
       mode: prev.mode === 'edit' ? 'menuOpened' : 'edit',
-      description : this.getInput(el).dataset.originalValue
+      description: this.getInput(el).dataset.originalValue
     }));
   },
-  
+
   showEditUi(el) {
-    if (this.getMode(el) !== 'menuOpened') return;
+    if(this.getMode(el) !== 'menuOpened') return;
     this.setTaskUi(this.getId(el), (prev) => ({
       ...prev,
       mode: 'edit'
@@ -1062,7 +1148,7 @@ const TaskUI = {
   },
 
   cancelSetColor(el) {
-      this.setTaskUi(this.getId(el), (prev) => ({
+    this.setTaskUi(this.getId(el), (prev) => ({
       ...prev,
       mode: 'menuOpened',
       color: el.closest('.task').querySelector('[data-original-color]').dataset.originalColor
@@ -1079,7 +1165,7 @@ const TaskUI = {
     const columnEl = el.closest('.column');
     BoardDomain.updateTask(this.getId(el), columnEl.dataset.id, {
       color: taskEl.dataset.color,
-      description : this.getInput(el).value
+      description: this.getInput(el).value
     });
     Bus.emit(Bus.events.boardsChanged);
   },
@@ -1099,42 +1185,42 @@ const TaskUI = {
   render(id) {
     let el = document.querySelector(`[data-id="${id}"]`);
     const uiTask = State.boardUi.taskUi[id];
-    if (el && !uiTask) {
+    if(el && !uiTask) {
       el.remove();
     } else {
       const html = this.getTaskHtml(id);
-      if (el) {
+      if(el) {
         el.outerHTML = html;
       } else {
         document.querySelector(`.column[data-id="${uiTask.columnId}"] .column-body`).insertAdjacentHTML('afterbegin', html);
       }
       el = document.querySelector(`[data-id="${id}"]`);
       const input = el.querySelector(`.task-edit-input`);
-      if (uiTask.mode === 'create' || uiTask.mode === 'edit') {
+      if(uiTask.mode === 'create' || uiTask.mode === 'edit') {
         Utils.expandInput(input);
         Utils.focusAndPlaceCursorAtEnd(input);
         this.updateButtonState(input);
       }
     }
-  },    
+  },
 
   getTaskHtml(id) {
     const domainTask = BoardDomain.getTask(id);
     const uiTask = State.boardUi.taskUi[id];
     const column = BoardDomain.getColumnByTaskId(id);
-    
+
     const isCreate = !domainTask && uiTask && uiTask.mode === 'create';
     const isEdit = domainTask && uiTask && uiTask.mode === 'edit';
     const isMenuOpened = domainTask && uiTask && uiTask.mode === 'menuOpened';
     const isDeleteConfirm = domainTask && uiTask && uiTask.mode === 'deleteConfirm';
     const isColorPicker = domainTask && uiTask && uiTask.mode === 'colors';
     const isDefault = !isCreate && !isEdit && !isMenuOpened && !isDeleteConfirm && !isColorPicker;
-    
+
     const origColor = domainTask ? domainTask.color : null;
     const descr = uiTask && uiTask.description ? uiTask.description : (domainTask ? domainTask.description : '');
     const origDescr = domainTask ? domainTask.description : '';
     const color = uiTask && uiTask.color ? uiTask.color : (domainTask ? domainTask.color : 'white');
-    
+
     return `
     <div class="task" style="background:${Colors[color]};" data-color="${color}" data-id="${id}">
       ${isDefault ? `<div class="ranks-info">${this.getTaskRanksInfo(domainTask, column, BoardDomain.getCurrentBoard())}</div>` : ''}
@@ -1163,7 +1249,7 @@ const TaskUI = {
       <div data-original-color="${origColor}" class="set-task-colors ${isColorPicker ? '' : 'hidden'}">
         Choose task color<br><br>
         ${this.getTaskColorPicker(color)}
-        <button class="task-edit-save board-management-button" ${color == origColor ? 'disabled' : '' }>Save</button>
+        <button class="task-edit-save board-management-button" ${color == origColor ? 'disabled' : ''}>Save</button>
         <button class="cancel-set-color board-management-button" >Cancel</button>
       </div>
     </div>
@@ -1201,7 +1287,7 @@ const TaskUI = {
   },
 
   getTaskColorPicker(currentColor) {
-    if (!currentColor) {
+    if(!currentColor) {
       currentColor = Colors.white;
     }
     const colors = Object.keys(Colors).map(key => {
@@ -1220,15 +1306,15 @@ const TaskUI = {
 
 const RanksUI = {
 
-  modes : {
-    default : 'default',
-    create : 'create',
-    edit : 'edit',
-    delete : 'delete',
-    reset : 'reset',
+  modes: {
+    default: 'default',
+    create: 'create',
+    edit: 'edit',
+    delete: 'delete',
+    reset: 'reset',
   },
 
-  selectors : {
+  selectors: {
     ranksBlock: '#ranks-block',
     createButton: '#create-ranks',
     createCancelButton: '#create-ranks-cancel',
@@ -1259,18 +1345,18 @@ const RanksUI = {
     infoContainer: '#ranks-panels-container',
   },
 
-  dom : {},
-  
+  dom: {},
+
   createDefaultState() {
     return {
-      mode : 'default',
-      errors : [],
-      draft : null,
-      draftRaw : null,
+      mode: 'default',
+      errors: [],
+      draft: null,
+      draftRaw: null,
       colorsInUseShown: false,
       countersShown: false,
     }
-  }, 
+  },
 
   init() {
     Bus.on(Bus.events.boardsChanged, this.render.bind(this));
@@ -1279,13 +1365,12 @@ const RanksUI = {
   },
 
   render() {
-    console.log('Ranks ui render...');
     if(State.headerUiMode !== 'ranks') return;
     const board = BoardDomain.getCurrentBoard();
     if(!board) return;
     const ranks = board.ranks;
     const raw = board.ranksRaw || '';
-    if (State.ranksUi === null) {
+    if(State.ranksUi === null) {
       State.ranksUi = this.createDefaultState();
     }
     const mode = State.ranksUi.mode;
@@ -1293,13 +1378,13 @@ const RanksUI = {
     const draftRaw = State.ranksUi.draftRaw;
     const errors = State.ranksUi.errors;
 
-    const saveButtonVisible = [this.modes.create, this.modes.edit].includes(mode) 
+    const saveButtonVisible = [this.modes.create, this.modes.edit].includes(mode)
       && !errors.length && (draft && JSON.stringify(draft.ranks) !== JSON.stringify(ranks));
 
     document.querySelector(this.selectors.ranksBlock).innerHTML = `
       <h3 class="top-menu-title">Manage the board ranks</h3>
       <div id="current-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getColorsInUseHtml()}</div>
-      <div id="ranks-panels-container" ${ranks && ![this.modes.delete].includes(mode)  ? '' : 'class="hidden"'}>
+      <div id="ranks-panels-container" ${ranks && ![this.modes.delete].includes(mode) ? '' : 'class="hidden"'}>
         ${this.getCountersHtml(board)}
       </div>
       <textarea id="ranks-input" ${[this.modes.create, this.modes.edit].includes(mode) ? '' : ' class="hidden"'} placeholder="2 blue 
@@ -1309,13 +1394,13 @@ const RanksUI = {
       <div id="ranks-input-errors" ${errors.length ? '' : 'class="hidden"'}>${errors.join('<br>')}</div>
       <div id="preview-ranks" ${draft ? '' : 'class="hidden"'}>
         ${draft ? this.getRanksHtml(
-          board,
-          draft.ranks,
-          'Preview',
-          null,
-          null,
-          true
-        ) : ''}
+      board,
+      draft.ranks,
+      'Preview',
+      null,
+      null,
+      true
+    ) : ''}
       </div>
       <div id="ranks-delete-confirm-message" class="ranks-message ${mode == this.modes.delete ? '' : 'hidden'}">Really delete ranks for this board?</div>
       <div id="ranks-counters-reset-message" class="ranks-message ${mode == this.modes.reset ? '' : 'hidden'}">Really reset  all counters for this board?</div>
@@ -1356,13 +1441,13 @@ const RanksUI = {
       State.ranksUi.countersShown
     ) : '';
     const absCounters = board.ranks ? this.getRanksHtml(
-        board,
-        board.ranks,
-        'Abs counters',
-        null,
-        true,
-        State.ranksUi.countersShown
-      ) : '';
+      board,
+      board.ranks,
+      'Abs counters',
+      null,
+      true,
+      State.ranksUi.countersShown
+    ) : '';
     return counters || absCounters ? `<div id="current-ranks">${counters}</div>
         <div id="abs-counters">${absCounters}</div>` : '';
   },
@@ -1447,7 +1532,7 @@ const RanksUI = {
       delete State.ranksUi.draft;
     }
     return null;
-  },  
+  },
 
   getRanksHtml(
     board,
@@ -1457,8 +1542,8 @@ const RanksUI = {
     showAbsCounters = false,
     showList = false,
   ) {
-    
-    if (!ranks) return '';
+
+    if(!ranks) return '';
 
     const levels = Object.keys(ranks)
       .map(Number)
@@ -1505,7 +1590,7 @@ const RanksUI = {
     <ul class="colors-list ranks-list ${showList == true ? '' : 'hidden'}">
     ${build(0)}
       </ul>`;
-  },  
+  },
 
   getColorsInUseHtml() {
     return `
@@ -1608,7 +1693,7 @@ const RanksUI = {
   preview() {
     const newValue = this.dom.ranksBlock.querySelector(this.selectors.textarea).value;
     const parsedRanks = this.parseRanks(newValue);
-    if (!State.ranksUi.errors.length && parsedRanks) {
+    if(!State.ranksUi.errors.length && parsedRanks) {
       State.ranksUi.draft = parsedRanks;
       State.ranksUi.draftRaw = parsedRanks.ranksRaw;
     } else {
@@ -1678,7 +1763,7 @@ const RanksUI = {
       noPreview
     );
 
-    if (!noPreview) {
+    if(!noPreview) {
       this.dom.saveButton.classList.toggle('hidden', true);
     }
     this.dom.previewBlock.classList.toggle('hidden', noPreview);
@@ -1839,7 +1924,7 @@ const DragDrop = {
       el.previousElementSibling === insertIndicator) : -1;
     if(targetColumnEl) {
       BoardDomain.moveTask(
-        targetColumnEl.dataset.id, 
+        targetColumnEl.dataset.id,
         this.dragState.draggingTask.dataset.id,
         insertIndex
       );
@@ -2119,6 +2204,7 @@ const Components = [
   TaskUI,
   RanksUI,
   DragDrop,
+  Stats,
 ];
 
 const Events = {
@@ -2134,6 +2220,7 @@ const Events = {
     'ColumnHeaderUI': ColumnHeaderUI,
     'TaskUI': TaskUI,
     'RanksUI': RanksUI,
+    'Stats': Stats,
     // 'Utils': Utils
   },
 
@@ -2188,6 +2275,10 @@ const Events = {
       [RanksUI.selectors.resetCountersButton]: 'RanksUI.showResetUi',
       [RanksUI.selectors.resetCountersCancelButton]: 'RanksUI.resetUi',
       [RanksUI.selectors.resetCountersConfirmButton]: 'RanksUI.resetCounters',
+
+      [Stats.selectors.resetButton]: 'Stats.promptReset',
+      [Stats.selectors.confirmResetButton]: 'Stats.reset',
+      [Stats.selectors.cancelResetButton]: 'Stats.resetUi',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
