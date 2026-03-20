@@ -820,12 +820,3 @@ body:has(.dragged) {
 .ranks-message {
   padding:10px 0;
 }
-
-#statsData {
-  border-collapse: separate;
-}
-
-#statsData td {
-  padding:5px 10px;
-  border:1px dotted #817b7b;
-}
