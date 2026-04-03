@@ -65,6 +65,7 @@ export const Events = {
 
       [RanksUI.selectors.createButton]: 'RanksUI.showCreateUi',
       [RanksUI.selectors.colorsInUseToggle]: 'RanksUI.toggleColorsInUse',
+      [RanksUI.selectors.freeColorsToggle]: 'RanksUI.toggleColorsInUse',
       [RanksUI.selectors.countersToggle]: 'RanksUI.toggleCounters',
       [RanksUI.selectors.createCancelButton]: 'RanksUI.resetUi',
       [RanksUI.selectors.previewButton]: 'RanksUI.preview',
@@ -87,7 +88,7 @@ export const Events = {
       [ColumnHeaderUI.selectors.renameColumnInput]: 'ColumnHeaderUI.updateButtonState',
       [ColumnHeaderUI.selectors.skipMoveCheckbox]: 'ColumnHeaderUI.setSkipMove',
       [TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
-      [RanksUI.selectors.textarea]: 'RanksUI.updateButtonState',
+      [RanksUI.selectors.textarea]: 'RanksUI.ranksInputHandler',
     },
     'contextmenu': {
       '##': ['DragDrop.preventOnce', [true]],

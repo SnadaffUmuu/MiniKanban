@@ -2,6 +2,7 @@ import {App} from './App.js'
 import {Storage} from './Storage.js'
 import {RanksUI} from './RanksUI.js'
 import {Utils} from './Utils.js'
+import {Colors} from './Colors.js'
 
 export const BoardDomain = {
 
@@ -62,6 +63,13 @@ export const BoardDomain = {
   resetBoardsCounters() {
     App.data.boardsCounters = {};
     Storage.save(App.data);
+  },
+
+  deleteBoardCounters(board, doSave) {
+    delete App.data.boardsCounters[board.id];
+    if (doSave) {
+      Storage.save(App.data);
+    }
   },
 
   resetCounters() {
@@ -202,6 +210,8 @@ export const BoardDomain = {
 
     }
 
+    this.checkAndUpdateRanks(board, color);
+
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
 
@@ -262,6 +272,39 @@ export const BoardDomain = {
     return [...colors]
   },
 
+  getFreeColors() {
+    let usedColors = new Set();
+
+    this.getCurrentBoard().columns?.forEach(column => {
+      column.tasks?.forEach(task => {
+        if(task.color) {
+          usedColors.add(task.color);
+        }
+      });
+    });
+
+    usedColors = [...usedColors];
+
+    return Object.keys(Colors).filter(color => !usedColors.includes(color));
+  },
+
+  checkAndUpdateRanks(board, color) {
+    //есть ли цвет в рангах?
+    const ranks = board.ranks;
+    if(!ranks) return;
+    const allRanksColors = [];
+    for(const key in ranks) {
+      allRanksColors.push(...ranks[key].c);
+    }
+    if(allRanksColors.includes(color)) {
+      return;
+    } 
+    const lowestLevel = Math.max(0, ...Object.keys(ranks));
+    ranks[lowestLevel].c = [...ranks[lowestLevel].c, color];
+    board.ranks = ranks;
+    board.ranksRaw += `,${color}`;
+  },
+
   setRanksData({ranks, ranksRaw}) {
     const board = this.getCurrentBoard();
     board.ranksRaw = ranksRaw;
@@ -289,7 +332,7 @@ export const BoardDomain = {
     delete board.ranksRaw;
     delete board.rankCounters;
     delete board.rankCountersAbs;
-
+    this.deleteBoardCounters(board, false);
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
 
@@ -361,14 +404,14 @@ export const BoardDomain = {
       // --- 6. Проверка “в долг”
       // Ход вперёд в долг = у верхнего уровня нет ресурса
       // Ход назад в долг = у верхнего уровня был компенсирующий долг
-      const affectsOwn =
-        isGoingForward
-          ? upperCount > 0
-          : true; // назад всегда восстанавливаем симметрично
+      // const affectsOwn =
+      //   isGoingForward
+      //     ? upperCount > 0
+      //     : true; // назад всегда восстанавливаем симметрично
 
-      if(affectsOwn) {
+      // if(affectsOwn) {
         board.rankCounters[level] = ownCount + delta;
-      }
+      // }
     }
 
     // --- 7. Корректировка верхнего уровня

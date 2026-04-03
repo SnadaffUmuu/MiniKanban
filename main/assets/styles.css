@@ -642,7 +642,6 @@ body:has(.dragged) {
   margin-right:5px; 
   display:flex;
   flex-flow:row nowrap;
-  flex:1 0 auto;
 }
 
 .colors-list.colors-in-use .label {
@@ -735,6 +734,10 @@ body:has(.dragged) {
   color: green
 }
 
+.cardPass.parentInDebt {
+  color: #a3a0a1;
+}
+
 #counters {
   padding: 8px;
 }
@@ -764,16 +767,19 @@ body:has(.dragged) {
   padding-right: 5px;
 }
 
-#ranks-panels-container {
+#ranks-panels-container, 
+#current-colors-container {
   display: flex;
   flex-flow: row nowrap;
 }
 
-#ranks-panels-container > div {
-  flex: 1 1 auto;
+#ranks-panels-container > div,  
+#current-colors-container > div {
+  flex: 1 1 50%;
 }
 
-#ranks-panels-container > div:not(:first-child) {
+#ranks-panels-container > div:not(:first-child), 
+#current-colors-container > div:not(:first-child) {
   padding-left:7px;
 }
 

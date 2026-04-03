@@ -33,6 +33,7 @@ export const RanksUI = {
     absCountersBlock: '#abs-counters',
     previewBlock: '#preview-ranks',
     colorsInUseToggle: '#current-colors .ranks-title',
+    freeColorsToggle: '#free-colors .ranks-title',
     countersToggle: '#ranks-panels-container .ranks-title',
 
     resetCountersButton: '#ranks-counters-reset',
@@ -52,8 +53,9 @@ export const RanksUI = {
       errors: [],
       draft: null,
       draftRaw: null,
+      inputedRaw: null,
       colorsInUseShown: false,
-      countersShown: false,
+      countersShown: true,
     }
   },
 
@@ -75,6 +77,7 @@ export const RanksUI = {
     const mode = State.ranksUi.mode;
     const draft = State.ranksUi.draft;
     const draftRaw = State.ranksUi.draftRaw;
+    const inputedRaw = State.ranksUi.inputedRaw;
     const errors = State.ranksUi.errors;
 
     const saveButtonVisible = [this.modes.create, this.modes.edit].includes(mode)
@@ -82,14 +85,17 @@ export const RanksUI = {
 
     document.querySelector(this.selectors.ranksBlock).innerHTML = `
       <h3 class="top-menu-title">Manage the board ranks</h3>
-      <div id="current-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getColorsInUseHtml()}</div>
+      <div id="current-colors-container">
+        <div id="current-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getColorsInUseHtml()}</div>
+        <div id="free-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getFreeColorsHtml()}</div>
+      </div>
       <div id="ranks-panels-container" ${ranks && ![this.modes.delete].includes(mode) ? '' : 'class="hidden"'}>
         ${this.getCountersHtml(board)}
       </div>
       <textarea id="ranks-input" ${[this.modes.create, this.modes.edit].includes(mode) ? '' : ' class="hidden"'} placeholder="2 blue 
 2 white 
 1 purple 
-1 pink,yellow">${draftRaw ? draftRaw : raw ? raw : ''}</textarea>
+1 pink,yellow">${inputedRaw ? inputedRaw : draftRaw ? draftRaw : raw ? raw : ''}</textarea>
       <div id="ranks-input-errors" ${errors.length ? '' : 'class="hidden"'}>${errors.join('<br>')}</div>
       <div id="preview-ranks" ${draft ? '' : 'class="hidden"'}>
         ${draft ? this.getRanksHtml(
@@ -112,7 +118,7 @@ export const RanksUI = {
         
         <button id="create-ranks" class="board-management-button ${!ranks && mode !== this.modes.create ? '' : 'hidden'}">Create</button>
         <button id="ranks-edit" class="board-management-button ${ranks && mode == this.modes.default ? '' : 'hidden'}">Edit</button>
-        <button id="ranks-preview" class="board-management-button hidden">👀</button>
+        <button id="ranks-preview" class="board-management-button ${this.nothingToPreview() ? 'hidden' : ''}">👀</button>
         <button id="create-ranks-cancel" class="board-management-button ${!ranks && mode == this.modes.create ? '' : 'hidden'}">Cancel</button>
         <button id="ranks-save-confirm" class="board-management-button ${saveButtonVisible ? '' : 'hidden'}">Save</button>
         <button id="ranks-edit-cancel" class="board-management-button ${mode == this.modes.edit ? '' : 'hidden'}">Cancel</button>
@@ -220,7 +226,8 @@ export const RanksUI = {
     if(notMentionedColors && notMentionedColors.length) {
       const lowestLevel = Math.max(0, ...Object.keys(ranks));
       ranks[lowestLevel].c = [...ranks[lowestLevel].c, ...notMentionedColors];
-      raw += `,${notMentionedColors.join(',')}`;
+      lines[lines.length - 1] += `,${notMentionedColors.join(',')}`;
+      raw = lines.join('\n');
     }
 
     if(!State.ranksUi.errors.length) {
@@ -301,6 +308,18 @@ export const RanksUI = {
     `;
   },
 
+  getFreeColorsHtml() {
+    return `
+    <span class="ranks-title">Free colors</span>
+    <div class="colors-list colors-in-use ${State.ranksUi.colorsInUseShown ? '' : 'hidden'}">${BoardDomain.getFreeColors().map(c => `
+      <div><span data-color="${c}" style="background:${Colors[c]}"></span><span class="label">${c}</span></div>
+      `).join('')}
+    </div>
+    `;
+  },
+
+
+
   getLevelOfColor(color, ranks) {
     if(ranks == undefined) {
       ranks = BoardDomain.getCurrentBoard().ranks;
@@ -354,15 +373,22 @@ export const RanksUI = {
     }
     // console.log(`card L${level} "${card.description}" (color: ${card.color})`, res);
 
+    const grandCounters = board.rankCounters[level - 2];
+    let parentInDebt = false;
+    if (grandCounters && grandCounters < 0) {
+      parentInDebt = true;
+    }
     const text = (res >= 0 ? 'Go! ' : '')
       + (
         res !== 0 ?
           (res >= 0 ? '+' : '') + res
           : ''
       );
+    
+    const resClass = parentInDebt ? 'parentInDebt' : res >= 0 ? 'positive' : '';
 
     return res != null ?
-      `<div class="cardPass${res >= 0 ? ' positive' : ''}">${text}</div>`
+      `<div class="cardPass ${resClass}">${text}</div>`
       : '';
   },
 
@@ -390,7 +416,7 @@ export const RanksUI = {
   /* handlers */
 
   preview() {
-    const newValue = this.dom.ranksBlock.querySelector(this.selectors.textarea).value;
+    const newValue = State.ranksUi.inputedRaw;
     const parsedRanks = this.parseRanks(newValue);
     if(!State.ranksUi.errors.length && parsedRanks) {
       State.ranksUi.draft = parsedRanks;
@@ -398,11 +424,13 @@ export const RanksUI = {
     } else {
       State.ranksUi.draftRaw = newValue;
     }
+    State.ranksUi.inputedRaw = State.ranksUi.draftRaw;
     Bus.emit(Bus.events.ranksUiChanged);
   },
 
   showCreateUi(el) {
     State.ranksUi.mode = 'create';
+    State.ranksUi.colorsInUseShown = true;
     Bus.emit(Bus.events.ranksUiChanged);
   },
 
@@ -451,21 +479,28 @@ export const RanksUI = {
 
   edit() {
     State.ranksUi.mode = 'edit';
+    State.ranksUi.colorsInUseShown = true;
     Bus.emit(Bus.events.ranksUiChanged);
   },
 
-  updateButtonState() {
+  nothingToPreview() {
     const to = State.ranksUi.draftRaw || '';
-    const noPreview = this.dom.textarea.value == to;
+    const inputed = State.ranksUi.inputedRaw || '';
+    return inputed == to;
+  },
+
+  ranksInputHandler(el) {
+    State.ranksUi.inputedRaw = el.value;
+    const nothingToPreview = this.nothingToPreview();
     this.dom.previewButton.classList.toggle(
       'hidden',
-      noPreview
+      nothingToPreview
     );
 
-    if(!noPreview) {
+    if(!nothingToPreview) {
       this.dom.saveButton.classList.toggle('hidden', true);
     }
-    this.dom.previewBlock.classList.toggle('hidden', noPreview);
+    this.dom.previewBlock.classList.toggle('hidden', nothingToPreview);
 
     this.dom.previewBlock.innerHTML = '';
   },

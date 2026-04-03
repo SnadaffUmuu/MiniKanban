@@ -88,7 +88,7 @@ export const TaskUI = {
     this.setTaskUi(this.getId(el), (prev) => ({
       ...prev,
       mode: 'menuOpened',
-      description: el.dataset.originalValue
+      description: this.getInput(el).originalValue
     }));
   },
 
@@ -204,7 +204,7 @@ export const TaskUI = {
     const color = uiTask && uiTask.color ? uiTask.color : (domainTask ? domainTask.color : 'white');
 
     return `
-    <div class="task" style="background:${Colors[color]};" data-color="${color}" data-id="${id}">
+    <div class="task ${isMenuOpened ? 'expanded' : ''}" style="background:${Colors[color]};" data-color="${color}" data-id="${id}">
       ${isDefault ? `<div class="ranks-info">${this.getTaskRanksInfo(domainTask, column, BoardDomain.getCurrentBoard())}</div>` : ''}
       <div class="task-expand-button ${!isDefault ? 'hidden' : ''}"></div>
       <button class="task-info-toggle ${isEdit || isMenuOpened ? 'expanded' : ''}"></button>
@@ -218,7 +218,10 @@ export const TaskUI = {
         <button class="task-edit-button"></button>
       </div>
       <div class="task-edit ${isCreate || isEdit ? '' : 'hidden'}">
-        <textarea rows="1" ${origDescr ? ' data-original-value="' + origDescr + '"' : ' placeholder="Description"'} class="task-edit-input">${descr}</textarea>
+        <textarea rows="1" ${origDescr
+          ? `data-original-value="${Utils.escapeAttr(origDescr)}"`
+          : `placeholder="Description"`
+        } class="task-edit-input">${Utils.escapeHtml(descr)}</textarea>
         ${isCreate ? `<div style="padding-left:10px;"><br>${this.getTaskColorPicker(color)}</div>` : ''}
         <button class="task-edit-save board-management-button" disabled>Save</button>
         <button class="${isCreate ? 'js-cancel-add-task' : 'js-cancel-edit-task'} task-edit-cancel board-management-button">Cancel</button>
@@ -255,16 +258,14 @@ export const TaskUI = {
   },
 
   taskDescrInputHandler(el) {
-    Utils.updateButtonState(
-      el,
-      el.closest('.task-edit').querySelector('.task-edit-save')
-    );
+    this.updateButtonState(el);
     Utils.expandInput(el);
   },
 
   previewColor(el) {
     const id = el.closest('.task').dataset.id;
     State.boardUi.taskUi[id].color = el.dataset.color;
+    State.boardUi.taskUi[id].description = this.getInput(el).value;
     Bus.emit(Bus.events.taskUiChanged, id);
   },
 
