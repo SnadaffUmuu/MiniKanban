@@ -2,12 +2,13 @@ import {Bus} from './Bus.js'
 import {BoardDomain} from './BoardDomain.js'
 import {State} from './State.js'
 import {TaskUI} from './TaskUI.js'
+import {App} from './App.js'
 
 export const BoardUI = {
 
   selectors: {
     columnsContainer: '#columns',
-    main: 'main',
+    main: 'main#board',
     addColumnButton: '#add-column',
   },
 
@@ -15,7 +16,9 @@ export const BoardUI = {
 
   init() {
     Bus.batchedMethod(this, 'render');
-    Bus.on(Bus.events.boardsChanged, this.render);
+    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+    Bus.on(Bus.events.screenChanged, this.render.bind(this));
+
     Bus.on(Bus.events.columnAdded, (newUid) => {
       this.render();
       State.afterRender.push(() => {
@@ -31,6 +34,10 @@ export const BoardUI = {
   },
 
   render() {
+    if (!App.isBoard()) {
+      this.dom.main.classList.add('hidden');
+      return;
+    }
     this.dom.columnsContainer.innerHTML = '';
     const board = BoardDomain.getCurrentBoard();
 
@@ -48,13 +55,7 @@ export const BoardUI = {
     board.columns.forEach(column => {
       // Карточки
       let tasksHtml = [];
-      /* 
-      
-      ${RanksUI.getLevelMarkHtml(task.color)}
-      ${RanksUI.getOwnCount(board, task.color)}
-      ${RanksUI.getPassMarkHtml(task, column)}
-      ${RanksUI.getUpperLevelMarkHtml(task.color)}
-      */
+
       column.tasks.forEach(task => {
         tasksHtml.push(TaskUI.getTaskHtml(task.id));
       });
@@ -100,6 +101,7 @@ export const BoardUI = {
       </div>
     `;
       this.dom.columnsContainer.insertAdjacentHTML('beforeend', columnHtml);
+      this.dom.main.classList.remove('hidden');
 
     });
 

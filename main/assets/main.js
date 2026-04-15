@@ -4,6 +4,7 @@ import {
   BoardsList,
   DeleteUI,
   BoardUI,
+  BooksUI,
   DragDrop,
   ColumnHeaderUI,
   TaskUI,
@@ -13,6 +14,7 @@ import {
 import {App} from './components/App.js'
 import {Events} from './components/Events.js'
 import {Utils} from './components/Utils.js'
+import {State} from './components/State.js'
 
 const Components = [
   HeaderUI,
@@ -20,6 +22,7 @@ const Components = [
   RenameUI,
   DeleteUI,
   BoardUI,
+  BooksUI,
   ColumnHeaderUI,
   TaskUI,
   RanksUI,
@@ -36,7 +39,11 @@ const AppInit = {
       o.init && o.init();
     });
     HeaderUI.render();
-    BoardUI.render();
+    if (App.isBoard()) {
+      BoardUI.render();
+    } else {
+      BooksUI.render();
+    }
   }
 };
 

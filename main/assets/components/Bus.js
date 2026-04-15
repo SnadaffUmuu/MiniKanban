@@ -1,13 +1,16 @@
 export const Bus = {
 
   events: {
-    boardsChanged: 'boardsChanged',
     headerUIChanged: 'headerUIChanged',
+    boardsChanged: 'boardsChanged',
     columnHeaderUIChanged: 'columnHeaderUIChanged',
     columnAdded: 'columnAdded',
     columnMoved: 'columnMoved',
     taskUiChanged: 'taskUiChanged',
     ranksUiChanged: 'ranksUiChanged',
+    screenChanged: 'screenChanged',
+    booksUiChanged: 'booksUiChanged',
+    booksChanged: 'booksChanged',
   },
 
   listeners: {},

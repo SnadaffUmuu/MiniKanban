@@ -258,10 +258,11 @@ export const BoardDomain = {
     return newId;
   },
 
-  getColorsInUse() {
+  getColorsInUse(board) {
+    const theBoard = board || this.getCurrentBoard();
     const colors = new Set();
 
-    this.getCurrentBoard().columns?.forEach(column => {
+    theBoard.columns?.forEach(column => {
       column.tasks?.forEach(task => {
         if(task.color) {
           colors.add(task.color);
@@ -273,18 +274,7 @@ export const BoardDomain = {
   },
 
   getFreeColors() {
-    let usedColors = new Set();
-
-    this.getCurrentBoard().columns?.forEach(column => {
-      column.tasks?.forEach(task => {
-        if(task.color) {
-          usedColors.add(task.color);
-        }
-      });
-    });
-
-    usedColors = [...usedColors];
-
+    const usedColors = this.getColorsInUse();
     return Object.keys(Colors).filter(color => !usedColors.includes(color));
   },
 

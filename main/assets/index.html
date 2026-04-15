@@ -13,8 +13,10 @@
   <header>
     <h1 id="board-title" class="top-menu-title"></h1>
     <div id="top-tools">
+      <button id="switchScreen" data-screen="board"></button>
       <button id="boards-button" data-header-mode-trigger="boardsList"></button>
       <button id="menu-toggle"></button>
+      <button id="books-menu-toggle"></button>
     </div>
     <section id="menu" class="hidden">
       <div id="menu-content">
@@ -23,6 +25,9 @@
         <button id="manage-ranks"  data-header-mode-trigger="ranks" class="hidden">Manage ranks</button>
         <button id="show-stats" class="hidden" data-header-mode-trigger="stats">Show stats</button>
       </div>
+    </section>
+    <section id="booksMenu" class="hidden">
+      <button>some books action</button>
     </section>
 
     <div id="statsUI" data-header-mode="stats" class="hidden">
@@ -62,10 +67,26 @@
   </header>
 
 
-  <main>
+  <main id="board" class="hidden">
     <div id="columns"></div>
     <button id="add-column"></button>
   </main>
+
+  <section id="books" class="hidden">
+    <button id="addBook">Add book</button>
+    <div id="addBookUi" class="hidden">
+      <form name="addBook" action="javascript:void(0);">
+        <input type="text" id="bookName" placeholder="name"><br>
+        <input type="text" id="bookKey" placeholder="key"><br>
+        <input type="number" id="size" placeholder="size"><br>
+        <select id="bookBoard"></select><br>
+        <select id="bookBoardColor"></select><br>
+        <button id="addBookConfirm">Save</button>
+        <button id="addBookCancel">Cancel</button>
+      </form>
+    </div>
+    <div id="booksListContainer"></div>
+  </section>
 
  <!-- <script src="script1.js"></script> -->
  <!-- <script src="./script1.js"></script> -->

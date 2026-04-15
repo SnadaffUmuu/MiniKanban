@@ -1,7 +1,6 @@
 export const State = {
 
-  screen: 'board', //books
-  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard
+  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault
   menuOpen: false,
   statsUiMode: null,
   boardUi: {
@@ -9,6 +8,9 @@ export const State = {
     taskUi: {},
   },
   ranksUi: null,
+  booksUi : {
+    addUiShown : false,
+  },
 
   afterRender: [],
 

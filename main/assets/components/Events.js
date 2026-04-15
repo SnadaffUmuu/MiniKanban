@@ -8,7 +8,8 @@ import {
   ColumnHeaderUI,
   TaskUI,
   RanksUI,
-  Stats
+  Stats,
+  BooksUI,
 } from './index.js'
 
 export const Events = {
@@ -24,6 +25,7 @@ export const Events = {
     'TaskUI': TaskUI,
     'RanksUI': RanksUI,
     'Stats': Stats,
+    'BooksUI' : BooksUI,
   },
 
   map: {
@@ -34,11 +36,15 @@ export const Events = {
       [HeaderUI.selectors.toggleMenuButton]: 'HeaderUI.toggleMenu',
       [HeaderUI.selectors.changeHeaderModeTriggers]: 'HeaderUI.changeMode',
       [HeaderUI.selectors.reset]: 'HeaderUI.reset',
+      [HeaderUI.selectors.screenSwitch]: 'HeaderUI.switchScreen',
+
       [RenameUI.selectors.confirmRenameButton]: 'RenameUI.renameBoard',
       [DeleteUI.selectors.deleteBoardConfirmButton]: 'DeleteUI.deleteBoard',
       [BoardsList.selectors.boardsButtons]: 'BoardsList.switchBoard',
       [BoardsList.selectors.createButton]: 'BoardsList.createBoard',
+
       [BoardUI.selectors.addColumnButton]: 'BoardUI.createColumn',
+      
       [ColumnHeaderUI.selectors.columnMenuTrigger]: 'ColumnHeaderUI.toggleColumnMenu',
       [ColumnHeaderUI.selectors.changeHeaderModeTriggers]: 'ColumnHeaderUI.changeColumnHeaderMode',
       [ColumnHeaderUI.selectors.cancelModeUi]: 'ColumnHeaderUI.cancelModeUi',
@@ -82,6 +88,10 @@ export const Events = {
       [Stats.selectors.resetButton]: 'Stats.promptReset',
       [Stats.selectors.confirmResetButton]: 'Stats.reset',
       [Stats.selectors.cancelResetButton]: 'Stats.resetUi',
+      
+      [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
+      [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],
+      [BooksUI.selectors.addBookConfirmButton]: 'BooksUI.addBook',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
@@ -89,6 +99,10 @@ export const Events = {
       [ColumnHeaderUI.selectors.skipMoveCheckbox]: 'ColumnHeaderUI.setSkipMove',
       [TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
       [RanksUI.selectors.textarea]: 'RanksUI.ranksInputHandler',
+    },
+    'change': {
+      [BooksUI.selectors.bookBoardSelect] : 'BooksUI.updateColorsDropdown',
+      [BooksUI.selectors.bookBoardColorSelect] : 'BooksUI.setColorsDropdownColor',
     },
     'contextmenu': {
       '##': ['DragDrop.preventOnce', [true]],
