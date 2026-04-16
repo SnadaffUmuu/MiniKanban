@@ -842,6 +842,13 @@ body:has(.dragged) {
   border:1px dotted #817b7b;
 }
 
+/* BOOKS */
+
+#switchScreen {
+  background:url(images/branch.svg) 50% no-repeat;
+  background-size: 50%;
+}
+
 #books {
   padding:10px;
 }
@@ -887,7 +894,7 @@ select:invalid {
 }
 
 .book-action {
-  margin:0 5px;
+  margin:0 3px;
   width:30px;
   height:30px;
   border:none;
@@ -896,21 +903,23 @@ select:invalid {
 }
 
 .book-action:not(:first-child) {
-  margin-left:5px;
+  margin-left:3px;
 }
 
 .book-action::before {
-  background-size: 18px;
-  content:'';
   display:block;
   width:100%;
   height:100%;
 }
 
 .book-action.delete::before {
+  content:'';
   background: url(images/delete-colored.svg) 50% no-repeat;
+  background-size: 18px;
 }
 
 .book-action.state::before {
-  background: url(images/state.svg) 50% no-repeat;
+  content:'';
+  background: url(images/branch1.svg) 50% no-repeat;
+  background-size: 18px;
 }
