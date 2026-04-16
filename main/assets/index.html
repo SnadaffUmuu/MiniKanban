@@ -75,13 +75,13 @@
   <section id="books" class="hidden">
     <button id="addBook">Add book</button>
     <div id="addBookUi" class="hidden">
-      <form name="addBook" action="javascript:void(0);">
-        <input type="text" id="bookName" placeholder="name"><br>
-        <input type="text" id="bookKey" placeholder="key"><br>
-        <input type="number" id="size" placeholder="size"><br>
+      <form name="addBookForm" action="javascript:void(0);">
+        <input type="text" id="bookName" placeholder="name" required><br>
+        <input type="text" id="bookKey" placeholder="key" required><br>
+        <input type="number" id="size" placeholder="size" required><br>
         <select id="bookBoard"></select><br>
         <select id="bookBoardColor"></select><br>
-        <button id="addBookConfirm">Save</button>
+        <button type="submit" id="addBookConfirm">Save</button>
         <button id="addBookCancel">Cancel</button>
       </form>
     </div>

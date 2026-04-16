@@ -1,3 +1,9 @@
+:root {
+  --satori: #fb8700;
+  --osarai: #ff00d4;
+  --paper: #0026ff;
+}
+
 html, body {
   width:100vw;
   height:100vh;
@@ -834,4 +840,77 @@ body:has(.dragged) {
 #statsData td {
   padding:5px 10px;
   border:1px dotted #817b7b;
+}
+
+#books {
+  padding:10px;
+}
+
+#booksListContainer {
+  padding-top:10px;
+}
+
+#booksList {
+  width: 100%;
+  border-collapse: separate;
+  background: #f1f1ee;
+}
+
+#booksList td, #booksList th {
+  border: 1px solid #47474775;
+  padding:3px;
+}
+
+.board-osarai-border, .board-osarai-border td {
+  border:2px solid var(--osarai) !important;
+}
+
+.board-satori-border, .board-satori-border td {
+  border:2px solid var(--satori) !important;
+}
+
+.board-paper-border, .board-paper-border td {
+  border:2px solid var(--paper) !important;
+}
+
+input[type="text"]:invalid,
+input[type="number"]:invalid,
+select:invalid {
+  border:1px solid red;
+}
+
+.book-action-container {
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-flow:row wrap;
+}
+
+.book-action {
+  margin:0 5px;
+  width:30px;
+  height:30px;
+  border:none;
+  background-color:#fff;
+  border-radius:15px;
+}
+
+.book-action:not(:first-child) {
+  margin-left:5px;
+}
+
+.book-action::before {
+  background-size: 18px;
+  content:'';
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+.book-action.delete::before {
+  background: url(images/delete-colored.svg) 50% no-repeat;
+}
+
+.book-action.state::before {
+  background: url(images/state.svg) 50% no-repeat;
 }

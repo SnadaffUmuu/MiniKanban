@@ -4,7 +4,7 @@ import {Colors} from './Colors.js'
 import { BoardDomain } from './BoardDomain.js';
 
 export const BooksDomain = {
-  
+
   getBooks() {
     return App.data.books || [];
   },
@@ -32,6 +32,12 @@ export const BooksDomain = {
       books.push(data);
     }
     this.saveBooks(books);
+  },
+
+  deleteBook(key, deleteHistory) {
+    const books = this.getBooks().filter(b => b.key !== key);
+    this.saveBooks(books);
+    //TODO: should the history be deleted?
   },
 
 };

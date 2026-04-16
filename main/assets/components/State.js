@@ -10,6 +10,7 @@ export const State = {
   ranksUi: null,
   booksUi : {
     addUiShown : false,
+    rowUi: {}, //delete, edit, state
   },
 
   afterRender: [],

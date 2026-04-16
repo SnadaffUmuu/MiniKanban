@@ -69,6 +69,7 @@ export const HeaderUI = {
     this.dom.toggleBooksMenuButton.classList.toggle('hidden', isBoard);
     this.dom.menu.classList.toggle('hidden', !State.menuOpen);
     this.dom.boardsButton.classList.toggle('hidden', !isBoard);
+    this.dom.screenSwitch.classList.toggle('hidden', isBoard && State.headerUiMode !== 'default');
     if(isBoard) {
       const board = BoardDomain.getCurrentBoard();
       this.dom.title.innerHTML = board.name;

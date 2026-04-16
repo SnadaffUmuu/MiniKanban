@@ -10,6 +10,7 @@ import {
   RanksUI,
   Stats,
   BooksUI,
+  Dialog,
 } from './index.js'
 
 export const Events = {
@@ -26,6 +27,7 @@ export const Events = {
     'RanksUI': RanksUI,
     'Stats': Stats,
     'BooksUI' : BooksUI,
+    'Dialog' : Dialog,
   },
 
   map: {
@@ -91,7 +93,12 @@ export const Events = {
       
       [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
       [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],
-      [BooksUI.selectors.addBookConfirmButton]: 'BooksUI.addBook',
+      [BooksUI.selectors.deleteBookButton] : 'BooksUI.showDeleteBookUi',
+      [BooksUI.selectors.extraUiCancelButton] : 'BooksUI.cancelExtra',
+      [BooksUI.selectors.extraUiConfirmButton] : 'BooksUI.confirmExtra',
+    },
+    'submit': {
+      [BooksUI.selectors.addBookForm] : 'BooksUI.addBook',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',

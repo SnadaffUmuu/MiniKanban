@@ -9,7 +9,8 @@ import {
   ColumnHeaderUI,
   TaskUI,
   RanksUI,
-  Stats
+  Stats,
+  Dialog,
 } from './components/index.js'
 import {App} from './components/App.js'
 import {Events} from './components/Events.js'
@@ -28,6 +29,7 @@ const Components = [
   RanksUI,
   DragDrop,
   Stats,
+  Dialog
 ];
 
 const AppInit = {
