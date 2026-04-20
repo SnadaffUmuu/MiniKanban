@@ -94,8 +94,11 @@ export const Events = {
       [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
       [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],
       [BooksUI.selectors.deleteBookButton] : 'BooksUI.showDeleteBookUi',
+      [BooksUI.selectors.editStateButton] : 'BooksUI.showEditStateUi',
       [BooksUI.selectors.extraUiCancelButton] : 'BooksUI.cancelExtra',
       [BooksUI.selectors.extraUiConfirmButton] : 'BooksUI.confirmExtra',
+      [BooksUI.selectors.addRangeButton] : 'BooksUI.addRangeRow',
+      [BooksUI.selectors.removeRangeRowRutton] : 'BooksUI.removeRangeRow',
     },
     'submit': {
       [BooksUI.selectors.addBookForm] : 'BooksUI.addBook',

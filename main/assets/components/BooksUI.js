@@ -2,15 +2,15 @@ import {Bus} from './Bus.js'
 import {BooksDomain} from './BooksDomain.js'
 import {State} from './State.js'
 import {App} from './App.js'
-import { Colors } from './Colors.js'
+import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js'
 
 export const BooksUI = {
 
-  boardCodesByName : {
-    'satori' : 'satori',
-    'paper' : 'paper',
-    'おさらい' : 'osarai', 
+  boardCodesByName: {
+    'satori': 'satori',
+    'paper': 'paper',
+    'おさらい': 'osarai',
   },
 
   getBoardCodeByBoard(boardId) {
@@ -23,18 +23,21 @@ export const BooksUI = {
     booksListContainer: '#booksListContainer',
     addBookButton: '#addBook',
     addBookUi: '#addBookUi',
-    bookNameInput : '#bookName',
-    bookKeyInput : '#bookKey',
-    bookSizeInput : '#size',
-    bookBoardSelect : '#bookBoard',
+    bookNameInput: '#bookName',
+    bookKeyInput: '#bookKey',
+    bookSizeInput: '#size',
+    bookBoardSelect: '#bookBoard',
     bookBoardColorSelect: '#bookBoardColor',
-    addBookConfirmButton : '#addBookConfirm',
-    addBookCancelButton : '#addBookCancel',
-    addBookForm : '[name="addBookForm"]',
-    deleteBookButton : '.js-delete-book',
-    extraUiRow : '.extraUi',
-    extraUiConfirmButton : '.extraUi .confirm',
-    extraUiCancelButton : '.extraUi .cancel',
+    addBookConfirmButton: '#addBookConfirm',
+    addBookCancelButton: '#addBookCancel',
+    addBookForm: '[name="addBookForm"]',
+    deleteBookButton: '.js-delete-book',
+    editStateButton: '.js-edit-state',
+    extraUiRow: '.extraUi',
+    extraUiConfirmButton: '.extraUi .confirm',
+    extraUiCancelButton: '.extraUi .cancel',
+    addRangeButton: '.extraUi .addRange',
+    removeRangeRowRutton: '.extraUi .removeRangeRow',
   },
 
   dom: {
@@ -64,15 +67,55 @@ export const BooksUI = {
     this.dom.bookBoardColorSelect.removeAttribute('style');
   },
 
+  addRangeRow(el) {
+    const fieldset = el.closest('fieldset');
+    let rows = [...fieldset.querySelectorAll('.rangesRow')];
+    el.closest('fieldset').insertAdjacentHTML('beforeend', this.getRangesRowHtml(null, true, true));
+    rows = [...fieldset.querySelectorAll('.rangesRow')];
+    el.remove();
+  },
+
+  removeRangeRow(el) {
+    const fieldset = el.closest('fieldset');
+    const rows = [...fieldset.querySelectorAll('.rangesRow')];
+    if (rows.length == 1) {
+      fieldset.insertAdjacentHTML('beforeend', this.getRangesRowHtml(null, true, false));
+    }
+    el.closest('.rangesRow').remove();
+    const lastRowButton = rows[rows.length - 1].querySelector('.addRange');
+    if (!lastRowButton) {
+      el.querySelector('.rangesRowButtonsWrap').insertAdjacentHTML('beforeend', '<button class="addRange">+</button>');
+    }
+  },
+
+  getRangesRowHtml(r, showAddButton, showRemoveButton) {
+    return `<div class="rangesRow">
+      <label>from <input type="number" name="from" ${r ? `value="${r.f}" disabled` : ' required'}></label>
+      <label>to <input type="number" name="to" ${r ? `value="${r.t}" disabled` : ' required '}></label>
+      <label>stage <input type="number" name="stage" ${r ? `value="${r.s}" disabled` : ' required'}></label>
+      <div class="rangesRowButtonsWrap">
+        ${showRemoveButton ? `<button class="removeRangeRow">-</button>` : ''}
+        ${showAddButton ? '<button class="addRange">+</button>' : ''}
+      </div>
+    </div>`;
+  },
+
+  getCurrentRangesHtml(key) {
+    const ranges = BooksDomain.getBook(key).state?.ranges;
+    if(!ranges || !ranges.length) return '';
+    return ranges.map((r, i) => this.getRangesRowHtml(r, (i == ranges.length - 1), true)).join('');
+  },
+
   getListHtml() {
     const rows = BooksDomain.getBooks().map(b => {
       const cellStyle = b.color ? ` style="background-color:${Colors[b.color]}"` : '';
       let rowStyle = b.board ? `class="board-${this.getBoardCodeByBoard(b.board)}-border"` : '';
-      const extra = State.booksUi.rowUi[b.key];
+      const extra = State.booksUi.rowUi[b.key]?.extra;
+      const error = State.booksUi.rowUi[b.key]?.error;
       let extraUi = '';
-      if (extra) {
+      if(extra) {
         rowStyle += ' style="opacity:0.5"';
-        switch (extra) {
+        switch(extra) {
           case 'delete':
             extraUi = `
               <h6>Delete book "${b.key}"?</h6>
@@ -80,7 +123,20 @@ export const BooksUI = {
               <button class="confirm">Yes</button>
               <button class="cancel">Cancel</button>
             `;
-          break;
+            break;
+          case 'state':
+            extraUi = `
+              <h6>Set state</h6>
+              <form name="stateForm" action="javascript:void(0);">
+                <fieldset>
+                  <legend>ranges</legend>
+                  ${this.getCurrentRangesHtml(b.key)}
+                </fieldset>
+                <button class="confirm">Save</button>
+                <button class="cancel">Cancel</button>
+              </form>
+            `;
+            break;
         }
       }
       return `
@@ -91,8 +147,8 @@ export const BooksUI = {
         <td ${cellStyle}>TODO progress</td>
         <td ${cellStyle}>
           <div class="book-action-container">
+          <button class="book-action state js-edit-state"></button>
             <button class="book-action delete js-delete-book"></button>
-            <button class="book-action state js-edit-state"></button>
           </div>
         </td>
       </tr>
@@ -101,6 +157,7 @@ export const BooksUI = {
         <td colspan="5">
           <div>
             ${extraUi}
+            ${error ? `<span style="color:red">${error}</span><br>` : ''}
           </div>
         </td>
       </tr>
@@ -125,16 +182,16 @@ export const BooksUI = {
     this.dom.addBookForm.reset();
     State.booksUi.addUiShown = toShow;
     Bus.emit(Bus.events.booksUiChanged);
-  }, 
+  },
 
   updateColorsDropdown(el) {
     console.log(el.value);
-    if (el.value) {
+    if(el.value) {
       const board = BoardDomain.getBoard(el.value);
-      this.dom.bookBoardColorSelect.innerHTML = '<option value="" disabled selected>choose a color</option>' 
-      + BooksDomain.getUnregisteredColorsForBoard(board)
-      .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
-      .join('');
+      this.dom.bookBoardColorSelect.innerHTML = '<option value="" disabled selected>choose a color</option>'
+        + BooksDomain.getUnregisteredColorsForBoard(board)
+          .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
+          .join('');
       this.dom.bookBoardColorSelect.setAttribute('required', true);
     } else {
       this.dom.bookBoardColorSelect.innerHTML = '';
@@ -160,33 +217,79 @@ export const BooksUI = {
     });
     State.booksUi.addUiShown = false;
     this.dom.addBookForm.reset();
-    Bus.emit(Bus.events.booksChanged);  
+    Bus.emit(Bus.events.booksChanged);
   },
 
   getRow(el) {
     return el.closest('tr');
   },
 
-  showDeleteBookUi(el) {
-    const key = this.getRow(el).dataset.bookKey;
-    State.booksUi.rowUi[key] = 'delete';
+  getRowKey(rowEl) {
+    const row = this.getRow(rowEl);
+    return row.dataset.bookKey || row.dataset.extraBookKey;
+  },
+
+  setRowUi(el, updater) {
+    const key = this.getRowKey(el);
+    const prev = State.booksUi.rowUi[key] || {};
+    const next = updater(prev, key);
+
+    if(next === null) {
+      delete State.booksUi.rowUi[key];
+    } else {
+      State.booksUi.rowUi[key] = next;
+    }
+
     Bus.emit(Bus.events.booksUiChanged);
   },
 
+  showDeleteBookUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'delete'
+    }));
+  },
+
+  showEditStateUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'state'
+    }));
+  },
+
   cancelExtra(el) {
-    delete State.booksUi.rowUi[this.getRow(el).dataset.extraBookKey];
-    Bus.emit(Bus.events.booksUiChanged);
+    this.setRowUi(el, () => null)
   },
 
   confirmExtra(el) {
     const row = this.getRow(el);
     const key = row.dataset.extraBookKey;
     const action = row.dataset.extra;
-    switch (action) {
-      case 'delete' : 
+    switch(action) {
+      case 'delete':
         BooksDomain.deleteBook(row.dataset.extraBookKey);
         Bus.emit(Bus.events.booksChanged);
-      break;
+        break;
+      case 'state':
+        const ranges = [];
+        [...row.querySelectorAll('.rangesRow')].forEach(el => {
+          ranges.push({
+            s: el.querySelector('[name="stage"]').value,
+            f: el.querySelector('[name="from"]').value,
+            t: el.querySelector('[name="to"]').value,
+          });
+        });
+        const res = BooksDomain.updateBookState(key, ranges);
+        if(res.result !== true) {
+          State.booksUi.rowUi[key].error = `
+            ${result.message}<br>
+            ${result.details}
+            `;
+          Bus.emit(Bus.events.booksUiChanged);
+          return;
+        }
+        Bus.emit(Bus.events.booksChanged);
+        break;
     }
   }
 

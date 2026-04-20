@@ -7,15 +7,37 @@ export const App = {
     books : 'books',
   },
 
-  load() {
-    this.data = Storage.load();
+  loadBoards() {
+    this.data = Storage.loadBoards();
     if(!this.data) {
       this.data = {};
     }
   },
 
-  save() {
-    Storage.save(this.data);
+  saveBoards() {
+    Storage.saveBoards(this.data);
+  },
+
+  loadBooks() {
+    this.data = Storage.loadBooks();
+    if(!this.books) {
+      this.books = {};
+    }
+  },
+
+  saveBooks() {
+    Storage.saveBooks(this.books);
+  },
+
+  loadEvents() {
+    this.data = Storage.loadEvents();
+    if(!this.events) {
+      this.events = {};
+    }
+  },
+
+  saveEvents() {
+    Storage.saveEvents(this.events);
   },
 
   getCurrentScreen() {
@@ -25,7 +47,7 @@ export const App = {
   switchScreen() {
     const current = this.getCurrentScreen();
     this.data.screen = current == this.screens.board ? this.screens.books : this.screens.board;
-    this.save();
+    this.saveBoards();
   },
 
   isBoard() {

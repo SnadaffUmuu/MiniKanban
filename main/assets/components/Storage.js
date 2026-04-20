@@ -1,17 +1,49 @@
 export const Storage = {
-  load() {
+  loadBoards() {
     if(typeof Android !== 'undefined') {
-      return JSON.parse(Android.loadDataFromFile());
+      return JSON.parse(Android.loadBoards());
     }
     return JSON.parse(localStorage.getItem('kanbanAppData'));
   },
 
-  save(data) {
+  loadBooks() {
+    if(typeof Android !== 'undefined') {
+      return JSON.parse(Android.loadBooks());
+    }
+    return JSON.parse(localStorage.getItem('kanbanBooks'));
+  },
+
+  loadEvents() {
+    if(typeof Android !== 'undefined') {
+      return JSON.parse(Android.loadEvents());
+    }
+    return JSON.parse(localStorage.getItem('kanbanEvents'));
+  },
+
+  saveBoards(data) {
     const raw = JSON.stringify(data);
     if(typeof Android !== 'undefined') {
-      Android.saveDataToFile(raw);
+      Android.saveBoards(raw);
     } else {
       localStorage.setItem('kanbanAppData', raw);
     }
-  }
+  },
+
+  saveBoards(data) {
+    const raw = JSON.stringify(data);
+    if(typeof Android !== 'undefined') {
+      Android.saveBooks(raw);
+    } else {
+      localStorage.setItem('kanbanBooks', raw);
+    }
+  },
+
+  saveEvents(data) {
+    const raw = JSON.stringify(data);
+    if(typeof Android !== 'undefined') {
+      Android.saveEvents(raw);
+    } else {
+      localStorage.setItem('kanbanEvents', raw);
+    }
+  },
 };

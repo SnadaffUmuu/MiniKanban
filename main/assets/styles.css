@@ -849,6 +849,11 @@ body:has(.dragged) {
   background-size: 50%;
 }
 
+#switchScreen.books {
+  background: url(images/boards.png) 50% no-repeat;
+  background-size: contain;
+}
+
 #books {
   padding:10px;
 }
@@ -866,6 +871,8 @@ body:has(.dragged) {
 #booksList td, #booksList th {
   border: 1px solid #47474775;
   padding:3px;
+  font-size:13px;
+  border-radius: 3px;
 }
 
 .board-osarai-border, .board-osarai-border td {
@@ -891,6 +898,7 @@ select:invalid {
   height:100%;
   display:flex;
   flex-flow:row wrap;
+  min-width:72px;
 }
 
 .book-action {
@@ -922,4 +930,45 @@ select:invalid {
   content:'';
   background: url(images/branch1.svg) 50% no-repeat;
   background-size: 18px;
+}
+
+.rangesRow {
+  display:flex;
+  flex-flow:row nowrap;
+  padding-bottom:5px;
+}
+
+.rangesRow label {
+  flex: 1 1 auto;
+  width:calc(30% - 10px);
+}
+
+.rangesRow input {
+  width:50px;
+}
+
+.rangesRowButtonsWrap {
+  width:50px;
+  display:flex;
+  flex-flow:row nowrap;
+  justify-content: space-between;
+}
+
+.rangesRowButtonsWrap button {
+  width:23px;
+  height:23px;
+}
+
+#booksList .extraUi h6 {
+  font-size:15px;
+  margin: 0 0 10px;
+}
+
+#booksList .extraUi fieldset {
+  margin-bottom:10px;
+  border-radius: 5px;
+}
+
+#booksList .extraUi td {
+  padding:10px;
 }

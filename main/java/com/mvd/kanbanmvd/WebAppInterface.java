@@ -9,15 +9,32 @@ import java.io.*;
 
 public class WebAppInterface {
     private static final String TAG = "KanbanMvdLog";
-    private static final String DATA_FILE_NAME = "kanban_mvd_data.json";
+    private static final String DATA_BOARDS_FILE_NAME = "kanban_mvd_data.json";
+    private static final String DATA_BOOKS_FILE_NAME = "kanban_mvd_books.json";
+    private static final String DATA_EVENTS_FILE_NAME = "kanban_mvd_events.log";
     private Context context;
 
     WebAppInterface(Context ctx) {
         this.context = ctx;
     }
-
+    
     @JavascriptInterface
-    public void saveDataToFile(String data) {
+    public void saveBoards(String data) {
+    	saveDataToFile(data, DATA_BOARDS_FILE_NAME);
+    }
+    
+    @JavascriptInterface
+    public void saveBooks(String data) {
+    	saveDataToFile(data, DATA_BOOKS_FILE_NAME);
+    } 
+    
+    @JavascriptInterface
+    public void saveEvents(String data) {
+    	saveDataToFile(data, DATA_EVENTS_FILE_NAME);
+    } 
+    
+
+    private void saveDataToFile(String data, String filename) {
         Log.d(TAG, "saveDataToFile called");
         Uri folderUri = getFolderUri();
         Log.d(TAG, "Got folder uri from prefs: " + folderUri);
@@ -27,13 +44,13 @@ public class WebAppInterface {
         Log.d(TAG, "Search Directory res: " + dir.getUri());
         if (dir == null) return;
 
-        DocumentFile existing = dir.findFile(DATA_FILE_NAME);
+        DocumentFile existing = dir.findFile(filename);
         if (existing != null) {
           Log.d(TAG, "File already exists, deleting");
           existing.delete();
         }
 
-        DocumentFile file = dir.createFile("application/json", DATA_FILE_NAME);
+        DocumentFile file = dir.createFile("application/json", filename);
         try (OutputStream out = context.getContentResolver().openOutputStream(file.getUri())) {
             out.write(data.getBytes());
             Log.d(TAG, "Save successful");
@@ -42,9 +59,23 @@ public class WebAppInterface {
             e.printStackTrace();
         }
     }
-
+    
     @JavascriptInterface
-    public String loadDataFromFile() {
+    public void loadBoards() {
+    	loadDataFromFile(DATA_BOARDS_FILE_NAME);
+    }
+    
+    @JavascriptInterface
+    public void loadBooks() {
+    	loadDataFromFile(DATA_BOOKS_FILE_NAME);
+    }   
+    
+    @JavascriptInterface
+    public void loadEvents() {
+    	loadDataFromFile(DATA_EVENTS_FILE_NAME);
+    }   
+
+    private String loadDataFromFile(filename) {
       Log.d(TAG, "loadDataFromFile called");
         Uri folderUri = getFolderUri();
         Log.d(TAG, "Got folder uri from prefs: " + folderUri);
@@ -54,7 +85,7 @@ public class WebAppInterface {
         Log.d(TAG, "Search Directory res: " + pickedDir.getUri());
         if (pickedDir == null) return "null";
 
-        DocumentFile jsonFile = pickedDir.findFile(DATA_FILE_NAME);
+        DocumentFile jsonFile = pickedDir.findFile(filename);
         Log.d(TAG, "Search file res: " + jsonFile.getUri());
         if (jsonFile == null) return "null";
 
