@@ -5,6 +5,8 @@ import {App} from './App.js'
 
 export const BoardsList = {
 
+  name: 'BoardsList',
+
   selectors: {
     createButton: '#create-board',
     boardsListButtonsContainer: '#boards-buttons',
@@ -20,6 +22,7 @@ export const BoardsList = {
   },
 
   render() {
+    console.log('RENDER: BoardsList');
     if(State.headerUiMode !== 'boardsList') return;
     if(!App.data.currentBoardId) return;
     let createButton = this.dom.createButton;

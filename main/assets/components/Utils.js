@@ -174,5 +174,24 @@ export const Utils = {
     });
   },
 
+  extractRange(str) {
+    const re = /(?:^|[^\p{L}\p{N}])(\d+)(?:\s*-\s*(\d+|\.\.\.))?(?=$|[^\p{L}\p{N}])/u;
+
+    const match = str.match(re);
+    if(!match) return null;
+
+    const start = parseInt(match[1], 10);
+
+    if(match[2]) {
+      if(match[2] === '...') return [start, start];
+      return [start, parseInt(match[2], 10)];
+    }
+
+    return [start, start];
+  },
+
+  toInt(v) {
+    return v == null ? 0 : parseInt(v, 10);
+  }
 
 };

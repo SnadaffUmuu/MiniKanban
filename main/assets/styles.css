@@ -1,7 +1,8 @@
 :root {
-  --satori: #fb8700;
-  --osarai: #ff00d4;
-  --paper: #0026ff;
+  --satori: #d77400;
+  --osarai: #52bb4b;
+  /* --osarai: #ff00d4; */
+  --paper: #7c46ff;
 }
 
 html, body {
@@ -117,6 +118,15 @@ header {
   z-index: 300;
   background: url(images/close.svg) 50% no-repeat #333533;
   background-size: 20px;
+}
+
+.button-close__extra {
+  background-color: #ccc;
+  width: 25px;
+  height: 25px;
+  top: -5px;
+  right: -5px;
+  border-radius: 5px;
 }
 
 #boards-buttons {
@@ -887,6 +897,11 @@ body:has(.dragged) {
   border:2px solid var(--paper) !important;
 }
 
+#addBookUi {
+  background:#f1f1ee;
+  padding:10px;
+}
+
 input[type="text"]:invalid,
 input[type="number"]:invalid,
 select:invalid {
@@ -902,12 +917,13 @@ select:invalid {
 }
 
 .book-action {
-  margin:0 3px;
-  width:30px;
-  height:30px;
+  margin:0 3px 3px;
+  width:25px;
+  height:25px;
   border:none;
   background-color:#fff;
-  border-radius:15px;
+  border-radius:13px;
+  box-shadow: 1px 1px 1px #47474775;
 }
 
 .book-action:not(:first-child) {
@@ -929,6 +945,12 @@ select:invalid {
 .book-action.state::before {
   content:'';
   background: url(images/branch1.svg) 50% no-repeat;
+  background-size: 18px;
+}
+
+.book-action.edit::before {
+  content:'';
+  background: url(images/edit-color.svg) 50% no-repeat;
   background-size: 18px;
 }
 
@@ -972,3 +994,61 @@ select:invalid {
 #booksList .extraUi td {
   padding:10px;
 }
+
+#dialog {
+  position:fixed;
+  top:0;
+  left:0;
+  bottom:0;
+  right:0;
+  background:#ffffff7a;
+  display:flex;
+  flex-flow:column nowrap;
+  align-items: center;
+  z-index: 1000;
+  padding:10%;
+  padding-top:10vh;
+}
+
+#dialogBody {
+  background: #f1f1ee;
+  box-shadow: 1px 1px 1px #47474775;
+  width:100%;
+  box-sizing: border-box;
+  position: relative;
+  height:50vh;
+  border-radius: 5px;
+  padding:20px;
+}
+
+.dialogContent {
+}
+
+.button-close__dialog {
+  top:5px;
+  right:5px;
+  box-shadow: -1px 1px 2px #47474775;
+}
+
+#taskData {
+  padding:10px;
+  border-radius:5px;
+}
+
+#growPrompt {
+  position:absolute;
+  z-index: 1000;
+  width: 50px;
+  height: 50px;
+  right: 30px;
+  bottom: 10%;
+  background: #ffaa00;
+  border-radius: 25px;
+  box-shadow: 4px 4px 5px #6f79f18c;
+  color: #fff;
+  font-size: 25px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 50px;
+  border: 1px solid #b58600;
+} 

@@ -6,6 +6,8 @@ import {State} from './State.js'
 
 export const HeaderUI = {
 
+  name: 'HeaderUI',
+
   board: null,
 
   selectors: {
@@ -63,6 +65,7 @@ export const HeaderUI = {
   },
 
   render() {
+    console.log('RENDER: HeaderUI');
     const isBoard = App.isBoard();
     this.dom.title.classList.toggle('hidden', State.headerUiMode !== 'default');
     this.dom.toggleMenuButton.classList.toggle('hidden', !isBoard || State.headerUiMode !== 'default');

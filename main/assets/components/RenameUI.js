@@ -6,6 +6,8 @@ import {App} from './App.js'
 
 export const RenameUI = {
 
+  name: 'RenameUI',
+
   selectors: {
     renameInput: '#rename-board-input',
     confirmRenameButton: '#confirm-rename',
@@ -33,6 +35,7 @@ export const RenameUI = {
   },
 
   render() {
+    console.log('RENDER: RenameUI');
     if(State.headerUiMode !== 'renameBoard') return;
     if(!App.data.currentBoardId) return;
     this.dom.renameInput.setAttribute('data-original-value', BoardDomain.getCurrentBoard().name);

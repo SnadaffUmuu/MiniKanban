@@ -10,6 +10,14 @@
  <script type="module" src="./main.js"></script>
 </head>
 <body>
+  <div class="hidden" id="growPrompt">go</div>
+  <div id="dialog" class="hidden">
+    <div id="dialogBody">
+      <button class="button-close button-close__extra button-close__dialog"></button>
+      <div class="dialogContent">
+      </div>
+    </div>
+  </div>
   <header>
     <h1 id="board-title" class="top-menu-title"></h1>
     <div id="top-tools">
@@ -79,9 +87,10 @@
         <input type="text" id="bookName" placeholder="name" required><br>
         <input type="text" id="bookKey" placeholder="key" required><br>
         <input type="number" id="size" placeholder="size" required><br>
-        <select id="bookBoard"></select><br>
-        <select id="bookBoardColor"></select><br>
-        <button type="submit" id="addBookConfirm">Save</button>
+        <input type="number" id="startIndex" placeholder="start column index"><br>
+        <select class="js-book-board" id="bookBoard" required></select><br>
+        <select class="js-book-board-color" id="bookBoardColor" required></select><br>
+        <button type="submit" class="js-add-book-confirm">Save</button>
         <button id="addBookCancel">Cancel</button>
       </form>
     </div>

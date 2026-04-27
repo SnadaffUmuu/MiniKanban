@@ -1,25 +1,27 @@
 import {Storage} from './Storage.js'
 
 export const App = {
-  data: null,
+  data: {},
+  books: {},
+  events: {},
   screens : {
     board : 'board',
     books : 'books',
   },
 
-  loadBoards() {
-    this.data = Storage.loadBoards();
+  loadData() {
+    this.data = Storage.loadData();
     if(!this.data) {
       this.data = {};
     }
   },
 
-  saveBoards() {
-    Storage.saveBoards(this.data);
+  saveData() {
+    Storage.saveData(this.data);
   },
 
   loadBooks() {
-    this.data = Storage.loadBooks();
+    this.books = Storage.loadBooks();
     if(!this.books) {
       this.books = {};
     }
@@ -30,9 +32,9 @@ export const App = {
   },
 
   loadEvents() {
-    this.data = Storage.loadEvents();
+    this.events = Storage.loadEvents();
     if(!this.events) {
-      this.events = {};
+      this.events = [];
     }
   },
 
@@ -47,7 +49,7 @@ export const App = {
   switchScreen() {
     const current = this.getCurrentScreen();
     this.data.screen = current == this.screens.board ? this.screens.books : this.screens.board;
-    this.saveBoards();
+    this.saveData();
   },
 
   isBoard() {

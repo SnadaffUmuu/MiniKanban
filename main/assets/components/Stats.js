@@ -4,6 +4,8 @@ import {State} from './State.js'
 
 export const Stats = {
 
+  name: 'Stats',
+
   idealMap: {
     "Satori Reader": 12,
     "Reading in paper": 8,
@@ -27,6 +29,7 @@ export const Stats = {
   },
 
   render() {
+    console.log('RENDER: Stats');
     if(State.headerUiMode !== 'stats') return;
     this.dom.resetMessage.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
     this.dom.confirmResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');

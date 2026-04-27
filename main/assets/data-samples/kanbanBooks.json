@@ -1,0 +1,78 @@
+[
+    {
+        "name": "公民のおさらい3",
+        "key": "society",
+        "size": "160",
+        "board": "_82cijdew3",
+        "color": "beige",
+        "state": {
+            "ranges": [
+                {
+                    "s": 1,
+                    "f": 1,
+                    "t": 10
+                },
+                {
+                    "s": 2,
+                    "f": 11,
+                    "t": 20
+                },
+                {
+                    "s": 3,
+                    "f": 21,
+                    "t": 30
+                },
+                {
+                    "s": 4,
+                    "f": 31,
+                    "t": 40
+                }
+            ]
+        },
+        "stages": "6"
+    },
+    {
+        "name": "敬語のおさらい",
+        "key": "keigo",
+        "size": "400",
+        "board": "_82cijdew3",
+        "color": "plum"
+    },
+    {
+        "name": "Nutshell",
+        "key": "nut",
+        "size": "79",
+        "board": "_eya4w92kj",
+        "color": "blue"
+    },
+    {
+        "name": "Yuyu Podcast",
+        "key": "yuyu",
+        "size": "50",
+        "board": "_eya4w92kj",
+        "color": "yellow"
+    },
+    {
+        "name": "変わらないもの",
+        "key": "unchanged",
+        "size": "15",
+        "board": "_eya4w92kj",
+        "color": "teal"
+    },
+    {
+        "name": "チェルノブイリ",
+        "key": "chern",
+        "size": "150",
+        "stages": "5",
+        "board": "_15ma569uj",
+        "color": "purple"
+    },
+    {
+        "name": "生物",
+        "key": "bio",
+        "size": "200",
+        "stages": "6",
+        "board": "_82cijdew3",
+        "color": "green"
+    }
+]

@@ -1,0 +1,5395 @@
+Project Structure:
+index.html
+main.js
+styles.css
+components/State.js
+components/ColumnHeaderUI.js
+components/TaskUI.js
+components/Events.js
+components/BooksDomain.js
+components/DeleteUI.js
+components/App.js
+components/DragDrop.js
+components/Stats.js
+components/BoardDomain.js
+components/HeaderUI.js
+components/Dialog.js
+components/BooksUI.js
+components/BoardsList.js
+components/RenameUI.js
+components/BoardUI.js
+components/index.js
+components/Colors.js
+components/Components.js
+components/RanksUI.js
+components/Utils.js
+components/Bus.js
+components/Storage.js
+components/ProgressUI.js
+data-samples/kanbanBooks.json
+data-samples/kanbanAppData.json
+
+File Contents:
+index.html:
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>333Mvd Kanban App</title>
+ <!-- <link rel="stylesheet" href="styles.css"> -->
+ <link rel="stylesheet" href="./styles.css">
+ <!-- <script type="module" src="main.js"></script> -->
+ <script type="module" src="./main.js"></script>
+</head>
+<body>
+  <div class="hidden" id="growPrompt" style="position:absolute;z-index: 1000;width: 50px;height: 50px;right: 30px;top: 20%;background: #ffaa00;border-radius: 25px;box-shadow: 4px 4px 5px #6f79f18c;color: #fff;font-size: 25px;font-weight: bold;text-align: center;line-height: 50px;border: 1px solid #b58600;">-&gt;</div>
+  <div id="dialog" class="hidden">
+    <div id="dialogBody">
+      <button class="button-close button-close__extra button-close__dialog"></button>
+      <div class="dialogContent">
+      </div>
+    </div>
+  </div>
+  <header>
+    <h1 id="board-title" class="top-menu-title"></h1>
+    <div id="top-tools">
+      <button id="switchScreen"></button>
+      <button id="boards-button" data-header-mode-trigger="boardsList"></button>
+      <button id="menu-toggle" class="hidden"></button>
+      <button id="books-menu-toggle" class="hidden"></button>
+    </div>
+    <section id="menu" class="hidden">
+      <div id="menu-content">
+        <button id="rename-board" data-header-mode-trigger="renameBoard" class="hidden">Rename board</button>
+        <button id="delete-board" data-header-mode-trigger="deleteBoard" class="hidden">Delete board</button>
+        <button id="manage-ranks"  data-header-mode-trigger="ranks" class="hidden">Manage ranks</button>
+        <button id="show-stats" class="hidden" data-header-mode-trigger="stats">Show stats</button>
+      </div>
+    </section>
+    <section id="booksMenu" class="hidden">
+      <button>some books action</button>
+    </section>
+
+    <div id="statsUI" data-header-mode="stats" class="hidden">
+      <h3 class="top-menu-title">Counters</h3>
+      <div id="stats"></div>
+      <div id="reset-message" class="hidden">Сбросить счетчики досок?</div>
+      <button id="reset-stats-confirm" class="board-management-button hidden">Yes</button>
+      <button id="reset-stats-cancel" class="board-management-button hidden">Нет</button>
+      <button class="js-cancel-current button-close"></button>
+      <button id="reset-stats" class="board-management-button">Reset</button>
+    </div>
+
+    <div id="rename-board-block" data-header-mode="renameBoard" class="hidden">
+      <h3 class="top-menu-title">Rename board</h3>
+      <button class="js-cancel-current button-close"></button>
+      <input type="search" id="rename-board-input" />
+      <button id="confirm-rename" class="board-management-button" disabled>Save</button>
+      <button id="cancel-rename" class="js-cancel-current board-management-button">Cancel</button>
+    </div>
+
+    <div id="delete-board-block" data-header-mode="deleteBoard" class="hidden">
+      <h3 class="top-menu-title">Delete board</h3>
+      <button class="js-cancel-current button-close"></button>
+      <p>Delete this board with all columns and tasks?</p>
+      <button id="delete-confirm" class="board-management-button">Delete</button>
+      <button id="delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
+    </div>      
+
+    <div id="ranks-block" data-header-mode="ranks" class="hidden"></div>      
+
+    <div id="boards-list" data-header-mode="boardsList" class="hidden">
+      <h3 class="top-menu-title">Boards</h3>
+      <div id="boards-buttons"></div>
+      <button id="create-board">Create board</button>
+      <button id="close-boards-list" class="js-cancel-current button-close"></button>
+    </div>
+  </header>
+
+
+  <main id="board" class="hidden">
+    <div id="columns"></div>
+    <button id="add-column"></button>
+  </main>
+
+  <section id="books" class="hidden">
+    <button id="addBook">Add book</button>
+    <div id="addBookUi" class="hidden">
+      <form name="addBookForm" action="javascript:void(0);">
+        <input type="text" id="bookName" placeholder="name" required><br>
+        <input type="text" id="bookKey" placeholder="key" required><br>
+        <input type="number" id="size" placeholder="size" required><br>
+        <input type="number" id="stages" placeholder="stages" required>
+        &nbsp;<span class="boardColCount"></span><br>
+        <select class="js-book-board" id="bookBoard" required></select><br>
+        <select class="js-book-board-color" id="bookBoardColor" required></select><br>
+        <button type="submit" class="js-add-book-confirm">Save</button>
+        <button id="addBookCancel">Cancel</button>
+      </form>
+    </div>
+    <div id="booksListContainer"></div>
+  </section>
+
+ <!-- <script src="script1.js"></script> -->
+ <!-- <script src="./script1.js"></script> -->
+ <!-- <script src="./script.js"></script> -->
+ <!-- <script src="script.js"></script> -->
+</body>
+</html>
+
+```
+
+main.js:
+```
+import {
+  HeaderUI,
+  BoardUI,
+  BooksUI,
+} from './components/index.js'
+import {Components}  from './components/Components.js'
+import {App} from './components/App.js'
+import {Events} from './components/Events.js'
+import {Utils} from './components/Utils.js'
+
+const AppInit = {
+  init() {
+    App.loadData();
+    App.loadBooks();
+    Events.init();
+    Components.forEach(o => {
+      Utils.cacheComponentDom(o);
+      o.init && o.init();
+    });
+    HeaderUI.render();
+    if (App.isBoard()) {
+      BoardUI.render();
+    } else {
+      BooksUI.render();
+    }
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  AppInit.init();
+});
+```
+
+styles.css:
+```
+:root {
+  --satori: #d77400;
+  --osarai: #52bb4b;
+  /* --osarai: #ff00d4; */
+  --paper: #7c46ff;
+}
+
+html, body {
+  width:100vw;
+  height:100vh;
+  background:#333533;
+  margin:0;
+  padding:0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-size:15px;
+  display: flex;
+  flex-flow:column nowrap;
+}
+
+button, input, textarea {
+  outline: none;
+  font-size: 15px;
+}
+
+textarea::placeholder {
+  font-weight: normal;
+}
+
+header {
+  background:#333533;
+  position: relative;
+  padding:15px 15px 13px;
+  box-shadow: 0px 10px 7px -7px black;
+  margin-bottom:5px !important;
+  flex:0 0 auto;
+}
+
+.hidden {
+  display:none !important;
+}
+
+.top-menu-title {
+  font-size:20px;
+  color:#f0f0f0;
+  margin:0;
+  min-height:23px;
+}
+
+#top-tools {
+  position: absolute;
+  top:0px;
+  right:0px;
+  z-index: 300;
+  display:flex;
+  flex-flow:row nowrap;
+  justify-content: flex-end;
+}
+
+#top-tools button {
+  width: 40px;
+  height:40px;
+  margin:5px;
+  border:none;
+  outline: none;
+}
+
+#boards-button {
+  background: url(images/boards.png) 50% no-repeat;
+  background-size: contain;
+}
+
+#menu-toggle {
+  background: url(images/menu_dots.svg) 50% no-repeat;
+}
+
+#menu {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  box-shadow: 0px 6px 6px -4px black;
+  background:#2c2c2c;
+  width:60vw;
+  z-index: 2000;
+  border-radius: 15px;
+  padding: 10px;
+}
+
+#menu button {
+  background: transparent;
+  border:0;
+  padding:10px 15px;
+  color:#f0f0f0;
+  box-sizing: border-box;
+  width: 100%;
+  text-align: left;
+}
+
+#boards-list {
+  position: relative;
+  margin-bottom:-10px;
+}
+
+#boards-list h3 {
+  margin-bottom:10px;
+}
+
+.button-close {
+  border:none;
+  outline: none;
+  width: 40px;
+  height:40px;
+  position: absolute;
+  top:-10px;
+  right:-10px;
+  z-index: 300;
+  background: url(images/close.svg) 50% no-repeat #333533;
+  background-size: 20px;
+}
+
+.button-close__extra {
+  background-color: #ccc;
+  width: 25px;
+  height: 25px;
+  top: -5px;
+  right: -5px;
+  border-radius: 5px;
+}
+
+#boards-buttons {
+  display:flex;
+  flex-flow:row wrap;
+}
+
+#boards-list button:not(#close-boards-list) {
+  border-radius: 15px;
+  background: #f0f0f0;
+  border:1px solid transparent;
+  color:black;
+  font-size:14px;
+  padding:5px 10px;
+  margin-right:10px;
+  margin-bottom:10px;
+}
+
+#boards-list button:not(#close-boards-list).active {
+  background:#f79d35;
+  color:#fff;
+}
+
+#boards-list button:not(#close-boards-list)#create-board {
+  color:#f79d35;
+  border: 1px solid #f79d35;
+  background: transparent url(images/plus.svg) 7px 50% no-repeat;
+  background-size: 24px;
+  padding-left:35px;
+}
+
+#boardsContainer {
+  display: flex;
+  gap: 20px;
+}
+
+.board {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  width: 250px;
+}
+
+#rename-board-block,
+#delete-board-block,
+#ranks-block,
+#statsUI {
+  position: relative;
+}
+
+#rename-board-block h3,
+#delete-board-block h3 {
+  padding-bottom:10px;
+}
+
+#rename-board-block input {
+  border: none;
+  display:block;
+  background: transparent;
+  outline:none;
+  border-bottom:2px solid #f79d35;
+  padding:10px 0;
+  color:#fff;
+  width:100%;
+  box-sizing: border-box;
+}
+
+.board-management-button {
+  background: none;
+  color:#f79d35;
+  padding:13px;
+  float:right;
+  font-weight: bold;
+  border:none;
+}
+
+.board-management-button[disabled] {
+  color:#999999;
+}
+
+#rename-board-block::after,
+#delete-board-block::after,
+.task-edit::after,
+.add-task::after,
+.task-delete-block::after,
+.set-task-colors::after,
+.delete-column-block::after,
+.rename-column-block::after,
+.move-column-block::after {
+  content: '';
+  clear:both;
+  display:block;
+}
+
+#delete-board-block p {
+  color:#fff;
+  margin-bottom:0;
+}
+
+#no-boards {
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  bottom:0;
+  z-index:1000;
+}
+
+#create-default-board {
+  border:0;
+  background: transparent;
+  position: absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  background: #2c2c2c;
+  color:#f0f0f0;
+}
+
+.insert-indicator {
+  height: 4px;
+  background-color: #2196f3;
+  margin: 4px 0;
+  border-radius: 2px;
+}
+
+.board-insert-indicator {
+  width: 4px;
+  height:28px;
+  background-color: #2196f3;
+  border-radius: 2px;
+  margin-left:-7px;
+  margin-right:3px;
+}
+
+.task, 
+.dragging:not(button) {
+  border-radius: 5px;
+  box-shadow: 0 1px 3px #47474775;
+  background: #fff;
+  position: relative;
+}
+
+button.dragging {
+  border-radius: 15px;
+  border: 1px solid transparent;
+  color: black;
+  font-size: 14px;
+  padding: 5px 10px;
+}
+
+.task + .task {
+  margin-top: 10px;
+}
+
+.dragging {
+  opacity: 0.7;
+}
+
+main {
+  width:100%;
+  max-width:100%;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+  flex: 1 1 auto;
+  display:flex;
+  flex-flow: row nowrap;
+  align-items:flex-start;
+}
+
+#columns {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+  height: 100%;
+  max-height: 100%;
+}
+
+.column {
+  width:75vw;
+  flex:1 0 auto;
+  max-width:300px;
+  margin-left:5px;
+  max-height: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.column-header {
+  background: #f1f1ee;
+  position: relative;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  display:flex;
+  flex-flow:row nowrap;
+  align-items: center;
+  box-shadow: 0 1px 3px #47474775;
+  padding:10px;
+  flex: 0 0 auto;
+}
+
+.column-header > * {
+  margin: 0 3px;
+}
+
+.column-header h3 {
+  margin:0;
+  font-size:15px;
+  font-weight:bold;
+  flex:1 0 auto;
+}
+
+.column-body {
+  background: #c3bfb6;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  padding:5px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  height: 100%;
+  max-height: 100%;
+}
+
+.column-menu {
+  background: #f1f1ee;
+  box-shadow: 0 3px 3px #47474775;
+  position: relative;
+  margin-top:-10px;
+}
+
+.column-menu button,
+.column-menu label {
+  background: transparent;
+  border:0;
+  border-top:1px solid #cfcfcf;
+  padding: 13px 0;
+  margin-left:60px;
+  width:calc(100% - 60px);
+  text-align: left;
+  position: relative;
+  color:#3b3b3b;
+  display:block;
+}
+
+.column-menu button:first-child {
+  border-top:none;
+}
+
+.column-menu button::before,
+.column-menu label input[type="checkbox"] {
+  position: absolute;
+  left:-40px;
+  height:20px;
+  width:20px;
+  content:'';
+}
+
+.column-menu label input[type="checkbox"] {
+  height:15px;
+  width:15px;
+  left:-42px;
+  top: 10px;
+}
+
+.rename-column::before {
+  background: url(images/edit-color.svg) 50% no-repeat;
+  background-size: 17px;
+}
+
+.move-column::before {
+  background: url(images/move.svg) 50% no-repeat;
+  background-size: 20px;
+}
+
+.delete-column::before {
+  background: url(images/delete-colored.svg) 50% no-repeat;
+  background-size: 18px;
+  background-position: 50% -1px;
+}
+
+.move-column-block [data-move-direction] {
+  width:20px;
+  height:20px;
+  border-radius: 10px;
+  background-position: 50%;
+  background-size: 10px;
+  background-repeat: no-repeat;
+  background-color: #f79d352c;
+  border: 1px solid #f79d3585;
+  margin-right:15px;
+  padding:0;
+}
+
+.col-move-block-container {
+  display:flex;
+  flex-flow:row nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom:15px;
+}
+
+.move-column-right {
+  background-image: url(images/column-right.svg);
+}
+
+.move-column-left {
+  background-image: url(images/column-right.svg);
+  transform: rotate(180deg);
+}
+
+.rename-column-block {
+  padding-top:5px !important;
+  padding-bottom:5px !important;
+  padding-right:10px !important
+}
+
+.rename-column-input {
+  font-size:16px;
+  border:0;
+  border-bottom:2px solid #f79d35;
+  display: block;
+  padding: 15px 0 10px 0;
+  box-sizing: border-box;
+  width:100%;
+  background: none; 
+}
+
+body:has(.dragged) {
+  touch-action: none;
+}
+
+.task-count {
+  font-size:13px;
+  color:#8a8a8a;
+}
+
+.add-task-button {
+  background: none;
+  border: none;
+  height:100px;
+  text-align: center;
+  width:100%;
+}
+
+.task-header {
+  padding:20px 10px;
+  padding-right:40px;
+}
+
+.task:not(.expanded) .task-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-expand-button {
+  position: absolute;
+  top: 0;
+  right:0;
+  bottom:0;
+  left:0;
+  cursor:pointer;
+  background: transparent;
+}
+
+.task.expanded .task-expand-button {
+  display:none;
+}
+
+.task-title {
+  white-space: pre-line;
+  display:block;
+  width:100%;
+}
+
+.task-info-toggle {
+  position:absolute;
+  top:5px;
+  right:10px;
+  padding: 0;
+}
+
+#add-column {
+  width:70px;
+  height:150px;
+  background:url(images/add_column.jpg) 50% 10px no-repeat;
+  background-size: 30px auto;
+  background-color:transparent;
+  border:0;
+  flex: 1 0 auto;
+}
+
+.task-info {
+  padding: 0 15px 10px;
+  display:flex;
+  flex-flow:row nowrap;
+  justify-content: flex-end;
+}
+
+.task-delete,
+.task-clone,
+.task-change-color,
+.task-info-toggle,
+.add-task,
+.column-menu-toggle,
+.task-edit-button,
+.new-task-cancel {
+  width:25px;
+  height:25px;
+  border:none;
+  margin-left:10px;
+}
+
+.task-delete {
+  background: transparent url(images/trash.svg) 50% no-repeat;
+  background-size: 23px;
+}
+
+.task-clone {
+  background: transparent url(images/copy.svg) 50% no-repeat;
+  background-size: 23px;
+}
+
+.task-change-color {
+  background: transparent url(images/colors.svg) 50% no-repeat;
+  background-size: 17px;
+}
+
+.task-info-toggle {
+  background: transparent url(images/arrow-down.svg) 50% no-repeat;
+  background-size: 20px;
+}
+
+.task-info-toggle.expanded,
+.new-task-cancel,
+.column-menu-toggle.expanded {
+  background: transparent url(images/close1.svg) 50% no-repeat;
+  background-size: 17px;
+}
+
+.add-task {
+  background: transparent url(images/plus1.svg) 50% no-repeat;
+  background-size: 20px;
+  margin-right: 5px;
+}
+
+.column-menu-toggle {
+  background: transparent url(images/menu_lines.svg) 50% no-repeat;
+  background-size: 20px;
+}
+
+.delete-column-block,
+.rename-column-block,
+.move-column-block {
+  background: #f1f1ee;
+  padding:15px 0 0 10px;
+  position: relative;
+  margin-top:-1px;
+}
+
+.task-edit-button {
+  background: transparent url(images/edit.svg) 50% no-repeat;
+  background-size: 22px;
+}
+
+.task-edit-input {
+  font-family: Arial, sans-serif;
+  border:0;
+  background:0;
+  padding:20px 40px 10px 0;
+  box-sizing: border-box;
+  margin-left:10px;
+  min-height: 1em; 
+  overflow-y: hidden; 
+  resize: none;
+  border-bottom:2px solid #f79d35;
+  width: calc(100% - 24px);
+  display: block;
+}
+
+.new-task-cancel { 
+  position: absolute;
+  right:10px;
+  top:5px;
+  padding: 0;
+}
+
+.task-delete-block {
+  padding:20px 0 0 10px;
+}
+
+.set-task-colors {
+  padding:20px 0 0 10px;
+}
+
+.colors-list {
+  padding:0;
+  margin:0 0 10px;
+  list-style: none;
+  display:flex;
+  flex-flow:row wrap;
+  clear:both;
+}
+
+.colors-list li[data-color] {
+  width:20px;
+  height:20px;
+  border:1px solid #999;
+  border-radius: 10px;
+  margin-right:7px;
+  margin-bottom:7px;
+  color:#999;
+}
+
+.colors-list.colors-in-use {
+  margin-bottom:0;
+  display:flex;
+  flex-flow:row wrap;
+  font-size:11px;
+}
+
+.colors-list.colors-in-use div:has(span[data-color]) {
+  margin-right:5px; 
+  display:flex;
+  flex-flow:row nowrap;
+}
+
+.colors-list.colors-in-use .label {
+  padding-left:3px;
+}
+
+.colors-list li.current::after {
+  content: '✓';
+  display: block;
+  text-align: center;
+  line-height:19px;
+  width: 100%;
+  height: 100%;
+}
+
+#ranks-block {
+  color:#fff;
+}
+
+#ranks-block textarea {
+  box-sizing: border-box;
+  height:100px;
+  width:100%;
+  background:transparent;
+  color:white;
+  padding:10px;
+  border-bottom:2px solid #f79d35;
+  display:block;
+  font-size:14px;
+  margin-top:10px;
+}
+
+#ranks-input-errors {
+  color:red;
+  padding:5px;
+}
+
+.ranks-list {
+  padding:0;
+  margin:10px 0 0;
+  list-style: none;
+  font-size:12px;
+}
+
+.ranks-list ul {
+  padding:0;
+  margin:0;
+  list-style: none;
+}
+
+.ranks-list ul {
+  padding-left:14px;
+}
+
+.ranks-list span {
+  display:inline-block
+}
+
+.ranks-list span[data-color],
+.colors-in-use span[data-color] {
+  width:15px;
+  height:15px;
+  border:1px solid #999;
+  border-radius: 7px;
+  margin-right:6px;
+  margin-bottom:6px;
+  color:#000;
+  text-align: center;
+}
+
+.ranks-info {
+  position: absolute;
+  right: 13px;
+  bottom: 5px;
+  display:flex;
+}
+
+.cardLevel {
+  color:#a3a0a1;
+  font-size:12px;
+  padding-right:5px;
+}
+
+.cardPass {
+  color:red;
+  font-size:12px;
+}
+
+.cardPass.positive {
+  color: green
+}
+
+.cardPass.parentInDebt {
+  color: #a3a0a1;
+}
+
+#counters {
+  padding: 8px;
+}
+
+#preview-ranks, #current-ranks, #abs-counters, #current-colors {
+  /* padding:10px; */
+  padding-bottom:0;
+}
+
+.rank-level-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  display: inline-block;
+  border: 1px solid #999;
+  margin-left:5px;
+}
+
+.ranks-info .red-cross {
+  font-size:6px;
+  vertical-align: middle;
+}
+
+.own-rank-count-mark {
+  font-size: 12px;
+  color:#a3a0a1;
+  padding-right: 5px;
+}
+
+#ranks-panels-container, 
+#current-colors-container {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+#ranks-panels-container > div,  
+#current-colors-container > div {
+  flex: 1 1 50%;
+}
+
+#ranks-panels-container > div:not(:first-child), 
+#current-colors-container > div:not(:first-child) {
+  padding-left:7px;
+}
+
+#ranks-buttons-container {
+  display:flex;
+  flex-flow: row wrap;
+  justify-content: flex-end;
+}
+
+#ranks-delete-confirm-message {
+  flex: 1 0 auto;
+  width:100%;
+}
+
+#ranks-block .board-management-button {
+  padding:10px;
+  float:none;
+}
+
+#current-colors {
+  display:flex;
+  flex-flow:column nowrap;
+}
+
+.ranks-title {
+  padding:12px;
+  padding-left:0;
+  display:block;
+}
+
+#current-ranks {
+  display:flex;
+  flex-flow: column nowrap;
+}
+
+#stats {
+  padding:10px 10px 10px 0;
+}
+
+#statsUI {
+  color:white;
+}
+
+.ranks-message {
+  padding:10px 0;
+}
+
+#statsData {
+  border-collapse: separate;
+}
+
+#statsData td {
+  padding:5px 10px;
+  border:1px dotted #817b7b;
+}
+
+/* BOOKS */
+
+#switchScreen {
+  background:url(images/branch.svg) 50% no-repeat;
+  background-size: 50%;
+}
+
+#switchScreen.books {
+  background: url(images/boards.png) 50% no-repeat;
+  background-size: contain;
+}
+
+#books {
+  padding:10px;
+}
+
+#booksListContainer {
+  padding-top:10px;
+}
+
+#booksList {
+  width: 100%;
+  border-collapse: separate;
+  background: #f1f1ee;
+}
+
+#booksList td, #booksList th {
+  border: 1px solid #47474775;
+  padding:3px;
+  font-size:13px;
+  border-radius: 3px;
+}
+
+.board-osarai-border, .board-osarai-border td {
+  border:2px solid var(--osarai) !important;
+}
+
+.board-satori-border, .board-satori-border td {
+  border:2px solid var(--satori) !important;
+}
+
+.board-paper-border, .board-paper-border td {
+  border:2px solid var(--paper) !important;
+}
+
+#addBookUi {
+  background:#f1f1ee;
+  padding:10px;
+}
+
+input[type="text"]:invalid,
+input[type="number"]:invalid,
+select:invalid {
+  border:1px solid red;
+}
+
+.book-action-container {
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-flow:row wrap;
+  min-width:72px;
+}
+
+.book-action {
+  margin:0 3px 3px;
+  width:25px;
+  height:25px;
+  border:none;
+  background-color:#fff;
+  border-radius:13px;
+  box-shadow: 1px 1px 1px #47474775;
+}
+
+.book-action:not(:first-child) {
+  margin-left:3px;
+}
+
+.book-action::before {
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+.book-action.delete::before {
+  content:'';
+  background: url(images/delete-colored.svg) 50% no-repeat;
+  background-size: 18px;
+}
+
+.book-action.state::before {
+  content:'';
+  background: url(images/branch1.svg) 50% no-repeat;
+  background-size: 18px;
+}
+
+.book-action.edit::before {
+  content:'';
+  background: url(images/edit-color.svg) 50% no-repeat;
+  background-size: 18px;
+}
+
+.rangesRow {
+  display:flex;
+  flex-flow:row nowrap;
+  padding-bottom:5px;
+}
+
+.rangesRow label {
+  flex: 1 1 auto;
+  width:calc(30% - 10px);
+}
+
+.rangesRow input {
+  width:50px;
+}
+
+.rangesRowButtonsWrap {
+  width:50px;
+  display:flex;
+  flex-flow:row nowrap;
+  justify-content: space-between;
+}
+
+.rangesRowButtonsWrap button {
+  width:23px;
+  height:23px;
+}
+
+#booksList .extraUi h6 {
+  font-size:15px;
+  margin: 0 0 10px;
+}
+
+#booksList .extraUi fieldset {
+  margin-bottom:10px;
+  border-radius: 5px;
+}
+
+#booksList .extraUi td {
+  padding:10px;
+}
+
+#dialog {
+  position:fixed;
+  top:0;
+  left:0;
+  bottom:0;
+  right:0;
+  background:#ffffff7a;
+  display:flex;
+  flex-flow:column nowrap;
+  align-items: center;
+  z-index: 1000;
+  padding:10%;
+  padding-top:10vh;
+}
+
+#dialogBody {
+  background: #f1f1ee;
+  box-shadow: 1px 1px 1px #47474775;
+  width:100%;
+  box-sizing: border-box;
+  position: relative;
+  height:50vh;
+  border-radius: 5px;
+  padding:35px;
+}
+
+.dialogContent {
+}
+
+.button-close__dialog {
+  top:5px;
+  right:5px;
+}
+```
+
+State.js:
+```
+export const State = {
+
+  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault
+  menuOpen: false,
+  statsUiMode: null,
+  boardUi: {
+    columnUi: {}, //default, menu, rename, move, delete
+    taskUi: {},
+  },
+  ranksUi: null,
+  booksUi : {
+    addUiShown : false,
+    rowUi: {}, //delete, edit, state
+  },
+  progressData : {},
+  progressPromptShown : false,
+
+  afterRender: [],
+
+  setState(patch) {
+    Object.assign(this, patch);
+  },
+
+};
+```
+
+ColumnHeaderUI.js:
+```
+import {Utils} from './Utils.js' 
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+
+export const ColumnHeaderUI = {
+
+  selectors: {
+    columnMenuTrigger: '.column-menu-toggle',
+    columnMenuBlock: '.column-menu',
+    changeHeaderModeTriggers: '.column [data-header-mode-trigger]',
+    renameColumnInput: '.column .rename-column-input',
+    cancelModeUi: '.column .js-back',
+    deleteColumn: '.column .save-delete-column',
+    renameColumn: '.column .save-rename-column',
+    moveColumnRightButton: '.column [data-move-direction="right"]',
+    moveColumnLeftButton: '.column [data-move-direction="left"]',
+    skipMoveCheckbox: '.column-menu input[name="skipMove"]',
+  },
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.boardsChanged, () => {
+      State.boardUi.columnUi = {};
+    });
+    Bus.on(Bus.events.columnHeaderUIChanged, this.render.bind(this));
+    Bus.on(Bus.events.columnMoved, (id) => {
+      this.setColumnHeaderMode(id, 'move');
+      const movedCol = document.querySelector(`[data-id="${id}"]`);
+      movedCol.closest('main').scrollLeft = document.querySelector(`[data-id="${id}"]`).offsetLeft - 30;
+    });
+  },
+
+  render() {
+    const headers = document.querySelectorAll('.column-header');
+
+    headers.forEach(header => {
+      const columnEl = Utils.getColumnEl(header);
+      const id = columnEl.dataset.id;
+      const mode = State.boardUi.columnUi[id] || 'default';
+      header.querySelector(this.selectors.columnMenuTrigger).classList.toggle('expanded', mode !== 'default');
+      columnEl.querySelector(this.selectors.columnMenuBlock).classList.toggle('hidden', mode !== 'menu');
+      columnEl.querySelectorAll('[data-header-mode]').forEach(el => {
+        el.classList.toggle('hidden', mode !== el.dataset.headerMode);
+        this.renderRenameUi(mode, columnEl);
+      });
+    });
+  },
+
+  renderRenameUi(mode, colEl) {
+    const input = colEl.querySelector('.rename-column-input');
+    if(mode === 'rename') {
+      Utils.focusAndPlaceCursorAtEnd(input);
+    } else {
+      input.value = input.dataset.originalValue;
+      this.updateButtonState(input);
+    }
+  },
+
+  toggleColumnMenu(el) {
+    let state = this.getColHeaderCurrentState(el);
+    State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id] = state !== undefined && state !== 'default' ? 'default' : 'menu';
+    Bus.emit(Bus.events.columnHeaderUIChanged);
+  },
+
+  setColumnHeaderMode(id, mode) {
+    State.boardUi.columnUi[id] = mode;
+    Bus.emit(Bus.events.columnHeaderUIChanged);
+  },
+
+  changeColumnHeaderMode(el) {
+    State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id] = el.dataset.headerModeTrigger;
+    Bus.emit(Bus.events.columnHeaderUIChanged);
+  },
+
+  getColHeaderCurrentState(el) {
+    return State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id];
+  },
+
+  updateButtonState(renameInput) {
+    Utils.updateButtonState(
+      renameInput,
+      renameInput.closest('.rename-column-block').querySelector('.save-rename-column'),
+    );
+  },
+
+  cancelModeUi(el) {
+    State.boardUi.columnUi[Utils.getColumnEl(el).dataset.id] = 'menu';
+    Bus.emit(Bus.events.columnHeaderUIChanged);
+  },
+
+  deleteColumn(el) {
+    BoardDomain.deleteColumn(Utils.getColumnEl(el).dataset.id);
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  moveColumn(el, e, [doMoveRight]) {
+    const column = Utils.getColumnEl(el);
+    BoardDomain.moveColumn(column.dataset.id, doMoveRight);
+    Bus.emit(Bus.events.boardsChanged);
+    Bus.emit(Bus.events.columnMoved, column.dataset.id);
+  },
+
+  renameColumn(el, e) {
+    const column = Utils.getColumnEl(el);
+    const input = column.querySelector('.rename-column-input');
+    BoardDomain.renameColumn(column.dataset.id, input.value.trim());
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  setSkipMove(el, e) {
+    BoardDomain.setColumnSkipMove(Utils.getColumnEl(el).dataset.id, el.checked);
+  },
+
+};
+```
+
+TaskUI.js:
+```
+import {Utils} from './Utils.js' 
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+import {Colors} from './Colors.js'
+import {RanksUI} from './RanksUI.js'
+
+export const TaskUI = {
+
+  selectors: {
+    taskEditInput: '.task-edit-input',
+    taskEditButton: '.task-edit-button',
+    taskTitle: '.task .task-title',
+    colorsListItem: '.colors-list li',
+    addTask: '.js-add-task',
+    cancelAddTaskButton: '.js-cancel-add-task',
+    cancelEditTaskButton: '.js-cancel-edit-task',
+    taskInfoToggle: '.task-info-toggle',
+    taskExpandButton: '.task-expand-button ',
+    taskDeleteButton: '.task-delete',
+    cancelDeleteTaskButton: '.cancel-delete-task',
+    confirmDeleteTaskButton: '.confirm-delete-task',
+    taskEditSaveButton: '.task-edit-save',
+    cloneTask: '.task-clone',
+    colorPickerButton: '.task-change-color',
+    cancelSetColorButton: '.cancel-set-color',
+  },
+
+  init() {
+    Bus.on(Bus.events.taskUiChanged, (id) => {
+      this.render(id);
+    });
+
+    Bus.on(Bus.events.boardsChanged, () => {
+      State.boardUi.taskUi = {};
+    });
+  },
+
+  getId(el) {
+    return el.closest('.task').dataset.id;
+  },
+
+  getMode(el) {
+    const obj = State.boardUi.taskUi[this.getId(el)];
+    return obj.mode || null;
+  },
+
+  getInput(el) {
+    return el.closest('.task').querySelector(this.selectors.taskEditInput);
+  },
+
+  setTaskUi(id, updater) {
+    const prev = State.boardUi.taskUi[id] || {};
+    const next = updater(prev);
+
+    if(next === null) {
+      delete State.boardUi.taskUi[id];
+    } else {
+      State.boardUi.taskUi[id] = next;
+    }
+
+    Bus.emit(Bus.events.taskUiChanged, id);
+  },
+
+  toggleTaskInfo(el) {
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: prev.mode === 'menuOpened' || prev.mode === 'edit' ? 'default' : 'menuOpened',
+      description: this.getInput(el).dataset.originalValue
+    }));
+  },
+
+  showAddTaskForm(el) {
+    const id = Utils.generateUID();
+    this.setTaskUi(id, () => ({
+      mode: 'create',
+      columnId: Utils.getColumnEl(el).dataset.id,
+      description: '',
+      color: 'white',
+    }));
+  },
+
+  hideAddTaskUi(el) {
+    this.setTaskUi(this.getId(el), () => null);
+  },
+
+  hideEditTaskUi(el) {
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: 'menuOpened',
+      description: this.getInput(el).originalValue
+    }));
+  },
+
+  toggleEdit(el) {
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: prev.mode === 'edit' ? 'menuOpened' : 'edit',
+      description: this.getInput(el).dataset.originalValue
+    }));
+  },
+
+  showEditUi(el) {
+    if(this.getMode(el) !== 'menuOpened') return;
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: 'edit'
+    }));
+  },
+
+  showDeleteUi(el) {
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: 'deleteConfirm'
+    }));
+  },
+
+  showColorPicker(el) {
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: 'colors'
+    }));
+  },
+
+  cancelDelete(el) {
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: 'menuOpened'
+    }));
+  },
+
+  cancelSetColor(el) {
+    this.setTaskUi(this.getId(el), (prev) => ({
+      ...prev,
+      mode: 'menuOpened',
+      color: el.closest('.task').querySelector('[data-original-color]').dataset.originalColor
+    }));
+  },
+
+  deleteTask(el) {
+    BoardDomain.deleteTask(this.getId(el));
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  saveTask(el) {
+    const taskEl = el.closest('.task');
+    const columnEl = el.closest('.column');
+    BoardDomain.updateTask(this.getId(el), columnEl.dataset.id, {
+      color: taskEl.dataset.color,
+      description: this.getInput(el).value
+    });
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  cloneTask(el) {
+    const newId = BoardDomain.cloneTask(this.getId(el));
+    State.afterRender.push(() => {
+      const currentColumnEl = document.querySelector(`[data-id="${el.closest('.column').dataset.id}"]`);
+      document.querySelector('main').scrollLeft = currentColumnEl.offsetLeft - 30;
+      const newTaskEl = currentColumnEl.querySelector(`.task[data-id="${newId}"]`);
+      newTaskEl.querySelector('.task-info-toggle').click();
+      newTaskEl.querySelector('.task-edit-button').click();
+    });
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  render(id) {
+    let el = document.querySelector(`[data-id="${id}"]`);
+    const uiTask = State.boardUi.taskUi[id];
+    if(el && !uiTask) {
+      el.remove();
+    } else {
+      const html = this.getTaskHtml(id);
+      if(el) {
+        el.outerHTML = html;
+      } else {
+        document.querySelector(`.column[data-id="${uiTask.columnId}"] .column-body`).insertAdjacentHTML('afterbegin', html);
+      }
+      el = document.querySelector(`[data-id="${id}"]`);
+      const input = el.querySelector(`.task-edit-input`);
+      if(uiTask.mode === 'create' || uiTask.mode === 'edit') {
+        Utils.expandInput(input);
+        Utils.focusAndPlaceCursorAtEnd(input);
+        this.updateButtonState(input);
+      }
+    }
+  },
+
+  getTaskHtml(id) {
+    const domainTask = BoardDomain.getTask(id);
+    const uiTask = State.boardUi.taskUi[id];
+    const column = BoardDomain.getColumnByTaskId(id);
+
+    const isCreate = !domainTask && uiTask && uiTask.mode === 'create';
+    const isEdit = domainTask && uiTask && uiTask.mode === 'edit';
+    const isMenuOpened = domainTask && uiTask && uiTask.mode === 'menuOpened';
+    const isDeleteConfirm = domainTask && uiTask && uiTask.mode === 'deleteConfirm';
+    const isColorPicker = domainTask && uiTask && uiTask.mode === 'colors';
+    const isDefault = !isCreate && !isEdit && !isMenuOpened && !isDeleteConfirm && !isColorPicker;
+
+    const origColor = domainTask ? domainTask.color : null;
+    const descr = uiTask && uiTask.description ? uiTask.description : (domainTask ? domainTask.description : '');
+    const origDescr = domainTask ? domainTask.description : '';
+    const color = uiTask && uiTask.color ? uiTask.color : (domainTask ? domainTask.color : 'white');
+
+    return `
+    <div class="task ${isMenuOpened ? 'expanded' : ''}" style="background:${Colors[color]};" data-color="${color}" data-id="${id}">
+      ${isDefault ? `<div class="ranks-info">${this.getTaskRanksInfo(domainTask, column, BoardDomain.getCurrentBoard())}</div>` : ''}
+      <div class="task-expand-button ${!isDefault ? 'hidden' : ''}"></div>
+      <button class="task-info-toggle ${isEdit || isMenuOpened ? 'expanded' : ''}"></button>
+      <div class="task-header ${!isDefault && !isMenuOpened ? 'hidden' : ''}">
+        <span class="task-title">${descr}</span>
+      </div>
+      <div class="task-info ${!isMenuOpened ? 'hidden' : ''}">
+        <button class="task-change-color"></button>
+        <button class="task-delete"></button>
+        <button class="task-clone"></button>
+        <button class="task-edit-button"></button>
+      </div>
+      <div class="task-edit ${isCreate || isEdit ? '' : 'hidden'}">
+        <textarea rows="1" ${origDescr
+          ? `data-original-value="${Utils.escapeAttr(origDescr)}"`
+          : `placeholder="Description"`
+        } class="task-edit-input">${Utils.escapeHtml(descr)}</textarea>
+        ${isCreate ? `<div style="padding-left:10px;"><br>${this.getTaskColorPicker(color)}</div>` : ''}
+        <button class="task-edit-save board-management-button" disabled>Save</button>
+        <button class="${isCreate ? 'js-cancel-add-task' : 'js-cancel-edit-task'} task-edit-cancel board-management-button">Cancel</button>
+      </div>
+      <div class="task-delete-block ${isDeleteConfirm ? '' : 'hidden'}">
+        Delete this task?<br><br>
+        <button class="confirm-delete-task  board-management-button">Delete</button>
+        <button class="cancel-delete-task  board-management-button">Cancel</button>
+      </div>
+      <div data-original-color="${origColor}" class="set-task-colors ${isColorPicker ? '' : 'hidden'}">
+        Choose task color<br><br>
+        ${this.getTaskColorPicker(color)}
+        <button class="task-edit-save board-management-button" ${color == origColor ? 'disabled' : ''}>Save</button>
+        <button class="cancel-set-color board-management-button" >Cancel</button>
+      </div>
+    </div>
+    `
+  },
+
+  getTaskRanksInfo(task, column, board) {
+    return `
+      ${RanksUI.getLevelMarkHtml(task.color)}
+      ${RanksUI.getOwnCount(board, task.color)}
+      ${RanksUI.getPassMarkHtml(task, column)}
+      ${RanksUI.getUpperLevelMarkHtml(task.color)}
+    `;
+  },
+
+  updateButtonState(el) {
+    Utils.updateButtonState(
+      el,
+      el.closest('.task-edit').querySelector(this.selectors.taskEditSaveButton)
+    );
+  },
+
+  taskDescrInputHandler(el) {
+    this.updateButtonState(el);
+    Utils.expandInput(el);
+  },
+
+  previewColor(el) {
+    const id = el.closest('.task').dataset.id;
+    State.boardUi.taskUi[id].color = el.dataset.color;
+    State.boardUi.taskUi[id].description = this.getInput(el).value;
+    Bus.emit(Bus.events.taskUiChanged, id);
+  },
+
+  getTaskColorPicker(currentColor) {
+    if(!currentColor) {
+      currentColor = Colors.white;
+    }
+    const colors = Object.keys(Colors).map(key => {
+      const color = Colors[key];
+      return `
+        <li data-color="${key}" style="background:${color}" ${currentColor == key ? ' class="current"' : ''}></li>  
+      `
+    });
+    return `
+      <ul class="colors-list">
+        ${colors.join('')}
+      </ul>`
+  },
+
+};
+```
+
+Events.js:
+```
+import {
+  HeaderUI,
+  RenameUI,
+  BoardsList,
+  DeleteUI,
+  BoardUI,
+  DragDrop,
+  ColumnHeaderUI,
+  TaskUI,
+  RanksUI,
+  Stats,
+  BooksUI,
+  Dialog,
+  ProgressUI,
+} from './index.js'
+import {Components} from './Components.js';
+
+export const Events = {
+
+  namespaces: {
+    'HeaderUI': HeaderUI,
+    'RenameUI': RenameUI,
+    'BoardsList': BoardsList,
+    'DeleteUI': DeleteUI,
+    'BoardUI': BoardUI,
+    'DragDrop': DragDrop,
+    'ColumnHeaderUI': ColumnHeaderUI,
+    'TaskUI': TaskUI,
+    'RanksUI': RanksUI,
+    'Stats': Stats,
+    'BooksUI': BooksUI,
+    'Dialog': Dialog,
+    'ProgressUI': ProgressUI,
+  },
+
+  map: {
+    'click': {
+      '##': [
+        'HeaderUI.hideMenu',
+      ],
+      [HeaderUI.selectors.toggleMenuButton]: 'HeaderUI.toggleMenu',
+      [HeaderUI.selectors.changeHeaderModeTriggers]: 'HeaderUI.changeMode',
+      [HeaderUI.selectors.reset]: 'HeaderUI.reset',
+      [HeaderUI.selectors.screenSwitch]: 'HeaderUI.switchScreen',
+
+      [RenameUI.selectors.confirmRenameButton]: 'RenameUI.renameBoard',
+      [DeleteUI.selectors.deleteBoardConfirmButton]: 'DeleteUI.deleteBoard',
+      [BoardsList.selectors.boardsButtons]: 'BoardsList.switchBoard',
+      [BoardsList.selectors.createButton]: 'BoardsList.createBoard',
+
+      [BoardUI.selectors.addColumnButton]: 'BoardUI.createColumn',
+
+      [ColumnHeaderUI.selectors.columnMenuTrigger]: 'ColumnHeaderUI.toggleColumnMenu',
+      [ColumnHeaderUI.selectors.changeHeaderModeTriggers]: 'ColumnHeaderUI.changeColumnHeaderMode',
+      [ColumnHeaderUI.selectors.cancelModeUi]: 'ColumnHeaderUI.cancelModeUi',
+      [ColumnHeaderUI.selectors.deleteColumn]: 'ColumnHeaderUI.deleteColumn',
+      [ColumnHeaderUI.selectors.renameColumn]: 'ColumnHeaderUI.renameColumn',
+      [ColumnHeaderUI.selectors.moveColumnRightButton]: ['ColumnHeaderUI.moveColumn', [true]],
+      [ColumnHeaderUI.selectors.moveColumnLeftButton]: ['ColumnHeaderUI.moveColumn', [false]],
+
+      [TaskUI.selectors.taskInfoToggle]: 'TaskUI.toggleTaskInfo',
+      [TaskUI.selectors.taskExpandButton]: 'TaskUI.toggleTaskInfo',
+      [TaskUI.selectors.addTask]: 'TaskUI.showAddTaskForm',
+      [TaskUI.selectors.cancelAddTaskButton]: 'TaskUI.hideAddTaskUi',
+      [TaskUI.selectors.cancelEditTaskButton]: 'TaskUI.hideEditTaskUi',
+      [TaskUI.selectors.colorsListItem]: 'TaskUI.previewColor',
+      [TaskUI.selectors.taskEditButton]: 'TaskUI.toggleEdit',
+      [TaskUI.selectors.taskTitle]: 'TaskUI.showEditUi',
+      [TaskUI.selectors.taskDeleteButton]: 'TaskUI.showDeleteUi',
+      [TaskUI.selectors.colorPickerButton]: 'TaskUI.showColorPicker',
+      [TaskUI.selectors.cancelSetColorButton]: 'TaskUI.cancelSetColor',
+      [TaskUI.selectors.cancelDeleteTaskButton]: 'TaskUI.cancelDelete',
+      [TaskUI.selectors.confirmDeleteTaskButton]: 'TaskUI.deleteTask',
+      [TaskUI.selectors.taskEditSaveButton]: 'TaskUI.saveTask',
+      [TaskUI.selectors.cloneTask]: 'TaskUI.cloneTask',
+
+      [RanksUI.selectors.createButton]: 'RanksUI.showCreateUi',
+      [RanksUI.selectors.colorsInUseToggle]: 'RanksUI.toggleColorsInUse',
+      [RanksUI.selectors.freeColorsToggle]: 'RanksUI.toggleColorsInUse',
+      [RanksUI.selectors.countersToggle]: 'RanksUI.toggleCounters',
+      [RanksUI.selectors.createCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.previewButton]: 'RanksUI.preview',
+      [RanksUI.selectors.saveButton]: 'RanksUI.save',
+      [RanksUI.selectors.deleteButton]: 'RanksUI.showDeleteUi',
+      [RanksUI.selectors.deleteCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.deleteConfirmButton]: 'RanksUI.delete',
+      [RanksUI.selectors.editButton]: 'RanksUI.edit',
+      [RanksUI.selectors.editCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.resetCountersButton]: 'RanksUI.showResetUi',
+      [RanksUI.selectors.resetCountersCancelButton]: 'RanksUI.resetUi',
+      [RanksUI.selectors.resetCountersConfirmButton]: 'RanksUI.resetCounters',
+
+      [Stats.selectors.resetButton]: 'Stats.promptReset',
+      [Stats.selectors.confirmResetButton]: 'Stats.reset',
+      [Stats.selectors.cancelResetButton]: 'Stats.resetUi',
+
+      [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
+      [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],
+      [BooksUI.selectors.deleteBookButton]: 'BooksUI.showDeleteBookUi',
+      [BooksUI.selectors.editBookButton]: 'BooksUI.showEditBookUi',
+      [BooksUI.selectors.editStateButton]: 'BooksUI.showEditStateUi',
+      [BooksUI.selectors.extraUiCancelButton]: 'BooksUI.cancelExtra',
+      [BooksUI.selectors.closeExtraUi]: 'BooksUI.cancelExtra',
+      [BooksUI.selectors.extraUiConfirmButton]: 'BooksUI.confirmExtra',
+      [BooksUI.selectors.addRangeButton]: 'BooksUI.addRangeRow',
+      [BooksUI.selectors.removeRangeRowRutton]: 'BooksUI.removeRangeRow',
+
+      //[ProgressUI.selectors.promptButton] : 'ProgressUI.hideUi',
+    },
+    'submit': {
+      [BooksUI.selectors.addBookForm]: 'BooksUI.addBook',
+      [BooksUI.selectors.editBookForm]: 'BooksUI.updateBook',
+    },
+    'input': {
+      [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
+      [ColumnHeaderUI.selectors.renameColumnInput]: 'ColumnHeaderUI.updateButtonState',
+      [ColumnHeaderUI.selectors.skipMoveCheckbox]: 'ColumnHeaderUI.setSkipMove',
+      [TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
+      [RanksUI.selectors.textarea]: 'RanksUI.ranksInputHandler',
+    },
+    'change': {
+      [BooksUI.selectors.bookBoardSelect]: 'BooksUI.selectBoardHandler',
+      [BooksUI.selectors.bookBoardColorSelect]: 'BooksUI.setColorsDropdownColor',
+    },
+    'contextmenu': {
+      '##': ['DragDrop.preventOnce', [true]],
+    },
+    'touchstart': {
+      '##': [
+        'DragDrop.boardsButtonTouchStart',
+        'DragDrop.taskTouchStart',
+        'DragDrop.progressButtonTouchStart',
+      ],
+    },
+    'touchend': {
+      '##': ['DragDrop.touchEnd'],
+    },
+    'touchmove': {
+      '##': ['DragDrop.touchMoveTask'],
+    },
+  },
+
+  // handler(e, eventName) {
+  //   const entry = this.map[eventName];
+  //   if(!entry) return;
+
+  //   const selectors = Object.keys(entry);
+  //   const normals = selectors.filter(s => s !== '##');
+  //   const globals = selectors.filter(s => s === '##');
+
+  //   [...normals, ...globals].forEach(selector => {
+  //     const callbackObj = entry[selector];
+
+  //     let callbacks = [];
+
+  //     // 1) строка
+  //     if(typeof callbackObj === 'string') {
+  //       callbacks = [[callbackObj, []]];
+  //     }
+
+  //     // 2) массив
+  //     else if(Array.isArray(callbackObj)) {
+
+  //       // случай [method, params]
+  //       if(
+  //         typeof callbackObj[0] === 'string' &&
+  //         Array.isArray(callbackObj[1])
+  //       ) {
+  //         callbacks = [[callbackObj[0], callbackObj[1]]];
+  //       }
+
+  //       // случай ['m1', 'm2', ...]
+  //       else {
+  //         callbacks = callbackObj.map(method => [method, []]);
+  //       }
+  //     }
+
+  //     callbacks.forEach(([methodPath, params]) => {
+
+  //       const shouldRun =
+  //         selector === '##' ||
+  //         (e.target.matches && e.target.matches(selector));
+
+  //       if(!shouldRun) return;
+
+  //       const resolved = this.resolveMethod(methodPath);
+  //       if(!resolved) return;
+
+  //       resolved.fn.call(resolved.ctx, e.target, e, params);
+  //     });
+  //   });
+  // },
+
+  normalize(val) {
+    if(!val) return [];
+
+    // строка → [[method, []]]
+    if(typeof val === 'string') {
+      return [[val, []]];
+    }
+
+    if(Array.isArray(val)) {
+
+      // [method, params]
+      if(typeof val[0] === 'string' && Array.isArray(val[1])) {
+        return [val];
+      }
+
+      // уже [[method, params]]
+      if(
+        Array.isArray(val[0]) &&
+        typeof val[0][0] === 'string'
+      ) {
+        return val;
+      }
+
+      // ['m1', 'm2']
+      return val.map(v => {
+        if(typeof v === 'string') return [v, []];
+
+        if(Array.isArray(v) && typeof v[0] === 'string') {
+          return [v[0], v[1] || []];
+        }
+
+        return null;
+      }).filter(Boolean);
+    }
+
+    return [];
+  },
+
+  mergeMaps(target, source) {
+    Object.keys(source).forEach(eventName => {
+      if(!target[eventName]) {
+        target[eventName] = {};
+      }
+
+      const targetEvent = target[eventName];
+      const sourceEvent = source[eventName];
+
+      Object.keys(sourceEvent).forEach(selector => {
+        const existing = targetEvent[selector];
+        const incoming = sourceEvent[selector];
+
+        targetEvent[selector] = [
+          ...this.normalize(existing),
+          ...this.normalize(incoming)
+        ];
+      });
+    });
+  },
+
+  resolveSelector(selector, component) {
+    if(selector.startsWith('@')) {
+      const key = selector.slice(1);
+      return component.selectors[key];
+    }
+    return selector;
+  },
+
+  resolveMethod(methodPath) {
+    if(typeof methodPath !== 'string') return null;
+
+    const parts = methodPath.split('.');
+    if(parts.length !== 2) return null;
+
+    const [nsName, methodName] = parts;
+    const ns = this.namespaces[nsName];
+
+    if(!ns || typeof ns[methodName] !== 'function') {
+      return null;
+    }
+
+    return {
+      ctx: ns,
+      fn: ns[methodName],
+    };
+  },
+
+  handler(e, eventName) {
+    const entry = this.map[eventName];
+    if(!entry) return;
+
+    Object.keys(entry).forEach(selector => {
+      const callbacks = entry[selector];
+
+      if(!Array.isArray(callbacks)) return; // 🔒 защита
+
+      const shouldRun =
+        selector === '##' ||
+        (e.target.matches && e.target.matches(selector));
+
+      if(!shouldRun) return;
+
+      callbacks.forEach(([methodPath, params]) => {
+        const resolved = this.resolveMethod(methodPath);
+        if(!resolved) return;
+
+        resolved.fn.call(resolved.ctx, e.target, e, params);
+      });
+    });
+  },
+
+  init() {
+
+    const addNamespace = (val, component) => {
+
+      const add = (m) =>
+        m.includes('.') ? m : `${component.name}.${m}`;
+
+      if(typeof val === 'string') {
+        return add(val);
+      }
+
+      if(Array.isArray(val)) {
+
+        // [method, params]
+        if(typeof val[0] === 'string' && Array.isArray(val[1])) {
+          return [add(val[0]), val[1]];
+        }
+
+        return val.map(item => {
+
+          if(typeof item === 'string') {
+            return add(item);
+          }
+
+          if(Array.isArray(item) && typeof item[0] === 'string') {
+            return [add(item[0]), item[1] || []];
+          }
+
+          return item;
+        });
+      }
+
+      return val;
+    };
+
+    // 🔥 1. НОРМАЛИЗУЕМ ИСХОДНУЮ MAP
+    Object.keys(this.map).forEach(eventName => {
+      const eventMap = this.map[eventName];
+
+      Object.keys(eventMap).forEach(selector => {
+        eventMap[selector] = this.normalize(eventMap[selector]);
+      });
+    });
+
+    // 🔥 2. ДОБАВЛЯЕМ EVENTS ИЗ КОМПОНЕНТОВ
+    Components.forEach(component => {
+      if(!component.events) return;
+
+      Object.keys(component.events).forEach(eventName => {
+        if(!this.map[eventName]) {
+          this.map[eventName] = {};
+        }
+
+        const entries = component.events[eventName];
+
+        Object.keys(entries).forEach(selectorKey => {
+          const realSelector = this.resolveSelector(selectorKey, component);
+          const rawValue = entries[selectorKey];
+          const value = addNamespace(rawValue, component);
+
+          this.mergeMaps(this.map, {
+            [eventName]: {
+              [realSelector]: value
+            }
+          });
+        });
+      });
+    });
+
+    // 🔥 3. LISTENERS
+    Object.keys(this.map).forEach(eventName => {
+      document.addEventListener(eventName, (e) => {
+        this.handler(e, eventName);
+      });
+    });
+  },  
+};
+```
+
+BooksDomain.js:
+```
+import {App} from './App.js'
+import {Storage} from './Storage.js'
+import {Colors} from './Colors.js'
+import {BoardDomain} from './BoardDomain.js';
+import {Utils} from './Utils.js'
+
+export const BooksDomain = {
+
+  getBooks() {
+    return App.books || [];
+  },
+
+  getBook(key) {
+    return App.books.find(b => b.key == key);
+  },
+
+  betBookByBoard(boardId, color) {
+    return App.books.find(b => b.board == boardId && b.color == color);
+  },
+
+  getUnregisteredColorsForBoard(board) {
+    const registeredColors = this.getBooks().filter(b => b.board == board.id).map(b => b.color);
+    return BoardDomain.getColorsInUse(board).filter(c => !registeredColors.includes(c));
+  },
+
+  saveBooks(books) {
+    App.books = books;
+    Storage.saveBooks(App.books);
+  },
+
+  save(data) {
+    const {name, key, newKey, size, stages, board, color} = data;
+    const books = this.getBooks();
+    const book = books.find(b => b.key == key);
+    if(book) {
+      book.name = name;
+      book.size = size;
+      book.stages = stages;
+      book.board = board;
+      book.color = color;
+      if (newKey) {
+        book.key = newKey;
+        //TODO: update events if a key changes
+      }
+    } else {
+      books.push(data);
+    }
+    this.saveBooks(books);
+  },
+
+  deleteBook(key, deleteHistory) {
+    const books = this.getBooks().filter(b => b.key !== key);
+    this.saveBooks(books);
+    //TODO: should the history be deleted?
+  },
+
+  updateBookState(key, incoming) {
+    incoming = incoming.map(r => ({
+      s: Number(r.s),
+      f: Number(r.f),
+      t: Number(r.t)
+    }));
+    const book = this.getBook(key);
+    const incomingConflicts = Utils.findCrossStageOverlaps(incoming);
+    if(incomingConflicts.length) {
+      return {
+        result: false,
+        message: 'Incoming ranges have overlaps',
+        details: Utils.formatConflicts(incomingConflicts)
+      }
+    }
+    let existing = book.state?.ranges || [];
+    if(existing.length) {
+      existing = existing.map(r => ({
+        s: Number(r.s),
+        f: Number(r.f),
+        t: Number(r.t)
+      }));
+      const existingConflicts = Utils.findCrossStageOverlaps(existing);
+      if(existingConflicts.length) {
+        return {
+          result: false,
+          message: 'Existing ranges have overlaps',
+          details: Utils.formatConflicts(existingConflicts)
+        }
+      }
+      const conflicts = Utils.findConflictsBetween(existing, incoming);
+      if(conflicts.length) {
+        return {
+          retult: false,
+          message: 'There are overlaps between incoming and existing ranges',
+          details: Utils.formatConflicts(conflicts)
+        }
+      }
+    }
+    const merged = Utils.mergeRanges(existing, incoming);
+
+    if(!book.state) {
+      book.state = {}
+    }
+
+    book.state.ranges = merged;
+
+    this.saveBooks(App.books);
+
+    return {
+      result: true,
+      message: null,
+      details: null
+    }
+  },
+
+};
+```
+
+DeleteUI.js:
+```
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+
+export const DeleteUI = {
+
+  selectors: {
+    deleteBoardConfirmButton: '#delete-confirm',
+  },
+
+  dom: {},
+
+  deleteBoard() {
+    BoardDomain.delete();
+    State.headerUiMode = 'default';
+    Bus.emit(Bus.events.headerUIChanged);
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+};
+```
+
+App.js:
+```
+import {Storage} from './Storage.js'
+
+export const App = {
+  data: {},
+  books: {},
+  events: {},
+  screens : {
+    board : 'board',
+    books : 'books',
+  },
+
+  loadData() {
+    this.data = Storage.loadData();
+    if(!this.data) {
+      this.data = {};
+    }
+  },
+
+  saveData() {
+    Storage.saveData(this.data);
+  },
+
+  loadBooks() {
+    this.books = Storage.loadBooks();
+    if(!this.books) {
+      this.books = {};
+    }
+  },
+
+  saveBooks() {
+    Storage.saveBooks(this.books);
+  },
+
+  loadEvents() {
+    this.events = Storage.loadEvents();
+    if(!this.events) {
+      this.events = {};
+    }
+  },
+
+  saveEvents() {
+    Storage.saveEvents(this.events);
+  },
+
+  getCurrentScreen() {
+    return this.screens[this.data.screen]
+  },
+
+  switchScreen() {
+    const current = this.getCurrentScreen();
+    this.data.screen = current == this.screens.board ? this.screens.books : this.screens.board;
+    this.saveData();
+  },
+
+  isBoard() {
+    return this.data.screen == this.screens.board
+  }
+
+};
+```
+
+DragDrop.js:
+```
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {BoardsList} from './BoardsList.js'
+import {ProgressUI} from './ProgressUI.js'
+
+export const DragDrop = {
+
+  selectors: {
+    main: 'main',
+    columns: '#columns',
+  },
+
+  dom: {},
+
+  longPressTimer: null,
+
+  longPressTarget: null,
+
+  dragState: null,
+
+  colsScroll: {},
+
+  // Определяем колонку, над которой сейчас находится курсор/палец
+  getColumnAtPoint(cursorX) {
+    const columnElements = Array.from(this.dom.columns.querySelectorAll('.column'));
+    for(let i = 0;i < columnElements.length;i++) {
+      const rect = columnElements[i].getBoundingClientRect();
+      if(cursorX > rect.left && cursorX < rect.right) {
+        return columnElements[i];
+      }
+    }
+  },
+
+  autoScrollColumns(cursorX, cursorY, currentColumn) {
+    //console.log('autoScrollColumns', cursorX);
+    const main = this.dom.main;
+    const scrollMargin = 60; // расстояние от края, при котором начинается прокрутка
+    const scrollSpeed = 7;  // пикселей за кадр
+
+    const containerRect = main.getBoundingClientRect();
+
+    if(cursorX < containerRect.left + scrollMargin) {
+      //console.log('left scroll');
+      // скроллим влево
+      main.scrollLeft -= scrollSpeed;
+    } else if(cursorX > containerRect.right - scrollMargin) {
+      //console.log('right scroll');
+      // скроллим вправо
+      main.scrollLeft += scrollSpeed;
+    }
+
+    if(!currentColumn) return;
+    const columnBody = currentColumn.querySelector('.column-body');
+    const colRect = columnBody.getBoundingClientRect();
+    if(cursorY < colRect.top + scrollMargin) {
+      //console.log('top scroll');
+      columnBody.scrollTop -= scrollSpeed;
+      this.colsScroll[currentColumn.dataset.id] = columnBody.scrollTop;
+    } else if(cursorY > colRect.bottom - scrollMargin) {
+      //console.log('down scroll');
+      columnBody.scrollTop += scrollSpeed;
+      this.colsScroll[currentColumn.dataset.id] = columnBody.scrollTop;
+    }
+    //console.log(this.colsScroll);
+  },
+
+  enableTextSelection(enable) {
+    document.body.style.userSelect = enable ? '' : 'none';
+  },
+
+  blockContextMenuTemporarily() {
+    function preventOnce(e) {
+      e.preventDefault();
+      // После одного вызова — удаляем обработчик
+      document.removeEventListener('contextmenu', preventOnce, true);
+    }
+
+    document.addEventListener('contextmenu', preventOnce, true);
+
+    // На всякий случай — удалим и по таймеру (если вдруг не сработал preventOnce)
+    setTimeout(() => {
+      document.removeEventListener('contextmenu', preventOnce, true);
+    }, 5000);
+  },
+
+  restoreColsVertScroll() {
+    for(let colId in this.colsScroll) {
+      const colEl = document.querySelector(`.column[data-id="${colId}"]`);
+      if(colEl) {
+        colEl.querySelector('.column-body').scrollTop = this.colsScroll[colId];
+      }
+    }
+    this.colsScroll = {};
+  },
+
+  dropTask(el, event) {
+    if(!this.dragState.draggingTask || !this.dragState.clone) return;
+    const cursorX = event.clientX || (event.touches && event.changedTouches[0].clientX);
+    let targetColumnEl = this.getColumnAtPoint(cursorX);
+    const insertIndicator = document.querySelector('.insert-indicator');
+    let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task:not(.dragged):not(.dragging)')).findIndex(el =>
+      el.previousElementSibling === insertIndicator) : -1;
+    if(targetColumnEl) {
+      BoardDomain.moveTask(
+        targetColumnEl.dataset.id,
+        this.dragState.draggingTask.dataset.id,
+        insertIndex
+      );
+      Bus.emit(Bus.events.boardsChanged);
+      this.restoreColsVertScroll();
+    }
+
+    this.removeInsertIndicators();
+    this.dragState.draggingTask.classList.remove('dragged');
+    this.dragState.draggingTask = null;
+    if(this.dragState.clone) {
+      this.dragState.clone.remove();
+      this.dragState.clone = null;
+    }
+  },
+
+  updateInsertIndicator(columnEl, y) {
+    this.removeInsertIndicators();
+
+    const tasks = Array.from(columnEl.querySelectorAll('.task:not(.dragged)'));
+    if(!tasks.length) return;
+    let inserted = false;
+
+    for(let i = 0;i < tasks.length;i++) {
+      const task = tasks[i];
+      const rect = task.getBoundingClientRect();
+      const midpoint = rect.top + rect.height / 2;
+
+      if(y < midpoint) {
+        const indicator = document.createElement('div');
+        indicator.classList.add('insert-indicator');
+        task.parentNode.insertBefore(indicator, task);
+        inserted = true;
+        break;
+      }
+    }
+
+    if(!inserted) {
+      // Если ниже всех — вставим в конец
+      const indicator = document.createElement('div');
+      indicator.classList.add('insert-indicator');
+      columnEl.appendChild(indicator);
+    }
+  },
+
+  dropBoardButton() {
+    if(!this.dragState.draggingTask || !this.dragState.clone) return;
+    const container = document.getElementById('boards-buttons');
+    const insertIndicator = container.querySelector('.board-insert-indicator');
+    let insertIndex = insertIndicator ? Array.from(container.querySelectorAll('button:not(.dragged):not(.dragging)')).findIndex(el =>
+      el.previousElementSibling === insertIndicator) : -1;
+
+    BoardDomain.reorder(this.dragState.draggingTask.dataset.id, insertIndex);
+
+    this.removeInsertIndicators();
+    this.dragState.draggingTask.classList.remove('dragged');
+    this.dragState.draggingTask = null;
+    if(this.dragState.clone) {
+      this.dragState.clone.remove();
+      this.dragState.clone = null;
+    }
+
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  updateBoardInsertIndicator(x, y) {
+    this.removeInsertIndicators();
+    const container = BoardsList.dom.boardsListButtonsContainer;
+    const siblings = Array.from(container.querySelectorAll('button:not(.dragged)'));
+    if(!siblings.length) return;
+    const afterElement = DragDrop.getDragAfterElement(container, x, y);
+    const indicator = document.createElement('div');
+    indicator.classList.add('board-insert-indicator');
+    if(afterElement) {
+      container.insertBefore(indicator, afterElement);
+    } else {
+      container.appendChild(indicator);
+    }
+  },
+
+  removeInsertIndicators() {
+    document.querySelectorAll('.insert-indicator').forEach(el => el.remove());
+    document.querySelectorAll('.board-insert-indicator').forEach(el => el.remove());
+  },
+
+  startDrag(taskElement) {
+    taskElement.classList.add('dragged');
+    const rect = taskElement.getBoundingClientRect();
+    const clone = taskElement.cloneNode(true);
+    clone.classList.add('dragging');
+    clone.style.position = 'fixed';
+    clone.style.top = `${rect.top}px`;
+    clone.style.left = `${rect.left}px`;
+    clone.style.width = `${rect.width}px`;
+    clone.style.zIndex = 1000;
+    document.body.appendChild(clone);
+
+    this.dragState = {
+      clone: clone,
+      draggingTask: taskElement,
+    };
+
+    function onMove(e) {
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+      clone.style.left = `${x - clone.offsetWidth / 2}px`;
+      clone.style.top = `${y - clone.offsetHeight / 2}px`;
+
+      const currentColumn = DragDrop.getColumnAtPoint(x);
+
+      DragDrop.autoScrollColumns(x, y, currentColumn);
+
+      if(currentColumn) {
+        DragDrop.updateInsertIndicator(currentColumn, e.clientY || e.touches?.[0]?.clientY);
+      }
+    }
+
+    function onEnd(e) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      document.removeEventListener('touchend', onEnd);
+
+      DragDrop.dropTask(e.target, e);
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, {passive: false});
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
+
+  },
+
+  boardsStartDrag(dragEl) {
+    dragEl.classList.add('dragged');
+    const rect = dragEl.getBoundingClientRect();
+    const clone = dragEl.cloneNode(true);
+    clone.classList.add('dragging');
+    clone.style.position = 'fixed';
+    clone.style.top = `${rect.top}px`;
+    clone.style.left = `${rect.left}px`;
+    clone.style.width = `${rect.width}px`;
+    clone.style.zIndex = 1000;
+    document.body.appendChild(clone);
+
+    this.dragState = {
+      clone: clone,
+      draggingTask: dragEl,
+    };
+
+    function onMove(e) {
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+      clone.style.left = `${x - clone.offsetWidth / 2}px`;
+      clone.style.top = `${y - clone.offsetHeight / 2}px`;
+
+      DragDrop.updateBoardInsertIndicator(x, y);
+    }
+
+    function onEnd(e) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      document.removeEventListener('touchend', onEnd);
+
+      DragDrop.dropBoardButton();
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, {passive: false});
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
+  },
+
+  getDragAfterElement(container, x, y) {
+    const draggableElements = [
+      ...container.querySelectorAll("button:not(.dragged)")
+    ];
+    return draggableElements.reduce(
+      (closest, child, index) => {
+        const box = child.getBoundingClientRect();
+        const nextBox = draggableElements[index + 1] && draggableElements[index + 1].getBoundingClientRect();
+        const inRow = y - box.bottom <= 0 && y - box.top >= 0; // check if this is in the same row
+        const offset = x - (box.left + box.width / 2);
+        if(inRow) {
+          if(offset < 0 && offset > closest.offset) {
+            return {
+              offset: offset,
+              element: child
+            };
+          } else {
+            if( // handle row ends, 
+              nextBox && // there is a box after this one. 
+              y - nextBox.top <= 0 && // the next is in a new row
+              closest.offset === Number.NEGATIVE_INFINITY // we didn't find a fit in the current row.
+            ) {
+              return {
+                offset: 0,
+                element: draggableElements[index + 1]
+              };
+            }
+            return closest;
+          }
+        } else {
+          return closest;
+        }
+      }, {
+      offset: Number.NEGATIVE_INFINITY
+    }
+    ).element;
+  },
+
+  boardsButtonTouchStart(el, e) {
+    if(!BoardsList.dom.boardsListButtonsContainer.contains(el)
+      || el.tagName !== 'BUTTON') return;
+    //console.log('touchstart boards list');
+    this.longPressTarget = el;
+    this.longPressTimer = setTimeout(() => {
+      this.enableTextSelection(false);
+      this.boardsStartDrag(this.longPressTarget);
+      this.blockContextMenuTemporarily(e);
+      this.longPressTimer = null;
+    }, 400);
+  },
+
+  taskTouchStart(el, e) {
+    console.log(el);
+    const task = e.target.closest('.task');
+    if(!task) return;
+    if(e.target.classList.contains('task-edit-input')
+      || task.classList.contains('expanded')) return;
+
+    this.longPressTarget = task;
+    this.longPressTimer = setTimeout(() => {
+      if(e.target.classList.contains('task-edit-input')
+        || task.classList.contains('expanded')) return;
+      this.enableTextSelection(false);
+      this.startDrag(this.longPressTarget, e);
+      this.blockContextMenuTemporarily(e);
+      this.longPressTimer = null;
+    }, 400);
+  },
+
+  touchEnd() {
+    //console.log('touchend')
+    if(this.longPressTimer) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+      this.enableTextSelection(true);
+    }
+  },
+
+  touchMoveTask(el) {
+    //console.log('touchmove task')
+    const task = el.closest('.task');
+    if(task) {
+      if(el.classList.contains('task-edit-input')
+        || task.classList.contains('expanded')) return;
+    }
+    if(this.longPressTimer) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+  }
+
+};
+```
+
+Stats.js:
+```
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+
+export const Stats = {
+
+  idealMap: {
+    "Satori Reader": 12,
+    "Reading in paper": 8,
+    "おさらい": 6
+  },
+
+  selectors: {
+    resetButton: '#reset-stats',
+    resetMessage: '#reset-message',
+    content: '#stats',
+    confirmResetButton: '#reset-stats-confirm',
+    cancelResetButton: '#reset-stats-cancel',
+  },
+
+  dom: {},
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
+    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+  },
+
+  render() {
+    if(State.headerUiMode !== 'stats') return;
+    this.dom.resetMessage.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
+    this.dom.confirmResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
+    this.dom.cancelResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
+    this.dom.resetButton.classList.toggle('hidden', State.statsUiMode == 'promptReset');
+    const roundUp1 = (num) => Math.ceil(num * 10) / 10;
+    const stats = BoardDomain.getBoardsCounters();
+    const total = Object.values(stats).reduce((a, b) => a + b, 0);
+    const idealTotal = Object.values(this.idealMap).reduce((a, b) => a + b, 0);
+
+    let content = 'No stats';
+
+    if(stats && Object.keys(stats).length) {
+
+      const rows = Object.keys(stats).map(boardId => {
+        const board = BoardDomain.getBoard(boardId);
+        const name = board.name;
+        const value = stats[boardId];
+
+        const realPercent = roundUp1((value / total) * 100);
+        const idealPercent = this.idealMap[name]
+          ? roundUp1((this.idealMap[name] / idealTotal) * 100)
+          : 0;
+
+        return `
+          <tr>
+            <td>${name}</td>
+            <td>${realPercent.toFixed(1)}%</td>
+            <td>${idealPercent.toFixed(1)}%</td>
+          </tr>
+        `;
+      }).join('');
+
+      content = `
+        <table id="statsData">
+          <thead>
+            <tr>
+              <th></th>
+              <th>real</th>
+              <th>ideal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    this.dom.content.innerHTML = content;
+
+  },
+
+  /* handlers */
+
+  reset() {
+    State.statsUiMode = null;
+    BoardDomain.resetBoardsCounters();
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+  promptReset() {
+    State.statsUiMode = 'promptReset';
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+  resetUi() {
+    State.statsUiMode = null;
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+};
+```
+
+BoardDomain.js:
+```
+import {App} from './App.js'
+import {Storage} from './Storage.js'
+import {RanksUI} from './RanksUI.js'
+import {Utils} from './Utils.js'
+import {Colors} from './Colors.js'
+import {Bus} from './Bus.js'
+import {State} from './State.js'
+
+export const BoardDomain = {
+
+  getBoard(id) {
+    return App.data.boards.find(b => b.id == id);
+  },
+
+  getCurrentBoard() {
+    return App.data.boards.find(b => b.id == App.data.currentBoardId);
+  },
+
+  getColumn(id) {
+    return this.getCurrentBoard().columns.find(c => c.id == id);
+  },
+
+  getTask(id) {
+    return this.getCurrentBoard().columns
+      .map(col => col.tasks.find(t => t.id === id))
+      .find(task => task !== undefined) || null;
+  },
+
+  getColumnByTaskId(id, board) {
+    if(!board) {
+      board = this.getCurrentBoard();
+    }
+    return board.columns.find(col =>
+      col.tasks && col.tasks.some(c => c.id === id)
+    );
+  },
+
+  getBoardsCounters() {
+    const bc = App.data.boardsCounters;
+    return bc != null ? bc : {};
+  },
+
+  switchBoard(boardId) {
+    if(App.data.boards.find(b => b.id == boardId)) {
+      App.data.currentBoardId = boardId;
+      Storage.saveData(App.data);
+    }
+  },
+
+  saveBoards(updatedBoards, currentBoardId) {
+    App.data.boards = updatedBoards;
+    if(currentBoardId === null) {
+      delete App.data.currentBoardId
+    } else {
+      App.data.currentBoardId = currentBoardId ? currentBoardId : App.data.currentBoardId;
+    }
+    Storage.saveData(App.data);
+  },
+
+  saveCounters(counters) {
+    App.data.boardsCounters = counters;
+    Storage.saveData(App.data);
+  },
+
+  resetBoardsCounters() {
+    App.data.boardsCounters = {};
+    Storage.saveData(App.data);
+  },
+
+  deleteBoardCounters(board, doSave) {
+    delete App.data.boardsCounters[board.id];
+    if(doSave) {
+      Storage.saveData(App.data);
+    }
+  },
+
+  resetCounters() {
+    const board = this.getCurrentBoard();
+    board.rankCounters = {};
+    board.rankCountersAbs = {};
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  create() {
+    const newId = Utils.generateUID();
+    App.data.boards.push({
+      id: newId,
+      name: "Новая доска",
+      columns: [
+        {id: Utils.generateUID(), name: "To Do", tasks: []},
+        {id: Utils.generateUID(), name: "In progress", tasks: []},
+        {id: Utils.generateUID(), name: "Done", tasks: []}
+      ]
+    });
+    this.saveBoards(App.data.boards, newId)
+  },
+
+  delete() {
+    const currentIndex = App.data.boards.findIndex(b => b.id === App.data.currentBoardId);
+    const newBoards = App.data.boards.filter(b => b.id !== App.data.currentBoardId);
+
+    if(newBoards.length > 0) {
+      // Выбираем следующую (или предыдущую, если удалили последнюю)
+      const nextIndex = Math.min(currentIndex, newBoards.length - 1);
+      const newCurrentBoardId = newBoards[nextIndex].id;
+      this.saveBoards(newBoards, newCurrentBoardId);
+    } else {
+      this.saveBoards([], null);
+    }
+  },
+
+  rename(newName) {
+    const board = this.getCurrentBoard();
+    board.name = newName;
+    this.saveBoards(App.data.boards, board.id);
+  },
+
+  reorder(draggedBoardId, insertIndex) {
+    const draggedBoard = App.data.boards.find(b => b.id == draggedBoardId);
+    App.data.boards = App.data.boards.filter(b => b.id !== draggedBoardId);
+    if(insertIndex === -1) insertIndex = App.data.boards.length;
+    App.data.boards.splice(insertIndex, 0, draggedBoard);
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  createColumn() {
+    const newUid = Utils.generateUID();
+    const newColumn = {
+      id: newUid,
+      name: 'Новая колонка',
+      tasks: []
+    };
+    this.getCurrentBoard().columns.push(newColumn);
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    return newUid;
+  },
+
+  deleteColumn(id) {
+    const board = this.getCurrentBoard();
+    const currentIndex = board.columns.findIndex(c => c.id === id);
+    board.columns = board.columns.filter((c, i) => i !== currentIndex);
+    this.saveBoards(App.data.boards, board.id);
+  },
+
+  moveColumn(currentColumnId, doMoveRight) {
+    const currentBoard = this.getCurrentBoard();
+    if(currentBoard.columns.length == 1) return;
+    const currentColumnIndex = currentBoard.columns.findIndex(col => col.id == currentColumnId);
+    if((currentColumnIndex == (currentBoard.columns.length - 1) && doMoveRight)
+      || (currentColumnIndex == 0 && !doMoveRight)) {
+      return;
+    }
+    const currentColumn = currentBoard.columns[currentColumnIndex];
+    if(!currentColumn) return;
+    currentBoard.columns = currentBoard.columns.filter(col => col != currentColumn);
+    const insertIndex = doMoveRight ? currentColumnIndex + 1 : currentColumnIndex - 1;
+    currentBoard.columns.splice(insertIndex, 0, currentColumn);
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  setColumnSkipMove(colId, value) {
+    this.getColumn(colId)['skipMove'] = value;
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  renameColumn(id, name) {
+    if(!name) return;
+    this.getColumn(id).name = name;
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  deleteTask(id) {
+    const board = this.getCurrentBoard();
+    for(const col of board.columns) {
+      const index = col.tasks.findIndex(task => task.id === id);
+      if(index !== -1) {
+        col.tasks.splice(index, 1);
+        this.saveBoards(App.data.boards, App.data.currentBoardId);
+        return;
+      }
+    }
+  },
+
+  updateTask(id, colId, {color, description}) {
+    const board = this.getCurrentBoard();
+    let theTask = null;
+    let theCol = null;
+
+    board.columns.forEach(col => {
+      const task = col.tasks.find(task => task.id === id);
+      if(task) {
+        theTask = task;
+        theCol = col;
+      }
+    });
+
+    if(theTask) {
+
+      theTask.color = color;
+      theTask.description = description;
+
+    } else {
+
+      theTask = {
+        id: id,
+        color: color,
+        description: description
+      };
+
+      theCol = board.columns.find(col => col.id === colId);
+      theCol.tasks = theCol.tasks ? [theTask, ...theCol.tasks] : [theTask];
+
+    }
+
+    this.checkAndUpdateRanks(board, color);
+
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  moveTask(targetColumnId, taskId, insertIndex) {
+    const board = this.getCurrentBoard();
+    const targetColumn = board.columns.find(col => col.id === targetColumnId);
+    //const targetColumnIndex = board.columns.findIndex(col => col.id === targetColumnId);
+    if(!targetColumn.tasks) targetColumn.tasks = [];
+    const sourceColumn = this.getColumnByTaskId(taskId);
+    const task = sourceColumn.tasks.find(c => c.id === taskId);
+    let sourceColumnIndex = null;
+    // Удалим карточку из старой колонки
+    if(sourceColumn) {
+      sourceColumnIndex = board.columns.findIndex(col => col.id == sourceColumn.id)
+      sourceColumn.tasks = sourceColumn.tasks.filter(c => c.id !== taskId);
+    }
+    // Добавим карточку в новую колонку
+    //console.log(insertIndex);
+    if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
+    targetColumn.tasks.splice(insertIndex, 0, task);
+
+    // this.makeAMove({
+    //   color: task.color,
+    //   sourceColumn: sourceColumn,
+    //   targetColumn: targetColumn
+    // });
+
+    this.checkForProgress({
+      task: task,
+      sourceColumn: sourceColumn,
+      targetColumn: targetColumn
+    });
+
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  cloneTask(currentTaskId) {
+    const task = this.getTask(currentTaskId);
+    const column = this.getColumnByTaskId(currentTaskId);
+    const {id, color, description} = task;
+    const newId = Utils.generateUID();
+    const newTask = {
+      id: newId,
+      color: color,
+      description: description
+    };
+    const currentTaskIndex = column.tasks.findIndex(task => task.id == currentTaskId);
+    column.tasks.splice(currentTaskIndex + 1, 0, newTask);
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    return newId;
+  },
+
+  getColorsInUse(board) {
+    const theBoard = board || this.getCurrentBoard();
+    const colors = new Set();
+
+    theBoard.columns?.forEach(column => {
+      column.tasks?.forEach(task => {
+        if(task.color) {
+          colors.add(task.color);
+        }
+      });
+    });
+
+    return [...colors]
+  },
+
+  getFreeColors() {
+    const usedColors = this.getColorsInUse();
+    return Object.keys(Colors).filter(color => !usedColors.includes(color));
+  },
+
+  checkAndUpdateRanks(board, color) {
+    //есть ли цвет в рангах?
+    const ranks = board.ranks;
+    if(!ranks) return;
+    const allRanksColors = [];
+    for(const key in ranks) {
+      allRanksColors.push(...ranks[key].c);
+    }
+    if(allRanksColors.includes(color)) {
+      return;
+    }
+    const lowestLevel = Math.max(0, ...Object.keys(ranks));
+    ranks[lowestLevel].c = [...ranks[lowestLevel].c, color];
+    board.ranks = ranks;
+    board.ranksRaw += `,${color}`;
+  },
+
+  setRanksData({ranks, ranksRaw}) {
+    const board = this.getCurrentBoard();
+    board.ranksRaw = ranksRaw;
+    board.ranks = ranks;
+
+    /* normalizing */
+    const counters = board.rankCounters || {};
+    const absCounters = board.rankCountersAbs || {};
+    Object.keys(ranks).forEach(level => {
+      if(!counters[level]) counters[level] = 0;
+      if(!absCounters[level]) absCounters[level] = 0;
+    });
+    board.rankCounters = counters;
+    board.rankCountersAbs = absCounters;
+
+    console.log('ranks', board.ranks);
+    console.log('ranksRaw', board.ranksRaw);
+
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  deleteRanks() {
+    const board = this.getCurrentBoard();
+    delete board.ranks;
+    delete board.ranksRaw;
+    delete board.rankCounters;
+    delete board.rankCountersAbs;
+    this.deleteBoardCounters(board, false);
+    this.saveBoards(App.data.boards, App.data.currentBoardId);
+  },
+
+  checkForProgress({task, sourceColumn, targetColumn}) {
+
+    console.log('BoardDomain checkForProgress ');
+
+    if(!sourceColumn || !targetColumn) return;
+    if(sourceColumn.id === targetColumn.id) return;
+
+    const board = this.getCurrentBoard();
+
+    const sourceIndex = board.columns.findIndex(c => c.id === sourceColumn.id);
+    const targetIndex = board.columns.findIndex(c => c.id === targetColumn.id);
+    const isGoingForward = targetIndex > sourceIndex;
+    const delta = isGoingForward ? 1 : -1;
+
+    const sourceCol = board.columns[sourceIndex];
+    const targetCol = board.columns[targetIndex];
+
+    const skipMove =
+      (isGoingForward && sourceCol.skipMove) ||
+      (!isGoingForward && targetCol.skipMove);
+
+    if(!skipMove) {
+      State.progressData = {
+        taskId: task.id,
+        boardId: board.id,
+        delta : delta,
+        sourceIndex : sourceIndex,
+        sourceColumnId: sourceCol.id,
+        targetIndex : targetIndex,
+        targetColumnId : targetCol.id
+      };
+      State.progressPromptShown = true;
+
+      Bus.emit(Bus.events.progress);
+    }
+
+    this.makeMove(board, task, delta, skipMove);
+
+  },
+
+  makeMove(board, task, delta, skipMove) {
+
+    //   if(!sourceColumn || !targetColumn) return;
+    //   if(sourceColumn.id === targetColumn.id) return;
+    //   const board = this.getCurrentBoard();
+    //   const sourceIndex = board.columns.findIndex(c => c.id === sourceColumn.id);
+    //   const targetIndex = board.columns.findIndex(c => c.id === targetColumn.id);
+    //   const isGoingForward = targetIndex > sourceIndex;
+    //   const delta = isGoingForward ? 1 : -1;
+    //   const sourceCol = board.columns[sourceIndex];
+    //   const targetCol = board.columns[targetIndex];
+
+    //   const skipMove =
+    //     (isGoingForward && sourceCol.skipMove) ||
+    //     (!isGoingForward && targetCol.skipMove);
+
+    const ranks = board.ranks;
+    if(!ranks || !task) return;
+
+    const level = RanksUI.getLevelOfColor(task.color, ranks);
+    if(!level) return;
+
+    board.rankCounters = board.rankCounters || {};
+    board.rankCountersAbs = board.rankCountersAbs || {};
+
+    const ownCount = Utils.toInt(board.rankCounters[level]);
+    const absCount = Utils.toInt(board.rankCountersAbs[level]);
+    const upperCount = level > 1 ? Utils.toInt(board.rankCounters[level - 1]) : 0;
+
+    // --- 1. Абсолютный счётчик — всегда меняется
+    board.rankCountersAbs[level] = absCount + delta;
+
+    // --- 2. Глобальный счётчик доски — всегда меняется
+    const boardsCounters = this.getBoardsCounters();
+    const boardTotal = Utils.toInt(boardsCounters[board.id]);
+    boardsCounters[board.id] = boardTotal + delta;
+
+    this.saveCounters(boardsCounters);
+
+    // --- 3. Если skipMove — логику рангов не трогаем
+    if(skipMove) {
+      return;
+    }
+
+    // --- 4. Первый уровень — всегда меняет свой счётчик
+    if(level === 1) {
+      board.rankCounters[level] = ownCount + delta;
+      return;
+    }
+
+    const quotaOwn = Utils.toInt(ranks[level].q);
+    const isLastLevel = level === Object.keys(ranks).length;
+
+    if(isLastLevel && ownCount >= quotaOwn) {
+
+      // --- 5. В последнем уровне не накапливаем счет сверх квоты
+      // (т.к. нет потомков и его никто не обнуляет)
+      board.rankCounters[level] = quotaOwn;
+
+    } else {
+
+      // --- 6. Проверка “в долг”
+      // Ход вперёд в долг = у верхнего уровня нет ресурса
+      // Ход назад в долг = у верхнего уровня был компенсирующий долг
+      // const affectsOwn =
+      //   isGoingForward
+      //     ? upperCount > 0
+      //     : true; // назад всегда восстанавливаем симметрично
+
+      // if(affectsOwn) {
+      board.rankCounters[level] = ownCount + delta;
+      // }
+    }
+
+    // --- 7. Корректировка верхнего уровня
+    const quotaUpper = Utils.toInt(ranks[level - 1].q);
+    board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
+
+  },
+
+
+  getActiveColumnsCount(boardId) {
+    return this.getBoard(boardId).columns.filter(c => !c.skipMove).length - 1
+  },
+
+};
+```
+
+HeaderUI.js:
+```
+import {App} from './App.js'
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {BooksDomain} from './BooksDomain.js'
+import {State} from './State.js'
+
+export const HeaderUI = {
+
+  board: null,
+
+  selectors: {
+    title: '#board-title',
+    boardsButton: '#boards-button',
+    toggleMenuButton: '#menu-toggle',
+    toggleBooksMenuButton: '#books-menu-toggle',
+    menu: '#menu',
+    changeHeaderModeTriggers: 'header [data-header-mode-trigger]',
+    reset: '.js-cancel-current',
+    screenSwitch: '#switchScreen',
+  },
+
+  dom: {},
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+    Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
+    Bus.on(Bus.events.screenChanged, this.render.bind(this));
+
+  },
+
+  toggleMenu(el, e) {
+    e.stopPropagation();
+    State.menuOpen = !State.menuOpen;
+    this.render();
+  },
+
+  hideMenu(el, e) {
+    if(
+      !this.dom.menu.contains(el) &&
+      !this.dom.toggleMenuButton.contains(el) &&
+      State.menuOpen !== false
+    ) {
+      State.menuOpen = false;
+      this.render();
+    }
+  },
+
+  reset() {
+    State.headerUiMode = 'default';
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+  changeMode(el, e) {
+    State.headerUiMode = el.dataset.headerModeTrigger;
+    State.menuOpen = false;
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+  switchScreen() {
+    App.switchScreen();
+    Bus.emit(Bus.events.screenChanged);
+  },
+
+  render() {
+    const isBoard = App.isBoard();
+    this.dom.title.classList.toggle('hidden', State.headerUiMode !== 'default');
+    this.dom.toggleMenuButton.classList.toggle('hidden', !isBoard || State.headerUiMode !== 'default');
+    this.dom.toggleBooksMenuButton.classList.toggle('hidden', isBoard);
+    this.dom.menu.classList.toggle('hidden', !State.menuOpen);
+    this.dom.boardsButton.classList.toggle('hidden', !isBoard);
+    this.dom.screenSwitch.classList.toggle('hidden', isBoard && State.headerUiMode !== 'default');
+    this.dom.screenSwitch.classList.toggle('books', !isBoard);
+    if(isBoard) {
+      const board = BoardDomain.getCurrentBoard();
+      this.dom.title.innerHTML = board.name;
+      this.dom.menu.querySelectorAll('button').forEach(el =>
+        el.classList.toggle('hidden', board == null));
+    } else {
+      this.dom.title.innerHTML = 'books';
+    }
+
+    document.querySelectorAll('[data-header-mode]').forEach(el =>
+      el.classList.toggle('hidden', State.headerUiMode !== el.dataset.headerMode));
+  },
+
+};
+```
+
+Dialog.js:
+```
+
+export const Dialog = {
+  
+  selectors : {},
+
+  dom : {},
+
+  init() {},
+
+  render() {},
+
+};
+```
+
+BooksUI.js:
+```
+import {Bus} from './Bus.js'
+import {BooksDomain} from './BooksDomain.js'
+import {State} from './State.js'
+import {App} from './App.js'
+import {Colors} from './Colors.js'
+import {BoardDomain} from './BoardDomain.js'
+
+export const BooksUI = {
+
+  boardCodesByName: {
+    'satori': 'satori',
+    'paper': 'paper',
+    'おさらい': 'osarai',
+  },
+
+  getBoardCodeByBoard(boardId) {
+    const bName = BoardDomain.getBoard(boardId).name;
+    return this.boardCodesByName[Object.keys(this.boardCodesByName).find(k => bName.toLowerCase().indexOf(k) >= 0)]
+  },
+
+  selectors: {
+    container: '#books',
+    booksListContainer: '#booksListContainer',
+    addBookButton: '#addBook',
+    addBookUi: '#addBookUi',
+    bookNameInput: '#bookName',
+    bookKeyInput: '#bookKey',
+    bookSizeInput: '#size',
+    bookStagesInput: '#stages',
+    bookBoardSelect: '.js-book-board',
+    bookBoardColorSelect: '.js-book-board-color',
+    addBookConfirmButton: '.js-add-book-confirm',
+    editBookConfirmButton: '.js-edit-book-confirm',
+    addBookCancelButton: '#addBookCancel',
+    addBookForm: '[name="addBookForm"]',
+    editBookForm: '.js-edit-book-form',
+    deleteBookButton: '.js-delete-book',
+    editBookButton: '.js-edit-book',
+    editStateButton: '.js-edit-state',
+    extraUiRow: '.extraUi',
+    extraUiConfirmButton: '.extraUi .confirm',
+    extraUiCancelButton: '.extraUi .cancel',
+    closeExtraUi: '.js-cancel-current',
+    addRangeButton: '.extraUi .addRange',
+    removeRangeRowRutton: '.extraUi .removeRangeRow',
+    colsCountContainer: '.boardColCount',
+  },
+
+  dom: {
+  },
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.screenChanged, this.render.bind(this));
+    Bus.on(Bus.events.booksUiChanged, this.render.bind(this));
+    Bus.on(Bus.events.booksChanged, this.render.bind(this));
+    // Bus.on(Bus.events.booksChanged, () => {
+    //   State.booksUi.rowUi = {};
+    //   this.render();
+    // });
+  },
+
+  render() {
+    if(App.isBoard()) {
+      this.dom.container.classList.add('hidden');
+      return;
+    }
+    console.log('books render');
+    this.dom.container.classList.remove('hidden');
+    this.dom.booksListContainer.innerHTML = this.getListHtml();
+    this.dom.addBookButton.classList.toggle('hidden', State.booksUi.addUiShown);
+    this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
+    this.dom.bookBoardSelect.innerHTML = '<option value="" disabled selected>choose a board</option>'
+      + App.data.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    this.dom.bookBoardColorSelect.removeAttribute('style');
+    this.dom.addBookForm.querySelector(this.selectors.colsCountContainer).innerHTML = '';
+  },
+
+  addRangeRow(el) {
+    const key = this.getRowKey(el);
+    const book = BooksDomain.getBook(key);
+    const fieldset = el.closest('fieldset');
+    let rows = [...fieldset.querySelectorAll('.rangesRow')];
+    el.closest('fieldset').insertAdjacentHTML('beforeend', this.getRangesRowHtml(book, null, true, true));
+    rows = [...fieldset.querySelectorAll('.rangesRow')];
+    el.remove();
+  },
+
+  removeRangeRow(el) {
+    const fieldset = el.closest('fieldset');
+    const rows = [...fieldset.querySelectorAll('.rangesRow')];
+    if(rows.length == 1) {
+      fieldset.insertAdjacentHTML('beforeend', this.getRangesRowHtml(null, true, false));
+    }
+    el.closest('.rangesRow').remove();
+    const lastRowButton = rows[rows.length - 1].querySelector('.addRange');
+    if(!lastRowButton) {
+      el.querySelector('.rangesRowButtonsWrap').insertAdjacentHTML('beforeend', '<button class="addRange">+</button>');
+    }
+  },
+
+  getRangesRowHtml(book, range, showAddButton, showRemoveButton) {
+    return `<div class="rangesRow">
+      <label>from <input type="number" name="from" ${range ? `value="${range.f}" disabled` : ' required'}></label>
+      <label>to <input type="number" name="to" ${range ? `value="${range.t}" disabled` : ' required '}></label>
+      <label>stage 
+        <select ${range ? 'disabled' : 'required'} name="stage">
+          ${Array.from({length: parseInt(book.stages)}).map((_, i) => `<option ${range && range.s == i + 1 ? 'selected' : ''} value="${i + 1}">${i + 1}</option>`).join('')}
+        </select>
+      </label>
+      <div class="rangesRowButtonsWrap">
+        ${showRemoveButton ? `<button class="removeRangeRow">-</button>` : ''}
+        ${showAddButton ? '<button class="addRange">+</button>' : ''}
+      </div>
+    </div>`;
+  },
+
+  getCurrentRangesHtml(key) {
+    const book = BooksDomain.getBook(key);
+    const ranges = book.state?.ranges;
+    if(!ranges || !ranges.length) return this.getRangesRowHtml(book, null, true, false);
+    return ranges.map((r, i) => this.getRangesRowHtml(book, r, (i == ranges.length - 1), true)).join('');
+  },
+
+  getListHtml() {
+    //TODO: sort by board
+    const rows = BooksDomain.getBooks().map(b => {
+      const cellStyle = b.color ? ` style="background-color:${Colors[b.color]}"` : '';
+      let rowStyle = b.board ? `class="board-${this.getBoardCodeByBoard(b.board)}-border"` : '';
+      const extra = State.booksUi.rowUi[b.key]?.extra;
+      const error = State.booksUi.rowUi[b.key]?.error;
+      let extraUi = '';
+      if(extra) {
+        rowStyle += ' style="opacity:0.5"';
+        switch(extra) {
+          case 'delete':
+            extraUi = `
+              <h6>Delete book "${b.key}"?</h6>
+              <label>Keep history? <input type="checkbox" id="keepHistory"></label><br>
+              <button class="confirm">Yes</button>
+              <button class="cancel">Cancel</button>
+            `;
+            break;
+          case 'state':
+            extraUi = `
+              <h6>Set state</h6>
+              <form name="stateForm" action="javascript:void(0);">
+                <fieldset>
+                  <legend>ranges</legend>
+                  ${this.getCurrentRangesHtml(b.key)}
+                </fieldset>
+                <button class="confirm">Save</button>
+                <button class="cancel">Cancel</button>
+              </form>
+            `;
+            break;
+          case 'edit':
+            extraUi = `
+            <div class="editBookUi">
+              <form data-key="${b.key}" name="edit-book-${b.key}" class="js-edit-book-form" action="javascript:void(0);">
+                <input type="text" name="bookName" placeholder="book name" value="${b.name}" required><br>
+                <input type="text" name="bookKey" paceholder="book key" value="${b.key}" required><br>
+                <input type="number" name="size" placeholder="size" value="${b.size}" required><br>
+                <input type="number" name="stages" placeholder="stages" value="${b.stages}" required>
+                &nbsp;<span class="boardColCount">${this.getColCount(b.board)}</span><br>
+                <select class="js-book-board" name="bookBoard" required>
+                  <option value="">choose a board</option>
+                  ${App.data.boards.map(board => `<option ${board.id == b.board ? 'selected' : ''} value="${board.id}">${board.name}</option>`).join('')}
+                </select><br>
+                <select required name="bookBoardColor" class="js-book-board-color" style="background-color:${Colors[b.color]}">
+                  <option value="">choose a color</option>
+                  <option selected value="${b.color}" style="background-color:${Colors[b.color]}">${b.color}</option>
+                  ${BooksDomain.getUnregisteredColorsForBoard(b.board)
+                .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
+                .join('')}
+                </select><br>
+                <button class="confirm">Save</button>
+                <button class="cancel">Cancel</button>
+              </form>
+            </div>            
+            `;
+            break;
+        }
+      }
+      return `
+      <tr ${rowStyle} data-book-key="${b.key}">
+        <td ${cellStyle}>${b.name}</td>
+        <td ${cellStyle}>${b.key}</td>
+        <td ${cellStyle}>${b.size}</td>
+        <td ${cellStyle}>TODO progress</td>
+        <td ${cellStyle}>
+          <div class="book-action-container">
+            <button class="book-action state js-edit-state"></button>
+            <button class="book-action edit js-edit-book"></button>
+            <button class="book-action delete js-delete-book"></button>
+          </div>
+        </td>
+      </tr>
+      ${extra ? `
+      <tr class="extraUi" data-extra-book-key="${b.key}" data-extra="${extra}">
+        <td colspan="5">
+          <div style="position:relative;">
+            <button class="js-cancel-current button-close button-close__extra"></button>
+            ${extraUi}
+            ${error ? `<span style="color:red">${error}</span><br>` : ''}
+          </div>
+        </td>
+      </tr>
+      ` : ''}
+    `
+    }).join('');
+    return `<table id="booksList">
+      <thead>
+        <th>name</th>
+        <th>key</th>
+        <th>size</th>
+        <th>%</th>
+        <th>actions</th>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>`;
+  },
+
+  toggleAddUi(el, e, [toShow]) {
+    this.dom.addBookForm.reset();
+    State.booksUi.addUiShown = toShow;
+    Bus.emit(Bus.events.booksUiChanged);
+  },
+
+  getColCount(boardId) {
+    return BoardDomain.getActiveColumnsCount(boardId);
+  },
+
+  setColCount(el) {
+    const container = el.closest('form')
+      .querySelector(this.selectors.colsCountContainer);
+    container.innerHTML = el.value ? 
+      this.getColCount(el.value) : '';
+  },
+
+  selectBoardHandler(el) {
+    this.updateColorsDropdown(el);
+    this.setColCount(el);
+  },
+
+  updateColorsDropdown(el) {
+    const select = el.closest('form').querySelector(this.selectors.bookBoardColorSelect);
+    if(el.value) {
+      const board = BoardDomain.getBoard(el.value);
+      select.innerHTML = '<option value="" selected>choose a color</option>'
+        + BooksDomain.getUnregisteredColorsForBoard(board)
+          .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
+          .join('');
+      select.setAttribute('required', true);
+    } else {
+      select.innerHTML = '';
+      select.removeAttribute('required');
+    }
+    select.removeAttribute('style');
+  },
+
+  setColorsDropdownColor(el) {
+    el.style.backgroundColor = Colors[el.value];
+  },
+
+  addBook() {
+    //TODO validate that key is unique
+    let errors = [];
+
+    BooksDomain.save({
+      name: this.dom.bookNameInput.value,
+      key: this.dom.bookKeyInput.value,
+      size: this.dom.bookSizeInput.value,
+      stages: this.dom.bookStagesInput.value,
+      board: this.dom.bookBoardSelect.value,
+      color: this.dom.bookBoardColorSelect.value
+    });
+    State.booksUi.addUiShown = false;
+    this.dom.addBookForm.reset();
+    Bus.emit(Bus.events.booksChanged);
+  },
+
+  getRow(el) {
+    return el.closest('tr');
+  },
+
+  getRowKey(rowEl) {
+    const row = this.getRow(rowEl);
+    return row.dataset.bookKey || row.dataset.extraBookKey;
+  },
+
+  setRowUi(el, updater) {
+    const key = this.getRowKey(el);
+    const prev = State.booksUi.rowUi[key] || {};
+    const next = updater(prev, key);
+
+    if(next === null) {
+      delete State.booksUi.rowUi[key];
+    } else {
+      State.booksUi.rowUi[key] = next;
+    }
+
+    Bus.emit(Bus.events.booksUiChanged);
+  },
+
+  showEditBookUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'edit'
+    }));
+  },
+
+  showDeleteBookUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'delete'
+    }));
+  },
+
+  showEditStateUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'state'
+    }));
+  },
+
+  cancelExtra(el, e) {
+    e.preventDefault();
+    this.setRowUi(el, () => null)
+  },
+
+  updateBook(el) {
+    let errors = [];
+    const form = el;
+    const data = {
+      name: form.bookName.value,
+      key: el.dataset.key,
+      size: form.size.value,
+      stages: form.stages.value,
+      board: form.bookBoard.value,
+      color: form.bookBoardColor.value
+    };
+
+    if(form.bookKey !== el.dataset.key) {
+      data.newKey = form.bookKey.value;
+    }
+
+    BooksDomain.save(data);
+    Bus.emit(Bus.events.booksChanged);
+  },
+
+  confirmExtra(el) {
+    const row = this.getRow(el);
+    const key = row.dataset.extraBookKey;
+    const action = row.dataset.extra;
+    switch(action) {
+      case 'delete':
+        BooksDomain.deleteBook(row.dataset.extraBookKey);
+        Bus.emit(Bus.events.booksChanged);
+        break;
+      case 'state':
+        const ranges = [];
+        [...row.querySelectorAll('.rangesRow')].forEach(el => {
+          ranges.push({
+            s: el.querySelector('[name="stage"]').value,
+            f: el.querySelector('[name="from"]').value,
+            t: el.querySelector('[name="to"]').value,
+          });
+        });
+        const res = BooksDomain.updateBookState(key, ranges);
+        if(res.result !== true) {
+          State.booksUi.rowUi[key].error = `
+            ${result.message}<br>
+            ${result.details}
+            `;
+          Bus.emit(Bus.events.booksUiChanged);
+          return;
+        }
+        Bus.emit(Bus.events.booksChanged);
+        break;
+      case 'edit':
+        el.closest('form').submit();
+        break;
+    }
+  },
+
+};
+```
+
+BoardsList.js:
+```
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+import {App} from './App.js'
+
+export const BoardsList = {
+
+  selectors: {
+    createButton: '#create-board',
+    boardsListButtonsContainer: '#boards-buttons',
+    boardsButtons: '#boards-buttons button:not([id="create-board"])',
+  },
+
+  dom: {},
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
+    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+  },
+
+  render() {
+    if(State.headerUiMode !== 'boardsList') return;
+    if(!App.data.currentBoardId) return;
+    let createButton = this.dom.createButton;
+    if(createButton) {
+      createButton = createButton.parentNode.removeChild(createButton);
+    }
+    this.dom.boardsListButtonsContainer.innerHTML = '';
+    App.data.boards.forEach(board => {
+      const btn = document.createElement('button');
+      btn.dataset.id = board.id;
+      btn.textContent = board.name;
+      if(board.id === App.data.currentBoardId) {
+        btn.classList.add('active');
+      }
+      this.dom.boardsListButtonsContainer.appendChild(btn);
+    });
+    createButton && this.dom.boardsListButtonsContainer.appendChild(createButton);
+  },
+
+  switchBoard(el, e) {
+    BoardDomain.switchBoard(el.dataset.id);
+    State.headerUiMode = 'default';
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  createBoard(el, e) {
+    if(!App.data.boards?.length) {
+      const el = document.getElementById('no-boards');
+      el && el.remove();
+    }
+    BoardDomain.create();
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+};
+```
+
+RenameUI.js:
+```
+import {Utils} from './Utils.js' 
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+import {App} from './App.js'
+
+export const RenameUI = {
+
+  selectors: {
+    renameInput: '#rename-board-input',
+    confirmRenameButton: '#confirm-rename',
+  },
+
+  dom: {},
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
+  },
+
+  updateButtonState() {
+    Utils.updateButtonState(
+      this.dom.renameInput,
+      this.dom.confirmRenameButton,
+    );
+  },
+
+  renameBoard() {
+    BoardDomain.rename(this.dom.renameInput.value.trim());
+    State.headerUiMode = 'default';
+    Bus.emit(Bus.events.boardsChanged);
+    Bus.emit(Bus.events.headerUIChanged);
+  },
+
+  render() {
+    if(State.headerUiMode !== 'renameBoard') return;
+    if(!App.data.currentBoardId) return;
+    this.dom.renameInput.setAttribute('data-original-value', BoardDomain.getCurrentBoard().name);
+    this.dom.renameInput.value = BoardDomain.getCurrentBoard().name;
+    Utils.focusAndPlaceCursorAtEnd(this.dom.renameInput);
+  },
+
+};
+```
+
+BoardUI.js:
+```
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+import {TaskUI} from './TaskUI.js'
+import {App} from './App.js'
+
+export const BoardUI = {
+
+  selectors: {
+    columnsContainer: '#columns',
+    main: 'main#board',
+    addColumnButton: '#add-column',
+  },
+
+  dom: {},
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+    Bus.on(Bus.events.screenChanged, this.render.bind(this));
+
+    Bus.on(Bus.events.columnAdded, (newUid) => {
+      this.render();
+      State.afterRender.push(() => {
+        const col = document.querySelector(
+          `.column[data-id="${newUid}"]`
+        );
+
+        if(!col) return;
+
+        this.dom.main.scrollLeft = col.offsetLeft - 30;
+      });
+    });
+  },
+
+  render() {
+    if (!App.isBoard()) {
+      this.dom.main.classList.add('hidden');
+      return;
+    }
+    this.dom.columnsContainer.innerHTML = '';
+    const board = BoardDomain.getCurrentBoard();
+
+    if(!board) {
+      this.dom.main.insertAdjacentHTML('afterbegin', `
+      <div id="no-boards">
+        <button id="create-default-board">
+          Click to create a board
+        </button>
+      </div>
+      `);
+      return;
+    }
+
+    board.columns.forEach(column => {
+      // Карточки
+      let tasksHtml = [];
+
+      column.tasks.forEach(task => {
+        tasksHtml.push(TaskUI.getTaskHtml(task.id));
+      });
+
+      if(!tasksHtml.length) {
+        tasksHtml = [`<button class="js-add-task add-task-button">Click to add first task</button>`];
+      }
+      const columnHtml = `
+      <div class="column" data-id="${column.id}">
+        <div class="column-header">
+          <h3 class="column-title">${column.name}</h3>
+          <span class="task-count">${column.tasks.length}</span>
+          <button class="js-add-task add-task"></button>
+          <button class="column-menu-toggle"></button>
+        </div>
+        <div class="column-menu hidden">
+          <button class="rename-column" data-header-mode-trigger="rename">Rename column</button>
+          <button class="move-column" data-header-mode-trigger="move">Move column</button>
+          <button class="delete-column" data-header-mode-trigger="delete">Delete column</button>
+          <label for="skipMove"><input type="checkbox"${column.skipMove ? 'checked' : ''} name="skipMove">Skip move</label>
+        </div>
+        <div class="rename-column-block hidden" data-header-mode="rename">
+          Rename column<br>
+          <input type="search" class="rename-column-input" ${column.name ? 'value="' + column.name + '" data-original-value="' + column.name + '"' : 'placeholder="New column name"'}>
+          <button class="save-rename-column board-management-button" disabled>Save</button>
+          <button class="js-back board-management-button">Cancel</button>
+        </div>
+        <div class="delete-column-block hidden" data-header-mode="delete">
+          <div>Delete this column with all tasks?</div>
+          <button class="save-delete-column board-management-button">Delete</button>
+          <button class="js-back board-management-button">Cancel</button>
+        </div>
+        <div class="move-column-block hidden" data-header-mode="move">
+          <div>Move column</div>
+          <div class="col-move-block-container">
+            <button data-move-direction="left" class="move-column-left board-management-button"></button>
+            <button data-move-direction="right" class="move-column-right board-management-button"></button>
+          </div>
+        </div>
+        <div class="column-body">
+          ${tasksHtml.join('')}
+        </div>
+      </div>
+    `;
+      this.dom.columnsContainer.insertAdjacentHTML('beforeend', columnHtml);
+      this.dom.main.classList.remove('hidden');
+
+    });
+
+    while(State.afterRender.length) {
+      const effect = State.afterRender.shift();
+      effect();
+    }
+  },
+
+  createColumn() {
+    const newUid = BoardDomain.createColumn();
+    Bus.emit(Bus.events.columnAdded, newUid);
+  },
+
+};
+```
+
+index.js:
+```
+export { HeaderUI } from './HeaderUI.js'
+export { RenameUI } from './RenameUI.js'
+export { BoardsList } from './BoardsList.js'
+export { DeleteUI } from './DeleteUI.js'
+export { BoardUI } from './BoardUI.js'
+export { BooksUI } from './BooksUI.js'
+export { DragDrop } from './DragDrop.js'
+export { ColumnHeaderUI } from './ColumnHeaderUI.js'
+export { TaskUI } from './TaskUI.js'
+export { RanksUI } from './RanksUI.js'
+export { Stats } from './Stats.js'
+export { Dialog } from './Dialog.js'
+export { ProgressUI } from './ProgressUI.js'
+
+```
+
+Colors.js:
+```
+export const Colors = {
+  peach: "#FFE2CC",
+  pink: "#FFD0D0",
+  plum: "#FAC7ED",
+  purple: "#DFCFEF",
+  blue: "#DBF6FF",
+  teal: "#c9fde2",
+  green: "#DFF6A7",
+  olive_pastel: "#E6EAD6",
+  yellow: "#FFFFB3",
+  white: "#FFFFFF",
+  beige: "#e5d9d6",
+};
+```
+
+Components.js:
+```
+import {
+  HeaderUI,
+  RenameUI,
+  BoardsList,
+  DeleteUI,
+  BoardUI,
+  BooksUI,
+  DragDrop,
+  ColumnHeaderUI,
+  TaskUI,
+  RanksUI,
+  Stats,
+  Dialog,
+  ProgressUI,
+} from './index.js'
+
+export const Components = [
+  HeaderUI,
+  BoardsList,
+  RenameUI,
+  DeleteUI,
+  BoardUI,
+  BooksUI,
+  ColumnHeaderUI,
+  TaskUI,
+  RanksUI,
+  DragDrop,
+  Stats,
+  Dialog,
+  ProgressUI,
+];
+```
+
+RanksUI.js:
+```
+import {Bus} from './Bus.js'
+import {BoardDomain} from './BoardDomain.js'
+import {State} from './State.js'
+import {Colors} from './Colors.js'
+
+export const RanksUI = {
+
+  modes: {
+    default: 'default',
+    create: 'create',
+    edit: 'edit',
+    delete: 'delete',
+    reset: 'reset',
+  },
+
+  selectors: {
+    ranksBlock: '#ranks-block',
+    createButton: '#create-ranks',
+    createCancelButton: '#create-ranks-cancel',
+    editButton: '#ranks-edit',
+    editCancelButton: '#ranks-edit-cancel',
+    previewButton: '#ranks-preview',
+    saveButton: '#ranks-save-confirm',
+    deleteButton: '#ranks-delete',
+    deleteMessage: '#ranks-delete-confirm-message',
+    deleteConfirmButton: '#ranks-delete-confirm',
+    deleteCancelButton: '#ranks-delete-cancel',
+    cancelButton: '#ranks-cancel',
+    errorsBlock: '#ranks-input-errors',
+    textarea: '#ranks-input',
+    currentColorsBlock: '#current-colors',
+    currentRanksBlock: '#current-ranks',
+    absCountersBlock: '#abs-counters',
+    previewBlock: '#preview-ranks',
+    colorsInUseToggle: '#current-colors .ranks-title',
+    freeColorsToggle: '#free-colors .ranks-title',
+    countersToggle: '#ranks-panels-container .ranks-title',
+
+    resetCountersButton: '#ranks-counters-reset',
+    resetCountersMessage: '#ranks-counters-reset-message',
+    resetCountersConfirmButton: '#ranks-counters-reset-confirm',
+    resetCountersCancelButton: '#ranks-counters-reset-cancel',
+
+    renderCountersButton: '#ranks-toggle-counters',
+    infoContainer: '#ranks-panels-container',
+  },
+
+  dom: {},
+
+  createDefaultState() {
+    return {
+      mode: 'default',
+      errors: [],
+      draft: null,
+      draftRaw: null,
+      inputedRaw: null,
+      colorsInUseShown: false,
+      countersShown: true,
+    }
+  },
+
+  init() {
+    Bus.on(Bus.events.boardsChanged, this.render.bind(this));
+    Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
+    Bus.on(Bus.events.ranksUiChanged, this.render.bind(this));
+  },
+
+  render() {
+    if(State.headerUiMode !== 'ranks') return;
+    const board = BoardDomain.getCurrentBoard();
+    if(!board) return;
+    const ranks = board.ranks;
+    const raw = board.ranksRaw || '';
+    if(State.ranksUi === null) {
+      State.ranksUi = this.createDefaultState();
+    }
+    const mode = State.ranksUi.mode;
+    const draft = State.ranksUi.draft;
+    const draftRaw = State.ranksUi.draftRaw;
+    const inputedRaw = State.ranksUi.inputedRaw;
+    const errors = State.ranksUi.errors;
+
+    const saveButtonVisible = [this.modes.create, this.modes.edit].includes(mode)
+      && !errors.length && (draft && JSON.stringify(draft.ranks) !== JSON.stringify(ranks));
+
+    document.querySelector(this.selectors.ranksBlock).innerHTML = `
+      <h3 class="top-menu-title">Manage the board ranks</h3>
+      <div id="current-colors-container">
+        <div id="current-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getColorsInUseHtml()}</div>
+        <div id="free-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getFreeColorsHtml()}</div>
+      </div>
+      <div id="ranks-panels-container" ${ranks && ![this.modes.delete].includes(mode) ? '' : 'class="hidden"'}>
+        ${this.getCountersHtml(board)}
+      </div>
+      <textarea id="ranks-input" ${[this.modes.create, this.modes.edit].includes(mode) ? '' : ' class="hidden"'} placeholder="2 blue 
+2 white 
+1 purple 
+1 pink,yellow">${inputedRaw ? inputedRaw : draftRaw ? draftRaw : raw ? raw : ''}</textarea>
+      <div id="ranks-input-errors" ${errors.length ? '' : 'class="hidden"'}>${errors.join('<br>')}</div>
+      <div id="preview-ranks" ${draft ? '' : 'class="hidden"'}>
+        ${draft ? this.getRanksHtml(
+      board,
+      draft.ranks,
+      'Preview',
+      null,
+      null,
+      true
+    ) : ''}
+      </div>
+      <div id="ranks-delete-confirm-message" class="ranks-message ${mode == this.modes.delete ? '' : 'hidden'}">Really delete ranks for this board?</div>
+      <div id="ranks-counters-reset-message" class="ranks-message ${mode == this.modes.reset ? '' : 'hidden'}">Really reset  all counters for this board?</div>
+      <div id="ranks-buttons-container">
+        <button class="js-cancel-current button-close"></button>
+
+        <button id="ranks-counters-reset" class="board-management-button ${ranks && mode === this.modes.default ? '' : 'hidden'}">Reset</button>
+        <button id="ranks-counters-reset-confirm" class="board-management-button ${mode === this.modes.reset ? '' : 'hidden'}">Yes</button>
+        <button id="ranks-counters-reset-cancel" class="board-management-button ${mode === this.modes.reset ? '' : 'hidden'}">Cancel</button>
+        
+        <button id="create-ranks" class="board-management-button ${!ranks && mode !== this.modes.create ? '' : 'hidden'}">Create</button>
+        <button id="ranks-edit" class="board-management-button ${ranks && mode == this.modes.default ? '' : 'hidden'}">Edit</button>
+        <button id="ranks-preview" class="board-management-button ${this.nothingToPreview() ? 'hidden' : ''}">👀</button>
+        <button id="create-ranks-cancel" class="board-management-button ${!ranks && mode == this.modes.create ? '' : 'hidden'}">Cancel</button>
+        <button id="ranks-save-confirm" class="board-management-button ${saveButtonVisible ? '' : 'hidden'}">Save</button>
+        <button id="ranks-edit-cancel" class="board-management-button ${mode == this.modes.edit ? '' : 'hidden'}">Cancel</button>
+        <button id="ranks-delete" class="board-management-button ${ranks && mode == this.modes.default ? '' : 'hidden'}">Delete</button>
+        <button id="ranks-delete-confirm" class="board-management-button ${mode == this.modes.delete ? '' : 'hidden'}">Delete</button>
+        <button id="ranks-delete-cancel" class="board-management-button  ${mode == this.modes.delete ? '' : 'hidden'}">Cancel</button>
+        <button id="ranks-cancel" class="js-cancel-current board-management-button ${mode == this.modes.default ? '' : 'hidden'}">Cancel</button>
+      </div>    
+    `;
+
+    this.dom.previewButton = document.querySelector(this.selectors.previewButton);
+    this.dom.textarea = document.querySelector(this.selectors.textarea);
+    this.dom.previewBlock = document.querySelector(this.selectors.previewBlock);
+    this.dom.saveButton = document.querySelector(this.selectors.saveButton);
+
+  },
+
+  getCountersHtml(board) {
+    const counters = board.ranks ? this.getRanksHtml(
+      board,
+      board.ranks,
+      undefined,
+      true,
+      null,
+      State.ranksUi.countersShown
+    ) : '';
+    const absCounters = board.ranks ? this.getRanksHtml(
+      board,
+      board.ranks,
+      'Abs counters',
+      null,
+      true,
+      State.ranksUi.countersShown
+    ) : '';
+    return counters || absCounters ? `<div id="current-ranks">${counters}</div>
+        <div id="abs-counters">${absCounters}</div>` : '';
+  },
+
+  parseRanks(raw) {
+    State.ranksUi.errors = [];
+
+    const lines = raw
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+
+    const result = {};
+    const ranks = {};
+
+    const usedColors = new Set();
+    const validColors = new Set(Object.keys(Colors));
+
+    lines.forEach((line, index) => {
+      const level = index + 1;
+
+      const firstSpace = line.indexOf(' ');
+      if(firstSpace === -1) {
+        State.ranksUi.errors.push(`Строка ${level}: отсутствует пробел после квоты`);
+      }
+
+      const quota = parseInt(line.slice(0, firstSpace), 10);
+      if(isNaN(quota) || quota <= 0) {
+        State.ranksUi.errors.push(`Строка ${level}: некорректная квота`);
+      }
+
+      const colorsPart = line.slice(firstSpace + 1);
+
+      const colors = colorsPart
+        .split(',')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
+
+      if(colors.length === 0) {
+        State.ranksUi.errors.push(`Строка ${level}: не указаны цвета`);
+      }
+
+      colors.forEach(color => {
+        if(!validColors.has(color)) {
+          State.ranksUi.errors.push(`Строка ${level}: цвет "${color}" не существует`);
+        }
+
+        if(usedColors.has(color)) {
+          State.ranksUi.errors.push(`Строка ${level}: цвет "${color}" используется повторно`);
+        }
+
+        usedColors.add(color);
+      });
+
+      ranks[level] = {
+        q: quota,
+        c: colors
+      };
+    });
+
+    console.log('usedColors', usedColors);
+    console.log('colorsOnBoard', BoardDomain.getColorsInUse());
+
+    /* 
+      цвета, которые есть на доске, но не указаны в поле,
+      автоматом приписываются как последний добавочный уровень
+    */
+    const notMentionedColors = BoardDomain.getColorsInUse().filter(c => ![...usedColors].includes(c));
+    console.log('notMentionedColors', notMentionedColors);
+
+    if(notMentionedColors && notMentionedColors.length) {
+      const lowestLevel = Math.max(0, ...Object.keys(ranks));
+      ranks[lowestLevel].c = [...ranks[lowestLevel].c, ...notMentionedColors];
+      lines[lines.length - 1] += `,${notMentionedColors.join(',')}`;
+      raw = lines.join('\n');
+    }
+
+    if(!State.ranksUi.errors.length) {
+      result.ranks = ranks;
+      result.ranksRaw = raw;
+      return result;
+    } else {
+      delete State.ranksUi.draft;
+    }
+    return null;
+  },
+
+  getRanksHtml(
+    board,
+    ranks,
+    title = 'Current ranks',
+    showCounters = false,
+    showAbsCounters = false,
+    showList = false,
+  ) {
+
+    if(!ranks) return '';
+
+    const levels = Object.keys(ranks)
+      .map(Number)
+      .sort((a, b) => a - b);
+
+    if(levels.length === 0) return '';
+
+    function build(levelIndex) {
+      const level = levels[levelIndex];
+      const {q, c} = ranks[level];
+
+      // генерируем список цветов текущего уровня
+      const colorsHtml = c.map(color => {
+        const bg = Colors[color] || '#ffffff';
+        return `<span data-color="${color}" style="background:${bg}">${q}</span>`;
+      }).join('');
+
+      let counter = '';
+      if(showCounters == true && board.rankCounters && board.rankCounters[level] != null) {
+        counter = '&nbsp;&nbsp;' + board.rankCounters[level];
+      } else if(showAbsCounters == true && board.rankCountersAbs && board.rankCountersAbs[level] != null) {
+        counter = '&nbsp;&nbsp;' + board.rankCountersAbs[level];
+      }
+
+      // если последний уровень — без вложенного ul
+      if(levelIndex === levels.length - 1) {
+        return `
+          <li data-level="${level}">
+            ${colorsHtml}${counter}
+          </li>`;
+      }
+
+      // иначе добавляем вложенный уровень
+      return `
+        <li data-level="${level}">
+          ${colorsHtml}${counter}
+          <ul>
+            ${build(levelIndex + 1)}
+          </ul>
+        </li>`;
+    }
+
+    return `<span class="ranks-title">${title}</span>
+    <ul class="colors-list ranks-list ${showList == true ? '' : 'hidden'}">
+    ${build(0)}
+      </ul>`;
+  },
+
+  getColorsInUseHtml() {
+    return `
+    <span class="ranks-title">Colors in use</span>
+    <div class="colors-list colors-in-use ${State.ranksUi.colorsInUseShown ? '' : 'hidden'}">${BoardDomain.getColorsInUse().map(c => `
+      <div><span data-color="${c}" style="background:${Colors[c]}"></span><span class="label">${c}</span></div>
+      `).join('')}
+    </div>
+    `;
+  },
+
+  getFreeColorsHtml() {
+    return `
+    <span class="ranks-title">Free colors</span>
+    <div class="colors-list colors-in-use ${State.ranksUi.colorsInUseShown ? '' : 'hidden'}">${BoardDomain.getFreeColors().map(c => `
+      <div><span data-color="${c}" style="background:${Colors[c]}"></span><span class="label">${c}</span></div>
+      `).join('')}
+    </div>
+    `;
+  },
+
+
+
+  getLevelOfColor(color, ranks) {
+    if(ranks == undefined) {
+      ranks = BoardDomain.getCurrentBoard().ranks;
+    }
+    if(!ranks) return null;
+    let level = Object.keys(ranks).find(k => ranks[k].c.includes(color));
+    if(!level) {
+      level = Math.max(...Object.keys(ranks).map(o => parseInt(o))) + 1
+    } else {
+      level = parseInt(level);
+    }
+    return level;
+  },
+
+  getLevelMarkHtml(color) {
+    const ranks = BoardDomain.getCurrentBoard().ranks;
+    if(!ranks) return '';
+    const level = this.getLevelOfColor(color, ranks);
+    return level ? `<div class="cardLevel">L${level}</div>` : '';
+  },
+
+  getPassMarkHtml(card, column) {
+
+    const board = BoardDomain.getCurrentBoard();
+    const ranks = board.ranks;
+    if(!ranks) return '';
+
+    const currentColIndex = board.columns.findIndex(col => col.id === column.id);
+
+    //Если последняя колонка, то ничего не отображаем
+    if(currentColIndex == (board.columns.length - 1)) {
+      return '';
+    }
+
+    const level = this.getLevelOfColor(card.color, ranks);
+    if(level == 1) return `<div class="cardPass positive">Go!</div>`; //первый уровень ходит безлимитно
+
+    const quotaOfUpperLevel = parseInt(ranks[level - 1].q);
+
+    let res = null;
+
+    let upperLevelCount = board.rankCounters ? board.rankCounters[level - 1] ? board.rankCounters[level - 1] : null : null;
+
+    // console.log('upperLevelCount', upperLevelCount);
+    // console.log('quotaOfUpperLevel', quotaOfUpperLevel);
+
+    if(upperLevelCount == null) {
+      res = -quotaOfUpperLevel;
+    } else {
+      res = upperLevelCount - quotaOfUpperLevel;
+    }
+    // console.log(`card L${level} "${card.description}" (color: ${card.color})`, res);
+
+    const grandCounters = board.rankCounters[level - 2];
+    let parentInDebt = false;
+    if (grandCounters && grandCounters < 0) {
+      parentInDebt = true;
+    }
+    const text = (res >= 0 ? 'Go! ' : '')
+      + (
+        res !== 0 ?
+          (res >= 0 ? '+' : '') + res
+          : ''
+      );
+    
+    const resClass = parentInDebt ? 'parentInDebt' : res >= 0 ? 'positive' : '';
+
+    return res != null ?
+      `<div class="cardPass ${resClass}">${text}</div>`
+      : '';
+  },
+
+  getUpperLevelMarkHtml(color) {
+    const ranks = BoardDomain.getCurrentBoard().ranks;
+    if(!ranks) return '';
+    const level = this.getLevelOfColor(color, ranks);
+    if(level) {
+      const upperLevel = ranks[level - 1];
+      return upperLevel ? upperLevel.c.map(c => `<div class="rank-level-mark" style="background:${Colors[c]}"></div>`).join('') : '';
+    } else {
+      return '';
+    }
+  },
+
+  getOwnCount(board, color) {
+    let res = '';
+    if(board && board.rankCounters) {
+      const count = board.rankCounters[this.getLevelOfColor(color)];
+      res = count != null ? `<span class="own-rank-count-mark">${count}</span>` : '';
+    }
+    return res;
+  },
+
+  /* handlers */
+
+  preview() {
+    const newValue = State.ranksUi.inputedRaw;
+    const parsedRanks = this.parseRanks(newValue);
+    if(!State.ranksUi.errors.length && parsedRanks) {
+      State.ranksUi.draft = parsedRanks;
+      State.ranksUi.draftRaw = parsedRanks.ranksRaw;
+    } else {
+      State.ranksUi.draftRaw = newValue;
+    }
+    State.ranksUi.inputedRaw = State.ranksUi.draftRaw;
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  showCreateUi(el) {
+    State.ranksUi.mode = 'create';
+    State.ranksUi.colorsInUseShown = true;
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  showDeleteUi() {
+    State.ranksUi.mode = 'delete';
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  toggleColorsInUse() {
+    State.ranksUi.colorsInUseShown = !State.ranksUi.colorsInUseShown;
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  toggleCounters() {
+    State.ranksUi.countersShown = !State.ranksUi.countersShown;
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  showResetUi() {
+    State.ranksUi.mode = 'reset';
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  resetCounters() {
+    BoardDomain.resetCounters();
+    State.ranksUi.mode = this.modes.default;
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  resetUi() {
+    State.ranksUi = this.createDefaultState();
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  save() {
+    BoardDomain.setRanksData(State.ranksUi.draft);
+    State.ranksUi = this.createDefaultState();
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  delete() {
+    BoardDomain.deleteRanks();
+    State.ranksUi = this.createDefaultState();
+    Bus.emit(Bus.events.boardsChanged);
+  },
+
+  edit() {
+    State.ranksUi.mode = 'edit';
+    State.ranksUi.colorsInUseShown = true;
+    Bus.emit(Bus.events.ranksUiChanged);
+  },
+
+  nothingToPreview() {
+    const to = State.ranksUi.draftRaw || '';
+    const inputed = State.ranksUi.inputedRaw || '';
+    return inputed == to;
+  },
+
+  ranksInputHandler(el) {
+    State.ranksUi.inputedRaw = el.value;
+    const nothingToPreview = this.nothingToPreview();
+    this.dom.previewButton.classList.toggle(
+      'hidden',
+      nothingToPreview
+    );
+
+    if(!nothingToPreview) {
+      this.dom.saveButton.classList.toggle('hidden', true);
+    }
+    this.dom.previewBlock.classList.toggle('hidden', nothingToPreview);
+
+    this.dom.previewBlock.innerHTML = '';
+  },
+
+};
+```
+
+Utils.js:
+```
+export const Utils = {
+  generateUID() {
+    return '_' + Math.random().toString(36).substr(2, 9);
+  },
+
+  preventDefault(e) {
+    e.preventDefault();
+  },
+
+  updateButtonState(field, button) {
+    if(field.value.trim().length
+      && (field.dataset.originalValue
+        && field.value !== field.dataset.originalValue
+        || !field.dataset.originalValue)
+    ) {
+      button.removeAttribute('disabled');
+    } else {
+      button.setAttribute('disabled', true);
+    }
+  },
+
+  expandInput(el) {
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight) + 'px';
+  },
+
+  focusAndPlaceCursorAtEnd(input) {
+    input.addEventListener('focus', function () {
+      setTimeout(() => {
+        this.setSelectionRange(this.value.length, this.value.length);
+      }, 0);
+    });
+    input.focus();
+  },
+
+  cacheComponentDom(component) {
+    if(!component.dom) return;
+    if(component.selectors) {
+      Object.keys(component.selectors).forEach(selector => {
+        const el = document.querySelector(component.selectors[selector]);
+        if(el) {
+          component.dom[selector] = el;
+        }
+      })
+    }
+  },
+
+  getColumnEl(el) {
+    return el.closest('.column');
+  },
+
+  escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  },
+
+  escapeAttr(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  },
+
+  mergeRanges(existing, incoming) {
+    const all = [...existing, ...incoming];
+
+    // группировка по stage
+    const byStage = new Map();
+
+    for(const r of all) {
+      if(!byStage.has(r.s)) {
+        byStage.set(r.s, []);
+      }
+      byStage.get(r.s).push({...r});
+    }
+
+    const result = [];
+
+    for(const [stage, ranges] of byStage) {
+      // сортировка по началу
+      ranges.sort((a, b) => a.f - b.f);
+
+      const merged = [];
+
+      for(const curr of ranges) {
+        if(merged.length === 0) {
+          merged.push(curr);
+          continue;
+        }
+
+        const last = merged[merged.length - 1];
+
+        // ключевая логика: пересечение ИЛИ смежность
+        if(curr.f <= last.t + 1) {
+          last.t = Math.max(last.t, curr.t);
+        } else {
+          merged.push(curr);
+        }
+      }
+
+      result.push(...merged);
+    }
+
+    return result;
+  },
+
+  findCrossStageOverlaps(ranges) {
+    // копия + сортировка
+    const sorted = [...ranges].sort((a, b) => a.f - b.f);
+
+    const active = [];
+    const conflicts = [];
+
+    for(const curr of sorted) {
+      // выкидываем неактуальные
+      for(let i = active.length - 1;i >= 0;i--) {
+        if(active[i].t < curr.f) {
+          active.splice(i, 1);
+        }
+      }
+
+      // проверяем пересечения с активными
+      for(const other of active) {
+        if(other.s === curr.s) continue; // только разные стадии
+
+        // есть пересечение
+        if(curr.f <= other.t) {
+          conflicts.push({
+            a: other,
+            b: curr,
+            overlap: {
+              from: Math.max(curr.f, other.f),
+              to: Math.min(curr.t, other.t)
+            }
+          });
+        }
+      }
+
+      active.push(curr);
+    }
+
+    return conflicts;
+  },
+
+  findConflictsBetween(existing, incoming) {
+    const conflicts = [];
+
+    for(const inc of incoming) {
+      for(const ex of existing) {
+        if(inc.s === ex.s) continue;
+
+        if(inc.f <= ex.t && ex.f <= inc.t) {
+          conflicts.push({
+            a: ex,
+            b: inc,
+            overlap: {
+              from: Math.max(inc.f, ex.f),
+              to: Math.min(inc.t, ex.t)
+            }
+          });
+        }
+      }
+    }
+
+    return conflicts;
+  },
+
+  formatConflicts(conflicts) {
+    return conflicts.map(c => {
+      return `Stage ${c.a.s} (${c.a.f}-${c.a.t}) пересекается с stage ${c.b.s} (${c.b.f}-${c.b.t}) на ${c.overlap.from}-${c.overlap.to}`;
+    });
+  },
+
+  extractRange(str) {
+    const re = /(?:^|[^\p{L}\p{N}])(\d+)(?:\s*-\s*(\d+|\.\.\.))?(?=$|[^\p{L}\p{N}])/u;
+
+    const match = str.match(re);
+    if(!match) return null;
+
+    const start = parseInt(match[1], 10);
+
+    if(match[2]) {
+      if(match[2] === '...') return [start, start];
+      return [start, parseInt(match[2], 10)];
+    }
+
+    return [start, start];
+  },
+
+  toInt(v) {
+    return v == null ? 0 : parseInt(v, 10);
+  }
+
+};
+```
+
+Bus.js:
+```
+export const Bus = {
+
+  events: {
+    headerUIChanged: 'headerUIChanged',
+    boardsChanged: 'boardsChanged',
+    columnHeaderUIChanged: 'columnHeaderUIChanged',
+    columnAdded: 'columnAdded',
+    columnMoved: 'columnMoved',
+    taskUiChanged: 'taskUiChanged',
+    ranksUiChanged: 'ranksUiChanged',
+    screenChanged: 'screenChanged',
+    booksUiChanged: 'booksUiChanged',
+    booksChanged: 'booksChanged',
+    progress: 'progress',
+  },
+
+  listeners: {},
+
+  queue: new Set(),
+
+  scheduled: false,
+
+  on(event, handler) {
+    if(!this.listeners[event]) {
+      this.listeners[event] = new Set();
+    }
+    this.listeners[event].add(handler);
+  },
+
+  emit(event, payload) {
+    const handlers = this.listeners[event];
+    if(!handlers) return;
+    setTimeout(() => {
+      handlers.forEach(h => h(payload));
+    }, 0)
+  },
+
+  schedule() {
+    if(this.scheduled) return;
+    this.scheduled = true;
+
+    const scheduleMicrotask =
+      typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : (cb) => Promise.resolve().then(cb);
+
+    scheduleMicrotask(() => this.flush());
+  },
+
+  flush() {
+    this.queue.forEach(fn => fn());
+    this.queue.clear();
+    this.scheduled = false;
+  },
+
+  scheduleMicrotask:
+    typeof queueMicrotask === 'function'
+      ? queueMicrotask
+      : (cb) => Promise.resolve().then(cb),
+
+  createBatched(fn) {
+    let scheduled = false;
+    const schedule = this.scheduleMicrotask;
+
+    return function batched(...args) {
+      if(scheduled) return;
+
+      scheduled = true;
+
+      schedule(() => {
+        scheduled = false;
+        fn.apply(this, args);
+      });
+    };
+  },
+
+  batchedMethod(obj, methodName) {
+    obj[methodName] = this.createBatched(obj[methodName].bind(obj));
+  },
+};
+```
+
+Storage.js:
+```
+export const Storage = {
+  loadData() {
+    if(typeof Android !== 'undefined') {
+      return JSON.parse(Android.loadData());
+    }
+    return JSON.parse(localStorage.getItem('kanbanAppData'));
+  },
+
+  loadBooks() {
+    if(typeof Android !== 'undefined') {
+      return JSON.parse(Android.loadBooks());
+    }
+    return JSON.parse(localStorage.getItem('kanbanBooks'));
+  },
+
+  loadEvents() {
+    if(typeof Android !== 'undefined') {
+      return JSON.parse(Android.loadEvents());
+    }
+    return JSON.parse(localStorage.getItem('kanbanEvents'));
+  },
+
+  saveData(data) {
+    const raw = JSON.stringify(data);
+    if(typeof Android !== 'undefined') {
+      Android.saveBoards(raw);
+    } else {
+      localStorage.setItem('kanbanAppData', raw);
+    }
+  },
+
+  saveBooks(data) {
+    const raw = JSON.stringify(data);
+    if(typeof Android !== 'undefined') {
+      Android.saveBooks(raw);
+    } else {
+      localStorage.setItem('kanbanBooks', raw);
+    }
+  },
+
+  saveEvents(data) {
+    const raw = JSON.stringify(data);
+    if(typeof Android !== 'undefined') {
+      Android.saveEvents(raw);
+    } else {
+      localStorage.setItem('kanbanEvents', raw);
+    }
+  },
+};
+```
+
+ProgressUI.js:
+```
+import {Bus} from './Bus.js'
+import {State} from './State.js'
+import { BoardDomain } from './BoardDomain.js'
+import { Colors } from './Colors.js';
+import {BooksDomain} from './BooksDomain.js';
+import { Utils } from './Utils.js';
+import { App } from './App.js';
+
+export const ProgressUI = {
+
+  name: 'ProgressUI',
+
+  selectors: {
+    promptButton: '#growPrompt',
+    dialogContent: '.dialogContent',
+    dialog: '#dialog',
+    dialogClose: '.button-close'
+  },
+
+  events: {
+    click: {
+      '@promptButton': 'showUi',
+      '##': 'hideUi'
+    }
+  },
+
+  dom: {},
+
+  init() {
+    Bus.batchedMethod(this, 'render');
+    Bus.on(Bus.events.progress, this.render.bind(this));
+  },
+
+  render() {
+    console.log('render Progress UI...');
+    let book = null;
+    let task = null;
+    const data = State.progressData;
+    const hasData = Object.keys(data).length;
+    if (hasData) {
+      task = BoardDomain.getTask(data.taskId);
+      book = BooksDomain.betBookByBoard(data.boardId, task.color);
+      if (!book) {
+        State.progressPromptShown = false;
+        return;
+      }
+    }
+    const dialogHidden = State.progressPromptShown || !hasData;
+    const buttonHidden = !State.progressPromptShown;
+    console.log('hasData', hasData);
+    console.log('dialogHidden', dialogHidden);
+    console.log('buttonHidden', buttonHidden);
+    this.dom.promptButton.classList.toggle('hidden', buttonHidden);
+    this.dom.dialog.querySelector(this.selectors.dialogContent).innerHTML = hasData ? `
+      ${this.getFormHtml(book, task)}
+    ` : '';
+    this.dom.dialog.classList.toggle('hidden', dialogHidden);
+  },
+
+  showUi() {
+    console.log('showUi (click)');
+    State.progressPromptShown = false;
+    this.render();
+  },
+
+  hideUi(el) {
+    if(this.dom.promptButton.contains(el)
+      || this.dom.dialog.contains(el)
+      && !this.dom.dialogClose.contains(el)) return;
+    State.progressData = {};
+    State.progressPromptShown = false;
+    this.render();
+  },
+
+  getFormHtml(book, task) {
+//     taskId: task.id,
+// boardId: board.id,
+// delta : delta,
+// sourceIndex : sourceIndex,
+// sourceColumnId: sourceCol.id,
+// targetIndex : targetIndex,
+// targetColId : targetCol.id
+    const data = State.progressData;
+    const range = Utils.extractRange(task.description);
+    const stage = '';
+    return `
+  <div id="progressUi">
+    <form action="javascript:void(0)">
+      <div id="taskData" style="background:${Colors[task.color]}">
+        book: ${book.name}<br>
+        description: ${task.description}<br>
+        color: ${task.color}<br>
+        range: from ${range ? range[0] : 'null'} to ${range ? range[1] : 'null'}<br>
+        from column "${BoardDomain.getColumn(data.sourceColumnId).name}"<br>
+        to column "${BoardDomain.getColumn(data.targetColumnId).name}"<br>
+        stage ${stage}<br>
+        progress or rollback? ${data.delta > 0 ? 'progress' : 'rollback'}
+      </div>
+      <label>book: <select name="book"></select></label><br>
+      <label>from page: <input type="number" name="from" value="" required></label><br>
+      <label>to page: <input type="number" name="to" value="" required></label><br>
+      <label>stage: <select name="stage"></select></label><br>
+      <button class="confirm">add</button>
+    </form>
+  </div>    
+    `;
+  },
+
+};
+```
+
+kanbanBooks.json:
+```
+[
+    {
+        "name": "公民のおさらい3",
+        "key": "society",
+        "size": "160",
+        "board": "_82cijdew3",
+        "color": "beige",
+        "state": {
+            "ranges": [
+                {
+                    "s": 1,
+                    "f": 1,
+                    "t": 10
+                },
+                {
+                    "s": 2,
+                    "f": 11,
+                    "t": 20
+                },
+                {
+                    "s": 3,
+                    "f": 21,
+                    "t": 30
+                },
+                {
+                    "s": 4,
+                    "f": 31,
+                    "t": 40
+                }
+            ]
+        },
+        "stages": "6"
+    },
+    {
+        "name": "敬語のおさらい",
+        "key": "keigo",
+        "size": "400",
+        "board": "_82cijdew3",
+        "color": "plum"
+    },
+    {
+        "name": "Nutshell",
+        "key": "nut",
+        "size": "79",
+        "board": "_eya4w92kj",
+        "color": "blue"
+    },
+    {
+        "name": "Yuyu Podcast",
+        "key": "yuyu",
+        "size": "50",
+        "board": "_eya4w92kj",
+        "color": "yellow"
+    },
+    {
+        "name": "変わらないもの",
+        "key": "unchanged",
+        "size": "15",
+        "board": "_eya4w92kj",
+        "color": "teal"
+    },
+    {
+        "name": "チェルノブイリ",
+        "key": "chern",
+        "size": "150",
+        "stages": "5",
+        "board": "_15ma569uj",
+        "color": "purple"
+    },
+    {
+        "name": "生物",
+        "key": "bio",
+        "size": "200",
+        "stages": "6",
+        "board": "_82cijdew3",
+        "color": "green"
+    }
+]
+```
+
+kanbanAppData.json:
+```
+{
+    "state": {
+        "screen": "board",
+        "headerUiMode": "default",
+        "menuOpen": true
+    },
+    "currentBoardId": "_eya4w92kj",
+    "boards": [
+        {
+            "id": "_eya4w92kj",
+            "name": "Satori Reader",
+            "columns": [
+                {
+                    "id": "_2vaqzairj",
+                    "name": "Слушать",
+                    "tasks": [
+                        {
+                            "id": "_nqk5rzdww",
+                            "description": "Nutshell 12 Pronoun の Part 3",
+                            "color": "blue"
+                        }
+                    ]
+                },
+                {
+                    "id": "_uedeszi28",
+                    "name": "Разбор",
+                    "tasks": [
+                        {
+                            "id": "_1riv1athx",
+                            "description": "fgasdg",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_spbofu41w",
+                    "name": "Комменты",
+                    "tasks": [
+                        {
+                            "id": "_227n9cnpa",
+                            "description": "Akiko 005",
+                            "color": "green"
+                        }
+                    ],
+                    "skipMove": true
+                },
+                {
+                    "id": "_cy8r6drp3",
+                    "name": "Лексика",
+                    "tasks": [],
+                    "skipMove": false
+                },
+                {
+                    "id": "_rv9w6kocf",
+                    "name": "Ревью",
+                    "tasks": [
+                        {
+                            "id": "_rq7x2gmsb",
+                            "description": "Akiko 006",
+                            "color": "green"
+                        }
+                    ]
+                },
+                {
+                    "id": "_36qxu9mia",
+                    "name": "Готово",
+                    "tasks": [
+                        {
+                            "id": "_zvtbmu5q3",
+                            "color": "purple",
+                            "description": "asdf1"
+                        }
+                    ]
+                }
+            ],
+            "ranksRaw": "2 purple\n1 teal,pink,white\n1 yellow,blue,green",
+            "ranks": {
+                "1": {
+                    "q": 2,
+                    "c": [
+                        "purple"
+                    ]
+                },
+                "2": {
+                    "q": 1,
+                    "c": [
+                        "teal",
+                        "pink",
+                        "white"
+                    ]
+                },
+                "3": {
+                    "q": 1,
+                    "c": [
+                        "yellow",
+                        "blue",
+                        "green"
+                    ]
+                }
+            },
+            "rankCounters": {
+                "1": 0,
+                "2": 1,
+                "3": 1
+            },
+            "rankCountersAbs": {
+                "1": 16,
+                "2": 7,
+                "3": 6
+            }
+        },
+        {
+            "id": "_15ma569uj",
+            "name": "Reading in paper",
+            "columns": [
+                {
+                    "id": "_98n4c2fw4",
+                    "name": "Сфотать/Todo",
+                    "tasks": [
+                        {
+                            "id": "_6dnc1jjas",
+                            "description": "仮名 62-63",
+                            "color": "pink"
+                        }
+                    ]
+                },
+                {
+                    "id": "_prontm1bv",
+                    "name": "Отсканить в текст",
+                    "tasks": [
+                        {
+                            "id": "_vtm6925pt",
+                            "description": "チェルノブイリ 14 - 28",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_emdbx9l3y",
+                    "name": "Вычитать",
+                    "tasks": [
+                        {
+                            "id": "_419nezkdu",
+                            "description": "ゴーショーグン",
+                            "color": "blue"
+                        }
+                    ]
+                },
+                {
+                    "id": "_zaqb3ib9i",
+                    "name": "Чтение, разбор",
+                    "tasks": [
+                        {
+                            "id": "_as1gn6680",
+                            "description": "Kitkat",
+                            "color": "yellow"
+                        }
+                    ]
+                },
+                {
+                    "id": "_wd0qftfvl",
+                    "name": "Лексика",
+                    "tasks": [
+                        {
+                            "id": "_8fin8zo5t",
+                            "description": "チェルノブイリ 10",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_xtw0lxgn1",
+                    "name": "Review",
+                    "tasks": [
+                        {
+                            "id": "_vfp367jfr",
+                            "description": "しろばんば 68",
+                            "color": "white"
+                        }
+                    ]
+                },
+                {
+                    "id": "_807yrxu62",
+                    "name": "Done",
+                    "tasks": [
+                        {
+                            "id": "_5qmilk1rn",
+                            "description": "ゴーショーグン 10",
+                            "color": "blue"
+                        }
+                    ]
+                }
+            ],
+            "ranksRaw": "3 blue\n2 white\n1 purple\n1 pink,yellow",
+            "ranks": {
+                "1": {
+                    "q": 3,
+                    "c": [
+                        "blue"
+                    ]
+                },
+                "2": {
+                    "q": 2,
+                    "c": [
+                        "white"
+                    ]
+                },
+                "3": {
+                    "q": 1,
+                    "c": [
+                        "purple"
+                    ]
+                },
+                "4": {
+                    "q": 1,
+                    "c": [
+                        "pink",
+                        "yellow"
+                    ]
+                }
+            },
+            "rankCounters": {
+                "1": 2,
+                "2": 0,
+                "3": 1
+            },
+            "rankCountersAbs": {
+                "1": 8,
+                "2": 2,
+                "3": 1
+            }
+        },
+        {
+            "id": "_82cijdew3",
+            "name": "おさらい",
+            "columns": [
+                {
+                    "id": "_549lmy55m",
+                    "name": "Сфотать",
+                    "tasks": [
+                        {
+                            "id": "_jtsp5py2e",
+                            "color": "yellow",
+                            "description": "sdfasd"
+                        }
+                    ],
+                    "skipMove": false
+                },
+                {
+                    "id": "_jxqwvz5ph",
+                    "name": "Отсканить в текст",
+                    "tasks": [
+                        {
+                            "id": "_anot5v1jp",
+                            "color": "green",
+                            "description": "gddf"
+                        }
+                    ]
+                },
+                {
+                    "id": "_jzsu4qfgn",
+                    "name": "Вычитать",
+                    "tasks": [
+                        {
+                            "id": "_yt9n1fi3z",
+                            "description": "日本史 26-34",
+                            "color": "blue"
+                        }
+                    ]
+                },
+                {
+                    "id": "_k6xzuaa3k",
+                    "name": "Чтение, разбор",
+                    "tasks": [
+                        {
+                            "id": "_tob8p5hj4",
+                            "description": "公民 preface 5-6",
+                            "color": "beige"
+                        },
+                        {
+                            "id": "_uu1bwfe0g",
+                            "description": "家庭科 5-6 preface",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_c6vzsw0os",
+                    "name": "Лексика",
+                    "tasks": [
+                        {
+                            "id": "_sb88bry52",
+                            "description": "性教育 21",
+                            "color": "pink"
+                        }
+                    ],
+                    "skipMove": false
+                },
+                {
+                    "id": "_k6vjrhlnr",
+                    "name": "Ревью",
+                    "tasks": []
+                },
+                {
+                    "id": "_grq4uqgi7",
+                    "name": "Всё",
+                    "tasks": [
+                        {
+                            "id": "_t5mt8yg7i",
+                            "description": "国語 98-101",
+                            "color": "green"
+                        }
+                    ]
+                }
+            ],
+            "ranksRaw": "2 green\n1 blue,pink,purple\n1 yellow,teal,plum,beige",
+            "ranks": {
+                "1": {
+                    "q": 2,
+                    "c": [
+                        "green"
+                    ]
+                },
+                "2": {
+                    "q": 1,
+                    "c": [
+                        "blue",
+                        "pink",
+                        "purple"
+                    ]
+                },
+                "3": {
+                    "q": 1,
+                    "c": [
+                        "yellow",
+                        "teal",
+                        "plum",
+                        "beige"
+                    ]
+                }
+            },
+            "rankCounters": {
+                "1": 0,
+                "2": -4,
+                "3": 1
+            },
+            "rankCountersAbs": {
+                "1": 6,
+                "2": 4,
+                "3": 6
+            }
+        }
+    ],
+    "boardsCounters": {
+        "_t2q68ryqx": 9,
+        "_n45jvsldg": 3
+    },
+    "screen": "board"
+}
+```

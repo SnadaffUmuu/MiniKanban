@@ -4,6 +4,8 @@ import {State} from './State.js'
 
 export const DeleteUI = {
 
+  name: 'DeleteUI',
+
   selectors: {
     deleteBoardConfirmButton: '#delete-confirm',
   },

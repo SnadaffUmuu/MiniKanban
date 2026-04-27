@@ -11,6 +11,7 @@ export const Bus = {
     screenChanged: 'screenChanged',
     booksUiChanged: 'booksUiChanged',
     booksChanged: 'booksChanged',
+    progress: 'progress',
   },
 
   listeners: {},
@@ -58,6 +59,7 @@ export const Bus = {
       : (cb) => Promise.resolve().then(cb),
 
   createBatched(fn) {
+    const id = Math.random().toString(36).slice(2);
     let scheduled = false;
     const schedule = this.scheduleMicrotask;
 

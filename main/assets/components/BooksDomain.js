@@ -7,11 +7,15 @@ import {Utils} from './Utils.js'
 export const BooksDomain = {
 
   getBooks() {
-    return App.data.books || [];
+    return App.books || [];
   },
 
   getBook(key) {
-    return App.data.books.find(b => b.key == key);
+    return App.books.find(b => b.key == key);
+  },
+
+  betBookByBoard(boardId, color) {
+    return App.books.find(b => b.board == boardId && b.color == color);
   },
 
   getUnregisteredColorsForBoard(board) {
@@ -19,23 +23,50 @@ export const BooksDomain = {
     return BoardDomain.getColorsInUse(board).filter(c => !registeredColors.includes(c));
   },
 
+  getBookStagesCountFromBoard(boardId, startIndex) {
+    const board = BoardDomain.getBoard(boardId);
+    const lastIndex = board.columns.length - 1;
+    return board.columns.filter((col, i) => {
+      return i >= startIndex && i < lastIndex && !col.skipMove;
+    }).length;
+  },
+
+  getStageAtIndex(cols, startIndex, currentIndex) {
+    const skipped = cols.filter((col, i) => {
+      return i >= startIndex && i < currentIndex && col.skipMove;
+    }).length;
+
+    return (currentIndex - startIndex) - skipped;
+  },
+
   saveBooks(books) {
-    App.data.books = books;
-    Storage.save(App.data);
+    App.books = books;
+    App.saveBooks(App.books);
   },
 
   save(data) {
-    const {name, key, size, board, color} = data;
+    let {name, key, newKey, size, startIndex, board, color} = data;
+    if(startIndex == null || startIndex == '') {
+      startIndex = 0;
+    }
     const books = this.getBooks();
     const book = books.find(b => b.key == key);
     if(book) {
       book.name = name;
       book.size = size;
+      book.startIndex = startIndex;
+      book.stages = this.getBookStagesCountFromBoard(board, startIndex);
       book.board = board;
       book.color = color;
+      if(newKey) {
+        book.key = newKey;
+        //TODO: update events if a key changes
+      }
     } else {
+      data.startIndex = startIndex;
       books.push(data);
     }
+
     this.saveBooks(books);
   },
 
@@ -92,7 +123,7 @@ export const BooksDomain = {
 
     book.state.ranges = merged;
 
-    this.saveBooks(App.data.books);
+    this.saveBooks(App.books);
 
     return {
       result: true,

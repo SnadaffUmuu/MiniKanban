@@ -3,6 +3,8 @@ import {Storage} from './Storage.js'
 import {RanksUI} from './RanksUI.js'
 import {Utils} from './Utils.js'
 import {Colors} from './Colors.js'
+import {Bus} from './Bus.js'
+import {State} from './State.js'
 
 export const BoardDomain = {
 
@@ -41,7 +43,7 @@ export const BoardDomain = {
   switchBoard(boardId) {
     if(App.data.boards.find(b => b.id == boardId)) {
       App.data.currentBoardId = boardId;
-      Storage.save(App.data);
+      Storage.saveData(App.data);
     }
   },
 
@@ -52,23 +54,23 @@ export const BoardDomain = {
     } else {
       App.data.currentBoardId = currentBoardId ? currentBoardId : App.data.currentBoardId;
     }
-    Storage.save(App.data);
+    Storage.saveData(App.data);
   },
 
   saveCounters(counters) {
     App.data.boardsCounters = counters;
-    Storage.save(App.data);
+    Storage.saveData(App.data);
   },
 
   resetBoardsCounters() {
     App.data.boardsCounters = {};
-    Storage.save(App.data);
+    Storage.saveData(App.data);
   },
 
   deleteBoardCounters(board, doSave) {
     delete App.data.boardsCounters[board.id];
-    if (doSave) {
-      Storage.save(App.data);
+    if(doSave) {
+      Storage.saveData(App.data);
     }
   },
 
@@ -233,8 +235,14 @@ export const BoardDomain = {
     if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
     targetColumn.tasks.splice(insertIndex, 0, task);
 
-    this.makeAMove({
-      color: task.color,
+    // this.makeAMove({
+    //   color: task.color,
+    //   sourceColumn: sourceColumn,
+    //   targetColumn: targetColumn
+    // });
+
+    this.checkForProgress({
+      task: task,
       sourceColumn: sourceColumn,
       targetColumn: targetColumn
     });
@@ -288,7 +296,7 @@ export const BoardDomain = {
     }
     if(allRanksColors.includes(color)) {
       return;
-    } 
+    }
     const lowestLevel = Math.max(0, ...Object.keys(ranks));
     ranks[lowestLevel].c = [...ranks[lowestLevel].c, color];
     board.ranks = ranks;
@@ -326,22 +334,14 @@ export const BoardDomain = {
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
 
-  makeAMove({color, sourceColumn, targetColumn}) {
+  checkForProgress({task, sourceColumn, targetColumn}) {
+
+    console.log('BoardDomain checkForProgress ');
 
     if(!sourceColumn || !targetColumn) return;
     if(sourceColumn.id === targetColumn.id) return;
 
     const board = this.getCurrentBoard();
-    const ranks = board.ranks;
-    if(!ranks || !color) return;
-
-    const level = RanksUI.getLevelOfColor(color, ranks);
-    if(!level) return;
-
-    board.rankCounters = board.rankCounters || {};
-    board.rankCountersAbs = board.rankCountersAbs || {};
-
-    const toInt = (v) => v == null ? 0 : parseInt(v, 10);
 
     const sourceIndex = board.columns.findIndex(c => c.id === sourceColumn.id);
     const targetIndex = board.columns.findIndex(c => c.id === targetColumn.id);
@@ -355,16 +355,60 @@ export const BoardDomain = {
       (isGoingForward && sourceCol.skipMove) ||
       (!isGoingForward && targetCol.skipMove);
 
-    const ownCount = toInt(board.rankCounters[level]);
-    const absCount = toInt(board.rankCountersAbs[level]);
-    const upperCount = level > 1 ? toInt(board.rankCounters[level - 1]) : 0;
+    if(!skipMove) {
+      State.progressData = {
+        taskId: task.id,
+        boardId: board.id,
+        delta : delta,
+        sourceIndex : sourceIndex,
+        sourceColumnId: sourceCol.id,
+        targetIndex : targetIndex,
+        targetColumnId : targetCol.id
+      };
+      State.progressPromptShown = true;
+
+      Bus.emit(Bus.events.progress);
+    }
+
+    this.makeMove(board, task, delta, skipMove);
+
+  },
+
+  makeMove(board, task, delta, skipMove) {
+
+    //   if(!sourceColumn || !targetColumn) return;
+    //   if(sourceColumn.id === targetColumn.id) return;
+    //   const board = this.getCurrentBoard();
+    //   const sourceIndex = board.columns.findIndex(c => c.id === sourceColumn.id);
+    //   const targetIndex = board.columns.findIndex(c => c.id === targetColumn.id);
+    //   const isGoingForward = targetIndex > sourceIndex;
+    //   const delta = isGoingForward ? 1 : -1;
+    //   const sourceCol = board.columns[sourceIndex];
+    //   const targetCol = board.columns[targetIndex];
+
+    //   const skipMove =
+    //     (isGoingForward && sourceCol.skipMove) ||
+    //     (!isGoingForward && targetCol.skipMove);
+
+    const ranks = board.ranks;
+    if(!ranks || !task) return;
+
+    const level = RanksUI.getLevelOfColor(task.color, ranks);
+    if(!level) return;
+
+    board.rankCounters = board.rankCounters || {};
+    board.rankCountersAbs = board.rankCountersAbs || {};
+
+    const ownCount = Utils.toInt(board.rankCounters[level]);
+    const absCount = Utils.toInt(board.rankCountersAbs[level]);
+    const upperCount = level > 1 ? Utils.toInt(board.rankCounters[level - 1]) : 0;
 
     // --- 1. Абсолютный счётчик — всегда меняется
     board.rankCountersAbs[level] = absCount + delta;
 
     // --- 2. Глобальный счётчик доски — всегда меняется
     const boardsCounters = this.getBoardsCounters();
-    const boardTotal = toInt(boardsCounters[board.id]);
+    const boardTotal = Utils.toInt(boardsCounters[board.id]);
     boardsCounters[board.id] = boardTotal + delta;
 
     this.saveCounters(boardsCounters);
@@ -380,7 +424,7 @@ export const BoardDomain = {
       return;
     }
 
-    const quotaOwn = toInt(ranks[level].q);
+    const quotaOwn = Utils.toInt(ranks[level].q);
     const isLastLevel = level === Object.keys(ranks).length;
 
     if(isLastLevel && ownCount >= quotaOwn) {
@@ -400,12 +444,12 @@ export const BoardDomain = {
       //     : true; // назад всегда восстанавливаем симметрично
 
       // if(affectsOwn) {
-        board.rankCounters[level] = ownCount + delta;
+      board.rankCounters[level] = ownCount + delta;
       // }
     }
 
     // --- 7. Корректировка верхнего уровня
-    const quotaUpper = toInt(ranks[level - 1].q);
+    const quotaUpper = Utils.toInt(ranks[level - 1].q);
     board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
 
   },

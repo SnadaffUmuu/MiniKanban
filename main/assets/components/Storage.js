@@ -1,7 +1,7 @@
 export const Storage = {
-  loadBoards() {
+  loadData() {
     if(typeof Android !== 'undefined') {
-      return JSON.parse(Android.loadBoards());
+      return JSON.parse(Android.loadData());
     }
     return JSON.parse(localStorage.getItem('kanbanAppData'));
   },
@@ -20,7 +20,7 @@ export const Storage = {
     return JSON.parse(localStorage.getItem('kanbanEvents'));
   },
 
-  saveBoards(data) {
+  saveData(data) {
     const raw = JSON.stringify(data);
     if(typeof Android !== 'undefined') {
       Android.saveBoards(raw);
@@ -29,7 +29,7 @@ export const Storage = {
     }
   },
 
-  saveBoards(data) {
+  saveBooks(data) {
     const raw = JSON.stringify(data);
     if(typeof Android !== 'undefined') {
       Android.saveBooks(raw);

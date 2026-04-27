@@ -7,6 +7,8 @@ import {RanksUI} from './RanksUI.js'
 
 export const TaskUI = {
 
+  name: 'TaskUI',
+
   selectors: {
     taskEditInput: '.task-edit-input',
     taskEditButton: '.task-edit-button',
@@ -165,6 +167,7 @@ export const TaskUI = {
   },
 
   render(id) {
+    console.log('RENDER: TaskUI');
     let el = document.querySelector(`[data-id="${id}"]`);
     const uiTask = State.boardUi.taskUi[id];
     if(el && !uiTask) {

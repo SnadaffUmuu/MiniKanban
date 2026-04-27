@@ -5,6 +5,8 @@ import {State} from './State.js'
 
 export const ColumnHeaderUI = {
 
+  name: 'ColumnHeaderUI',
+
   selectors: {
     columnMenuTrigger: '.column-menu-toggle',
     columnMenuBlock: '.column-menu',
@@ -32,6 +34,8 @@ export const ColumnHeaderUI = {
   },
 
   render() {
+    console.log('RENDER: ColumnHeaderUI');
+
     const headers = document.querySelectorAll('.column-header');
 
     headers.forEach(header => {

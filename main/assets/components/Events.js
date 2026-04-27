@@ -11,7 +11,9 @@ import {
   Stats,
   BooksUI,
   Dialog,
+  ProgressUI,
 } from './index.js'
+import {Components} from './Components.js';
 
 export const Events = {
 
@@ -26,8 +28,9 @@ export const Events = {
     'TaskUI': TaskUI,
     'RanksUI': RanksUI,
     'Stats': Stats,
-    'BooksUI' : BooksUI,
-    'Dialog' : Dialog,
+    'BooksUI': BooksUI,
+    'Dialog': Dialog,
+    'ProgressUI': ProgressUI,
   },
 
   map: {
@@ -46,7 +49,7 @@ export const Events = {
       [BoardsList.selectors.createButton]: 'BoardsList.createBoard',
 
       [BoardUI.selectors.addColumnButton]: 'BoardUI.createColumn',
-      
+
       [ColumnHeaderUI.selectors.columnMenuTrigger]: 'ColumnHeaderUI.toggleColumnMenu',
       [ColumnHeaderUI.selectors.changeHeaderModeTriggers]: 'ColumnHeaderUI.changeColumnHeaderMode',
       [ColumnHeaderUI.selectors.cancelModeUi]: 'ColumnHeaderUI.cancelModeUi',
@@ -90,18 +93,23 @@ export const Events = {
       [Stats.selectors.resetButton]: 'Stats.promptReset',
       [Stats.selectors.confirmResetButton]: 'Stats.reset',
       [Stats.selectors.cancelResetButton]: 'Stats.resetUi',
-      
+
       [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
       [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],
-      [BooksUI.selectors.deleteBookButton] : 'BooksUI.showDeleteBookUi',
-      [BooksUI.selectors.editStateButton] : 'BooksUI.showEditStateUi',
-      [BooksUI.selectors.extraUiCancelButton] : 'BooksUI.cancelExtra',
-      [BooksUI.selectors.extraUiConfirmButton] : 'BooksUI.confirmExtra',
-      [BooksUI.selectors.addRangeButton] : 'BooksUI.addRangeRow',
-      [BooksUI.selectors.removeRangeRowRutton] : 'BooksUI.removeRangeRow',
+      [BooksUI.selectors.deleteBookButton]: 'BooksUI.showDeleteBookUi',
+      [BooksUI.selectors.editBookButton]: 'BooksUI.showEditBookUi',
+      [BooksUI.selectors.editStateButton]: 'BooksUI.showEditStateUi',
+      [BooksUI.selectors.extraUiCancelButton]: 'BooksUI.cancelExtra',
+      [BooksUI.selectors.closeExtraUi]: 'BooksUI.cancelExtra',
+      [BooksUI.selectors.extraUiConfirmButton]: 'BooksUI.confirmExtra',
+      [BooksUI.selectors.addRangeButton]: 'BooksUI.addRangeRow',
+      [BooksUI.selectors.removeRangeRowRutton]: 'BooksUI.removeRangeRow',
+
+      //[ProgressUI.selectors.promptButton] : 'ProgressUI.hideUi',
     },
     'submit': {
-      [BooksUI.selectors.addBookForm] : 'BooksUI.addBook',
+      [BooksUI.selectors.addBookForm]: 'BooksUI.addBook',
+      [BooksUI.selectors.editBookForm]: 'BooksUI.updateBook',
     },
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
@@ -111,8 +119,8 @@ export const Events = {
       [RanksUI.selectors.textarea]: 'RanksUI.ranksInputHandler',
     },
     'change': {
-      [BooksUI.selectors.bookBoardSelect] : 'BooksUI.updateColorsDropdown',
-      [BooksUI.selectors.bookBoardColorSelect] : 'BooksUI.setColorsDropdownColor',
+      [BooksUI.selectors.bookBoardSelect]: 'BooksUI.selectBoardHandler',
+      [BooksUI.selectors.bookBoardColorSelect]: 'BooksUI.setColorsDropdownColor',
     },
     'contextmenu': {
       '##': ['DragDrop.preventOnce', [true]],
@@ -131,7 +139,127 @@ export const Events = {
     },
   },
 
+  // handler(e, eventName) {
+  //   const entry = this.map[eventName];
+  //   if(!entry) return;
+
+  //   const selectors = Object.keys(entry);
+  //   const normals = selectors.filter(s => s !== '##');
+  //   const globals = selectors.filter(s => s === '##');
+
+  //   [...normals, ...globals].forEach(selector => {
+  //     const callbackObj = entry[selector];
+
+  //     let callbacks = [];
+
+  //     // 1) строка
+  //     if(typeof callbackObj === 'string') {
+  //       callbacks = [[callbackObj, []]];
+  //     }
+
+  //     // 2) массив
+  //     else if(Array.isArray(callbackObj)) {
+
+  //       // случай [method, params]
+  //       if(
+  //         typeof callbackObj[0] === 'string' &&
+  //         Array.isArray(callbackObj[1])
+  //       ) {
+  //         callbacks = [[callbackObj[0], callbackObj[1]]];
+  //       }
+
+  //       // случай ['m1', 'm2', ...]
+  //       else {
+  //         callbacks = callbackObj.map(method => [method, []]);
+  //       }
+  //     }
+
+  //     callbacks.forEach(([methodPath, params]) => {
+
+  //       const shouldRun =
+  //         selector === '##' ||
+  //         (e.target.matches && e.target.matches(selector));
+
+  //       if(!shouldRun) return;
+
+  //       const resolved = this.resolveMethod(methodPath);
+  //       if(!resolved) return;
+
+  //       resolved.fn.call(resolved.ctx, e.target, e, params);
+  //     });
+  //   });
+  // },
+
+  normalize(val) {
+    if(!val) return [];
+
+    // строка → [[method, []]]
+    if(typeof val === 'string') {
+      return [[val, []]];
+    }
+
+    if(Array.isArray(val)) {
+
+      // [method, params]
+      if(typeof val[0] === 'string' && Array.isArray(val[1])) {
+        return [val];
+      }
+
+      // уже [[method, params]]
+      if(
+        Array.isArray(val[0]) &&
+        typeof val[0][0] === 'string'
+      ) {
+        return val;
+      }
+
+      // ['m1', 'm2']
+      return val.map(v => {
+        if(typeof v === 'string') return [v, []];
+
+        if(Array.isArray(v) && typeof v[0] === 'string') {
+          return [v[0], v[1] || []];
+        }
+
+        return null;
+      }).filter(Boolean);
+    }
+
+    return [];
+  },
+
+  mergeMaps(target, source) {
+    Object.keys(source).forEach(eventName => {
+      if(!target[eventName]) {
+        target[eventName] = {};
+      }
+
+      const targetEvent = target[eventName];
+      const sourceEvent = source[eventName];
+
+      Object.keys(sourceEvent).forEach(selector => {
+        const existing = targetEvent[selector];
+        const incoming = sourceEvent[selector];
+
+        targetEvent[selector] = [
+          ...this.normalize(existing),
+          ...this.normalize(incoming)
+        ];
+      });
+    });
+  },
+
+  resolveSelector(selector, component) {
+    if(selector.startsWith('@')) {
+      const key = selector.slice(1);
+      return component.selectors[key];
+    }
+    return selector;
+  },
+
   resolveMethod(methodPath) {
+    if(typeof methodPath !== 'string') return null;
+
     const parts = methodPath.split('.');
     if(parts.length !== 2) return null;
 
@@ -152,45 +280,18 @@ export const Events = {
     const entry = this.map[eventName];
     if(!entry) return;
 
-    const selectors = Object.keys(entry);
-    const normals = selectors.filter(s => s !== '##');
-    const globals = selectors.filter(s => s === '##');
+    Object.keys(entry).forEach(selector => {
+      const callbacks = entry[selector];
 
-    [...normals, ...globals].forEach(selector => {
-      const callbackObj = entry[selector];
+      if(!Array.isArray(callbacks)) return; // 🔒 защита
 
-      let callbacks = [];
+      const shouldRun =
+        selector === '##' ||
+        (e.target.matches && e.target.matches(selector));
 
-      // 1) строка
-      if(typeof callbackObj === 'string') {
-        callbacks = [[callbackObj, []]];
-      }
-
-      // 2) массив
-      else if(Array.isArray(callbackObj)) {
-
-        // случай [method, params]
-        if(
-          typeof callbackObj[0] === 'string' &&
-          Array.isArray(callbackObj[1])
-        ) {
-          callbacks = [[callbackObj[0], callbackObj[1]]];
-        }
-
-        // случай ['m1', 'm2', ...]
-        else {
-          callbacks = callbackObj.map(method => [method, []]);
-        }
-      }
+      if(!shouldRun) return;
 
       callbacks.forEach(([methodPath, params]) => {
-
-        const shouldRun =
-          selector === '##' ||
-          (e.target.matches && e.target.matches(selector));
-
-        if(!shouldRun) return;
-
         const resolved = this.resolveMethod(methodPath);
         if(!resolved) return;
 
@@ -200,11 +301,79 @@ export const Events = {
   },
 
   init() {
-    for(let eventName in this.map) {
+
+    const addNamespace = (val, component) => {
+
+      const add = (m) =>
+        m.includes('.') ? m : `${component.name}.${m}`;
+
+      if(typeof val === 'string') {
+        return add(val);
+      }
+
+      if(Array.isArray(val)) {
+
+        // [method, params]
+        if(typeof val[0] === 'string' && Array.isArray(val[1])) {
+          return [add(val[0]), val[1]];
+        }
+
+        return val.map(item => {
+
+          if(typeof item === 'string') {
+            return add(item);
+          }
+
+          if(Array.isArray(item) && typeof item[0] === 'string') {
+            return [add(item[0]), item[1] || []];
+          }
+
+          return item;
+        });
+      }
+
+      return val;
+    };
+
+    // 🔥 1. НОРМАЛИЗУЕМ ИСХОДНУЮ MAP
+    Object.keys(this.map).forEach(eventName => {
+      const eventMap = this.map[eventName];
+
+      Object.keys(eventMap).forEach(selector => {
+        eventMap[selector] = this.normalize(eventMap[selector]);
+      });
+    });
+
+    // 🔥 2. ДОБАВЛЯЕМ EVENTS ИЗ КОМПОНЕНТОВ
+    Components.forEach(component => {
+      if(!component.events) return;
+
+      Object.keys(component.events).forEach(eventName => {
+        if(!this.map[eventName]) {
+          this.map[eventName] = {};
+        }
+
+        const entries = component.events[eventName];
+
+        Object.keys(entries).forEach(selectorKey => {
+          const realSelector = this.resolveSelector(selectorKey, component);
+          const rawValue = entries[selectorKey];
+          const value = addNamespace(rawValue, component);
+
+          this.mergeMaps(this.map, {
+            [eventName]: {
+              [realSelector]: value
+            }
+          });
+        });
+      });
+    });
+
+    // 🔥 3. LISTENERS
+    Object.keys(this.map).forEach(eventName => {
       document.addEventListener(eventName, (e) => {
         this.handler(e, eventName);
       });
-    }
-  },
-
+    });
+  },  
 };

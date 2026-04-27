@@ -6,6 +6,8 @@ import {App} from './App.js'
 
 export const BoardUI = {
 
+  name : 'BoardUI',
+
   selectors: {
     columnsContainer: '#columns',
     main: 'main#board',
@@ -34,6 +36,7 @@ export const BoardUI = {
   },
 
   render() {
+    console.log('RENDER: BoardUI');
     if (!App.isBoard()) {
       this.dom.main.classList.add('hidden');
       return;

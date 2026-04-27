@@ -1,0 +1,359 @@
+{
+    "state": {
+        "screen": "board",
+        "headerUiMode": "default",
+        "menuOpen": true
+    },
+    "currentBoardId": "_eya4w92kj",
+    "boards": [
+        {
+            "id": "_eya4w92kj",
+            "name": "Satori Reader",
+            "columns": [
+                {
+                    "id": "_2vaqzairj",
+                    "name": "Слушать",
+                    "tasks": [
+                        {
+                            "id": "_nqk5rzdww",
+                            "description": "Nutshell 12 Pronoun の Part 3",
+                            "color": "blue"
+                        }
+                    ]
+                },
+                {
+                    "id": "_uedeszi28",
+                    "name": "Разбор",
+                    "tasks": [
+                        {
+                            "id": "_1riv1athx",
+                            "description": "fgasdg",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_spbofu41w",
+                    "name": "Комменты",
+                    "tasks": [
+                        {
+                            "id": "_227n9cnpa",
+                            "description": "Akiko 005",
+                            "color": "green"
+                        }
+                    ],
+                    "skipMove": true
+                },
+                {
+                    "id": "_cy8r6drp3",
+                    "name": "Лексика",
+                    "tasks": [],
+                    "skipMove": false
+                },
+                {
+                    "id": "_rv9w6kocf",
+                    "name": "Ревью",
+                    "tasks": [
+                        {
+                            "id": "_rq7x2gmsb",
+                            "description": "Akiko 006",
+                            "color": "green"
+                        }
+                    ]
+                },
+                {
+                    "id": "_36qxu9mia",
+                    "name": "Готово",
+                    "tasks": [
+                        {
+                            "id": "_zvtbmu5q3",
+                            "color": "purple",
+                            "description": "asdf1"
+                        }
+                    ]
+                }
+            ],
+            "ranksRaw": "2 purple\n1 teal,pink,white\n1 yellow,blue,green",
+            "ranks": {
+                "1": {
+                    "q": 2,
+                    "c": [
+                        "purple"
+                    ]
+                },
+                "2": {
+                    "q": 1,
+                    "c": [
+                        "teal",
+                        "pink",
+                        "white"
+                    ]
+                },
+                "3": {
+                    "q": 1,
+                    "c": [
+                        "yellow",
+                        "blue",
+                        "green"
+                    ]
+                }
+            },
+            "rankCounters": {
+                "1": 0,
+                "2": 1,
+                "3": 1
+            },
+            "rankCountersAbs": {
+                "1": 16,
+                "2": 7,
+                "3": 6
+            }
+        },
+        {
+            "id": "_15ma569uj",
+            "name": "Reading in paper",
+            "columns": [
+                {
+                    "id": "_98n4c2fw4",
+                    "name": "Сфотать/Todo",
+                    "tasks": [
+                        {
+                            "id": "_6dnc1jjas",
+                            "description": "仮名 62-63",
+                            "color": "pink"
+                        }
+                    ]
+                },
+                {
+                    "id": "_prontm1bv",
+                    "name": "Отсканить в текст",
+                    "tasks": [
+                        {
+                            "id": "_vtm6925pt",
+                            "description": "チェルノブイリ 14 - 28",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_emdbx9l3y",
+                    "name": "Вычитать",
+                    "tasks": [
+                        {
+                            "id": "_419nezkdu",
+                            "description": "ゴーショーグン",
+                            "color": "blue"
+                        }
+                    ]
+                },
+                {
+                    "id": "_zaqb3ib9i",
+                    "name": "Чтение, разбор",
+                    "tasks": [
+                        {
+                            "id": "_as1gn6680",
+                            "description": "Kitkat",
+                            "color": "yellow"
+                        }
+                    ]
+                },
+                {
+                    "id": "_wd0qftfvl",
+                    "name": "Лексика",
+                    "tasks": [
+                        {
+                            "id": "_8fin8zo5t",
+                            "description": "チェルノブイリ 10",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_xtw0lxgn1",
+                    "name": "Review",
+                    "tasks": [
+                        {
+                            "id": "_vfp367jfr",
+                            "description": "しろばんば 68",
+                            "color": "white"
+                        }
+                    ]
+                },
+                {
+                    "id": "_807yrxu62",
+                    "name": "Done",
+                    "tasks": [
+                        {
+                            "id": "_5qmilk1rn",
+                            "description": "ゴーショーグン 10",
+                            "color": "blue"
+                        }
+                    ]
+                }
+            ],
+            "ranksRaw": "3 blue\n2 white\n1 purple\n1 pink,yellow",
+            "ranks": {
+                "1": {
+                    "q": 3,
+                    "c": [
+                        "blue"
+                    ]
+                },
+                "2": {
+                    "q": 2,
+                    "c": [
+                        "white"
+                    ]
+                },
+                "3": {
+                    "q": 1,
+                    "c": [
+                        "purple"
+                    ]
+                },
+                "4": {
+                    "q": 1,
+                    "c": [
+                        "pink",
+                        "yellow"
+                    ]
+                }
+            },
+            "rankCounters": {
+                "1": 2,
+                "2": 0,
+                "3": 1
+            },
+            "rankCountersAbs": {
+                "1": 8,
+                "2": 2,
+                "3": 1
+            }
+        },
+        {
+            "id": "_82cijdew3",
+            "name": "おさらい",
+            "columns": [
+                {
+                    "id": "_549lmy55m",
+                    "name": "Сфотать",
+                    "tasks": [
+                        {
+                            "id": "_jtsp5py2e",
+                            "color": "yellow",
+                            "description": "sdfasd"
+                        }
+                    ],
+                    "skipMove": false
+                },
+                {
+                    "id": "_jxqwvz5ph",
+                    "name": "Отсканить в текст",
+                    "tasks": [
+                        {
+                            "id": "_anot5v1jp",
+                            "color": "green",
+                            "description": "gddf"
+                        }
+                    ]
+                },
+                {
+                    "id": "_jzsu4qfgn",
+                    "name": "Вычитать",
+                    "tasks": [
+                        {
+                            "id": "_yt9n1fi3z",
+                            "description": "日本史 26-34",
+                            "color": "blue"
+                        }
+                    ]
+                },
+                {
+                    "id": "_k6xzuaa3k",
+                    "name": "Чтение, разбор",
+                    "tasks": [
+                        {
+                            "id": "_tob8p5hj4",
+                            "description": "公民 preface 5-6",
+                            "color": "beige"
+                        },
+                        {
+                            "id": "_uu1bwfe0g",
+                            "description": "家庭科 5-6 preface",
+                            "color": "purple"
+                        }
+                    ]
+                },
+                {
+                    "id": "_c6vzsw0os",
+                    "name": "Лексика",
+                    "tasks": [
+                        {
+                            "id": "_sb88bry52",
+                            "description": "性教育 21",
+                            "color": "pink"
+                        }
+                    ],
+                    "skipMove": false
+                },
+                {
+                    "id": "_k6vjrhlnr",
+                    "name": "Ревью",
+                    "tasks": []
+                },
+                {
+                    "id": "_grq4uqgi7",
+                    "name": "Всё",
+                    "tasks": [
+                        {
+                            "id": "_t5mt8yg7i",
+                            "description": "国語 98-101",
+                            "color": "green"
+                        }
+                    ]
+                }
+            ],
+            "ranksRaw": "2 green\n1 blue,pink,purple\n1 yellow,teal,plum,beige",
+            "ranks": {
+                "1": {
+                    "q": 2,
+                    "c": [
+                        "green"
+                    ]
+                },
+                "2": {
+                    "q": 1,
+                    "c": [
+                        "blue",
+                        "pink",
+                        "purple"
+                    ]
+                },
+                "3": {
+                    "q": 1,
+                    "c": [
+                        "yellow",
+                        "teal",
+                        "plum",
+                        "beige"
+                    ]
+                }
+            },
+            "rankCounters": {
+                "1": 0,
+                "2": -4,
+                "3": 1
+            },
+            "rankCountersAbs": {
+                "1": 6,
+                "2": 4,
+                "3": 6
+            }
+        }
+    ],
+    "boardsCounters": {
+        "_t2q68ryqx": 9,
+        "_n45jvsldg": 3
+    },
+    "screen": "board"
+}

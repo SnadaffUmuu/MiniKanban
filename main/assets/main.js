@@ -1,40 +1,17 @@
 import {
   HeaderUI,
-  RenameUI,
-  BoardsList,
-  DeleteUI,
   BoardUI,
   BooksUI,
-  DragDrop,
-  ColumnHeaderUI,
-  TaskUI,
-  RanksUI,
-  Stats,
-  Dialog,
 } from './components/index.js'
+import {Components}  from './components/Components.js'
 import {App} from './components/App.js'
 import {Events} from './components/Events.js'
 import {Utils} from './components/Utils.js'
-import {State} from './components/State.js'
-
-const Components = [
-  HeaderUI,
-  BoardsList,
-  RenameUI,
-  DeleteUI,
-  BoardUI,
-  BooksUI,
-  ColumnHeaderUI,
-  TaskUI,
-  RanksUI,
-  DragDrop,
-  Stats,
-  Dialog
-];
 
 const AppInit = {
   init() {
-    App.load();
+    App.loadData();
+    App.loadBooks();
     Events.init();
     Components.forEach(o => {
       Utils.cacheComponentDom(o);
@@ -44,6 +21,7 @@ const AppInit = {
     if (App.isBoard()) {
       BoardUI.render();
     } else {
+      App.loadEvents();
       BooksUI.render();
     }
   }

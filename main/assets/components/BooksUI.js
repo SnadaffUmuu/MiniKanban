@@ -4,8 +4,11 @@ import {State} from './State.js'
 import {App} from './App.js'
 import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js'
+import { EventsDomain } from './EventsDomain.js'
 
 export const BooksUI = {
+
+  name: 'BooksUI',
 
   boardCodesByName: {
     'satori': 'satori',
@@ -26,16 +29,21 @@ export const BooksUI = {
     bookNameInput: '#bookName',
     bookKeyInput: '#bookKey',
     bookSizeInput: '#size',
-    bookBoardSelect: '#bookBoard',
-    bookBoardColorSelect: '#bookBoardColor',
-    addBookConfirmButton: '#addBookConfirm',
+    startIndex: '#startIndex',
+    bookBoardSelect: '.js-book-board',
+    bookBoardColorSelect: '.js-book-board-color',
+    addBookConfirmButton: '.js-add-book-confirm',
+    editBookConfirmButton: '.js-edit-book-confirm',
     addBookCancelButton: '#addBookCancel',
     addBookForm: '[name="addBookForm"]',
+    editBookForm: '.js-edit-book-form',
     deleteBookButton: '.js-delete-book',
+    editBookButton: '.js-edit-book',
     editStateButton: '.js-edit-state',
     extraUiRow: '.extraUi',
     extraUiConfirmButton: '.extraUi .confirm',
     extraUiCancelButton: '.extraUi .cancel',
+    closeExtraUi: '.extraUi .js-cancel-current',
     addRangeButton: '.extraUi .addRange',
     removeRangeRowRutton: '.extraUi .removeRangeRow',
   },
@@ -45,15 +53,17 @@ export const BooksUI = {
 
   init() {
     Bus.batchedMethod(this, 'render');
-    Bus.on(Bus.events.screenChanged, this.render);
-    Bus.on(Bus.events.booksUiChanged, this.render);
-    Bus.on(Bus.events.booksChanged, () => {
-      State.booksUi.rowUi = {};
-      this.render();
-    });
+    Bus.on(Bus.events.screenChanged, this.render.bind(this));
+    Bus.on(Bus.events.booksUiChanged, this.render.bind(this));
+    Bus.on(Bus.events.booksChanged, this.render.bind(this));
+    // Bus.on(Bus.events.booksChanged, () => {
+    //   State.booksUi.rowUi = {};
+    //   this.render();
+    // });
   },
 
   render() {
+    console.log('RENDER: BooksUI');
     if(App.isBoard()) {
       this.dom.container.classList.add('hidden');
       return;
@@ -63,14 +73,17 @@ export const BooksUI = {
     this.dom.booksListContainer.innerHTML = this.getListHtml();
     this.dom.addBookButton.classList.toggle('hidden', State.booksUi.addUiShown);
     this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
-    this.dom.bookBoardSelect.innerHTML = '<option value="" disabled selected>choose a board</option>' + App.data.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    this.dom.bookBoardSelect.innerHTML = '<option value="" disabled selected>choose a board</option>'
+      + App.data.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
     this.dom.bookBoardColorSelect.removeAttribute('style');
   },
 
   addRangeRow(el) {
+    const key = this.getRowKey(el);
+    const book = BooksDomain.getBook(key);
     const fieldset = el.closest('fieldset');
     let rows = [...fieldset.querySelectorAll('.rangesRow')];
-    el.closest('fieldset').insertAdjacentHTML('beforeend', this.getRangesRowHtml(null, true, true));
+    el.closest('fieldset').insertAdjacentHTML('beforeend', this.getRangesRowHtml(book, null, true, true));
     rows = [...fieldset.querySelectorAll('.rangesRow')];
     el.remove();
   },
@@ -78,21 +91,25 @@ export const BooksUI = {
   removeRangeRow(el) {
     const fieldset = el.closest('fieldset');
     const rows = [...fieldset.querySelectorAll('.rangesRow')];
-    if (rows.length == 1) {
+    if(rows.length == 1) {
       fieldset.insertAdjacentHTML('beforeend', this.getRangesRowHtml(null, true, false));
     }
     el.closest('.rangesRow').remove();
     const lastRowButton = rows[rows.length - 1].querySelector('.addRange');
-    if (!lastRowButton) {
+    if(!lastRowButton) {
       el.querySelector('.rangesRowButtonsWrap').insertAdjacentHTML('beforeend', '<button class="addRange">+</button>');
     }
   },
 
-  getRangesRowHtml(r, showAddButton, showRemoveButton) {
+  getRangesRowHtml(book, range, showAddButton, showRemoveButton) {
     return `<div class="rangesRow">
-      <label>from <input type="number" name="from" ${r ? `value="${r.f}" disabled` : ' required'}></label>
-      <label>to <input type="number" name="to" ${r ? `value="${r.t}" disabled` : ' required '}></label>
-      <label>stage <input type="number" name="stage" ${r ? `value="${r.s}" disabled` : ' required'}></label>
+      <label>from <input type="number" name="from" ${range ? `value="${range.f}" disabled` : ' required'}></label>
+      <label>to <input type="number" name="to" ${range ? `value="${range.t}" disabled` : ' required '}></label>
+      <label>stage 
+        <select ${range ? 'disabled' : 'required'} name="stage">
+          ${Array.from({length: parseInt(book.stages)}).map((_, i) => `<option ${range && range.s == i + 1 ? 'selected' : ''} value="${i + 1}">${i + 1}</option>`).join('')}
+        </select>
+      </label>
       <div class="rangesRowButtonsWrap">
         ${showRemoveButton ? `<button class="removeRangeRow">-</button>` : ''}
         ${showAddButton ? '<button class="addRange">+</button>' : ''}
@@ -101,13 +118,14 @@ export const BooksUI = {
   },
 
   getCurrentRangesHtml(key) {
-    const ranges = BooksDomain.getBook(key).state?.ranges;
-    if(!ranges || !ranges.length) return '';
-    return ranges.map((r, i) => this.getRangesRowHtml(r, (i == ranges.length - 1), true)).join('');
+    const book = BooksDomain.getBook(key);
+    const ranges = book.state?.ranges;
+    if(!ranges || !ranges.length) return this.getRangesRowHtml(book, null, true, false);
+    return ranges.map((r, i) => this.getRangesRowHtml(book, r, (i == ranges.length - 1), true)).join('');
   },
 
   getListHtml() {
-    const rows = BooksDomain.getBooks().map(b => {
+    const rows = BooksDomain.getBooks().sort((a, b) => a.board.localeCompare(b.board)).map(b => {
       const cellStyle = b.color ? ` style="background-color:${Colors[b.color]}"` : '';
       let rowStyle = b.board ? `class="board-${this.getBoardCodeByBoard(b.board)}-border"` : '';
       const extra = State.booksUi.rowUi[b.key]?.extra;
@@ -137,17 +155,44 @@ export const BooksUI = {
               </form>
             `;
             break;
+          case 'edit':
+            extraUi = `
+            <div class="editBookUi">
+              <form data-key="${b.key}" name="edit-book-${b.key}" class="js-edit-book-form" action="javascript:void(0);">
+                <input type="text" name="bookName" placeholder="book name" value="${b.name}" required><br>
+                <input type="text" name="bookKey" paceholder="book key" value="${b.key}" required><br>
+                <input type="number" name="size" placeholder="size" value="${b.size}" required><br>
+                <input type="number" name="startIndex" placeholder="start column index" value="${b.startIndex != null ? b.startIndex : 0}"><br>
+                <select class="js-book-board" name="bookBoard" required>
+                  <option value="">choose a board</option>
+                  ${App.data.boards.map(board => `<option ${board.id == b.board ? 'selected' : ''} value="${board.id}">${board.name}</option>`).join('')}
+                </select><br>
+                <select required name="bookBoardColor" class="js-book-board-color" style="background-color:${Colors[b.color]}">
+                  <option value="">choose a color</option>
+                  <option selected value="${b.color}" style="background-color:${Colors[b.color]}">${b.color}</option>
+                  ${BooksDomain.getUnregisteredColorsForBoard(b.board)
+                .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
+                .join('')}
+                </select><br>
+                <button class="confirm">Save</button>
+                <button class="cancel">Cancel</button>
+              </form>
+            </div>            
+            `;
+            break;
         }
       }
+      const lastUpdated = EventsDomain.getEventsForBook(b.key, false);
       return `
       <tr ${rowStyle} data-book-key="${b.key}">
         <td ${cellStyle}>${b.name}</td>
         <td ${cellStyle}>${b.key}</td>
         <td ${cellStyle}>${b.size}</td>
-        <td ${cellStyle}>TODO progress</td>
+        <td ${cellStyle}>${lastUpdated.length ? lastUpdated[0] : ''}</td>
         <td ${cellStyle}>
           <div class="book-action-container">
-          <button class="book-action state js-edit-state"></button>
+            <button class="book-action state js-edit-state"></button>
+            <button class="book-action edit js-edit-book"></button>
             <button class="book-action delete js-delete-book"></button>
           </div>
         </td>
@@ -155,7 +200,8 @@ export const BooksUI = {
       ${extra ? `
       <tr class="extraUi" data-extra-book-key="${b.key}" data-extra="${extra}">
         <td colspan="5">
-          <div>
+          <div style="position:relative;">
+            <button class="js-cancel-current button-close button-close__extra"></button>
             ${extraUi}
             ${error ? `<span style="color:red">${error}</span><br>` : ''}
           </div>
@@ -169,7 +215,7 @@ export const BooksUI = {
         <th>name</th>
         <th>key</th>
         <th>size</th>
-        <th>%</th>
+        <th>upd</th>
         <th>actions</th>
       </thead>
       <tbody>
@@ -184,20 +230,28 @@ export const BooksUI = {
     Bus.emit(Bus.events.booksUiChanged);
   },
 
+  // getColCount(boardId, key) {
+  //   return BooksDomain.getBookStagesCountFromBoard(boardId, this.getBook(key).startIndex);
+  // },
+
+  selectBoardHandler(el) {
+    this.updateColorsDropdown(el);
+  },
+
   updateColorsDropdown(el) {
-    console.log(el.value);
+    const select = el.closest('form').querySelector(this.selectors.bookBoardColorSelect);
     if(el.value) {
       const board = BoardDomain.getBoard(el.value);
-      this.dom.bookBoardColorSelect.innerHTML = '<option value="" disabled selected>choose a color</option>'
+      select.innerHTML = '<option value="" selected>choose a color</option>'
         + BooksDomain.getUnregisteredColorsForBoard(board)
           .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
           .join('');
-      this.dom.bookBoardColorSelect.setAttribute('required', true);
+      select.setAttribute('required', true);
     } else {
-      this.dom.bookBoardColorSelect.innerHTML = '';
-      this.dom.bookBoardColorSelect.removeAttribute('required');
+      select.innerHTML = '';
+      select.removeAttribute('required');
     }
-    this.dom.bookBoardColorSelect.removeAttribute('style');
+    select.removeAttribute('style');
   },
 
   setColorsDropdownColor(el) {
@@ -212,6 +266,7 @@ export const BooksUI = {
       name: this.dom.bookNameInput.value,
       key: this.dom.bookKeyInput.value,
       size: this.dom.bookSizeInput.value,
+      startIndex: this.dom.startIndex.value,
       board: this.dom.bookBoardSelect.value,
       color: this.dom.bookBoardColorSelect.value
     });
@@ -243,6 +298,13 @@ export const BooksUI = {
     Bus.emit(Bus.events.booksUiChanged);
   },
 
+  showEditBookUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'edit'
+    }));
+  },
+
   showDeleteBookUi(el) {
     this.setRowUi(el, (prev, key) => ({
       ...prev,
@@ -257,8 +319,29 @@ export const BooksUI = {
     }));
   },
 
-  cancelExtra(el) {
+  cancelExtra(el, e) {
+    e.preventDefault();
     this.setRowUi(el, () => null)
+  },
+
+  updateBook(el) {
+    let errors = [];
+    const form = el;
+    const data = {
+      name: form.bookName.value,
+      key: el.dataset.key,
+      size: form.size.value,
+      startIndex: form.startIndex.value,
+      board: form.bookBoard.value,
+      color: form.bookBoardColor.value
+    };
+
+    if(form.bookKey.value !== el.dataset.key) {
+      data.newKey = form.bookKey.value;
+    }
+
+    BooksDomain.save(data);
+    Bus.emit(Bus.events.booksChanged);
   },
 
   confirmExtra(el) {
@@ -282,15 +365,19 @@ export const BooksUI = {
         const res = BooksDomain.updateBookState(key, ranges);
         if(res.result !== true) {
           State.booksUi.rowUi[key].error = `
-            ${result.message}<br>
-            ${result.details}
+            ${res.message}<br>
+            ${res.details}
             `;
           Bus.emit(Bus.events.booksUiChanged);
           return;
         }
+
         Bus.emit(Bus.events.booksChanged);
         break;
+      case 'edit':
+        el.closest('form').submit();
+        break;
     }
-  }
+  },
 
 };

@@ -9,7 +9,7 @@ import java.io.*;
 
 public class WebAppInterface {
     private static final String TAG = "KanbanMvdLog";
-    private static final String DATA_BOARDS_FILE_NAME = "kanban_mvd_data.json";
+    private static final String DATA_FILE_NAME = "kanban_mvd_data.json";
     private static final String DATA_BOOKS_FILE_NAME = "kanban_mvd_books.json";
     private static final String DATA_EVENTS_FILE_NAME = "kanban_mvd_events.log";
     private Context context;
@@ -19,8 +19,8 @@ public class WebAppInterface {
     }
     
     @JavascriptInterface
-    public void saveBoards(String data) {
-    	saveDataToFile(data, DATA_BOARDS_FILE_NAME);
+    public void saveData(String data) {
+    	saveDataToFile(data, DATA_FILE_NAME);
     }
     
     @JavascriptInterface
@@ -61,8 +61,8 @@ public class WebAppInterface {
     }
     
     @JavascriptInterface
-    public void loadBoards() {
-    	loadDataFromFile(DATA_BOARDS_FILE_NAME);
+    public void loadData() {
+    	loadDataFromFile(DATA_FILE_NAME);
     }
     
     @JavascriptInterface

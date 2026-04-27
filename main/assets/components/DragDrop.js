@@ -1,8 +1,11 @@
 import {Bus} from './Bus.js'
 import {BoardDomain} from './BoardDomain.js'
 import {BoardsList} from './BoardsList.js'
+import {ProgressUI} from './ProgressUI.js'
 
 export const DragDrop = {
+
+  name: 'DragDrop',
 
   selectors: {
     main: 'main',
@@ -79,7 +82,7 @@ export const DragDrop = {
     // На всякий случай — удалим и по таймеру (если вдруг не сработал preventOnce)
     setTimeout(() => {
       document.removeEventListener('contextmenu', preventOnce, true);
-    }, 300);
+    }, 5000);
   },
 
   restoreColsVertScroll() {
@@ -317,9 +320,9 @@ export const DragDrop = {
   },
 
   boardsButtonTouchStart(el, e) {
-    //console.log('touchstart boards list');
     if(!BoardsList.dom.boardsListButtonsContainer.contains(el)
       || el.tagName !== 'BUTTON') return;
+    //console.log('touchstart boards list');
     this.longPressTarget = el;
     this.longPressTimer = setTimeout(() => {
       this.enableTextSelection(false);
@@ -330,17 +333,18 @@ export const DragDrop = {
   },
 
   taskTouchStart(el, e) {
-    //console.log('touchstart task')
     const task = e.target.closest('.task');
     if(!task) return;
     if(e.target.classList.contains('task-edit-input')
       || task.classList.contains('expanded')) return;
+    console.log('taskTouchStart', el);
 
     this.longPressTarget = task;
     this.longPressTimer = setTimeout(() => {
       if(e.target.classList.contains('task-edit-input')
         || task.classList.contains('expanded')) return;
       this.enableTextSelection(false);
+      console.log('taskTouchStart: startDrag');
       this.startDrag(this.longPressTarget, e);
       this.blockContextMenuTemporarily(e);
       this.longPressTimer = null;
@@ -352,7 +356,7 @@ export const DragDrop = {
     if(this.longPressTimer) {
       clearTimeout(this.longPressTimer);
       this.longPressTimer = null;
-      this.enableTextSelection(false);
+      this.enableTextSelection(true);
     }
   },
 

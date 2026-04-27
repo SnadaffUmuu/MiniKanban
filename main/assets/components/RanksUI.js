@@ -5,6 +5,8 @@ import {Colors} from './Colors.js'
 
 export const RanksUI = {
 
+  name: 'RanksUI',
+
   modes: {
     default: 'default',
     create: 'create',
@@ -66,6 +68,7 @@ export const RanksUI = {
   },
 
   render() {
+    console.log('RENDER: RanksUI');
     if(State.headerUiMode !== 'ranks') return;
     const board = BoardDomain.getCurrentBoard();
     if(!board) return;

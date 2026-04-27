@@ -1,0 +1,31 @@
+import {
+  HeaderUI,
+  RenameUI,
+  BoardsList,
+  DeleteUI,
+  BoardUI,
+  BooksUI,
+  DragDrop,
+  ColumnHeaderUI,
+  TaskUI,
+  RanksUI,
+  Stats,
+  Dialog,
+  ProgressUI,
+} from './index.js'
+
+export const Components = [
+  HeaderUI,
+  BoardsList,
+  RenameUI,
+  DeleteUI,
+  BoardUI,
+  BooksUI,
+  ColumnHeaderUI,
+  TaskUI,
+  RanksUI,
+  DragDrop,
+  Stats,
+  Dialog,
+  ProgressUI,
+];

@@ -12,6 +12,8 @@ export const State = {
     addUiShown : false,
     rowUi: {}, //delete, edit, state
   },
+  progressData : {},
+  progressPromptShown : false,
 
   afterRender: [],
 
