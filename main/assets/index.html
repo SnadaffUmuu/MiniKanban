@@ -20,13 +20,14 @@
   </div>
   <header>
     <h1 id="board-title" class="top-menu-title"></h1>
-    <div id="top-tools">
+    <div id="top-tools" class="hidden">
+      <button id="addBook"></button>
       <button id="switchScreen"></button>
       <button id="boards-button" data-header-mode-trigger="boardsList"></button>
-      <button id="menu-toggle" class="hidden"></button>
-      <button id="books-menu-toggle" class="hidden"></button>
+      <button id="menu-toggle" class="menu-toggle hidden"></button>
+      <button id="books-menu-toggle" class="menu-toggle  hidden"></button>
     </div>
-    <section id="menu" class="hidden">
+    <section id="menu" class="menu hidden">
       <div id="menu-content">
         <button id="rename-board" data-header-mode-trigger="renameBoard" class="hidden">Rename board</button>
         <button id="delete-board" data-header-mode-trigger="deleteBoard" class="hidden">Delete board</button>
@@ -34,8 +35,9 @@
         <button id="show-stats" class="hidden" data-header-mode-trigger="stats">Show stats</button>
       </div>
     </section>
-    <section id="booksMenu" class="hidden">
-      <button>some books action</button>
+    <section id="booksMenu" class="menu hidden">
+      <button data-books-mode-trigger="events">events</button>
+      <button data-books-mode-trigger="books">books</button>
     </section>
 
     <div id="statsUI" data-header-mode="stats" class="hidden">
@@ -81,7 +83,6 @@
   </main>
 
   <section id="books" class="hidden">
-    <button id="addBook">Add book</button>
     <div id="addBookUi" class="hidden">
       <form name="addBookForm" action="javascript:void(0);">
         <input type="text" id="bookName" placeholder="name" required><br>
@@ -97,9 +98,8 @@
     <div id="booksListContainer"></div>
   </section>
 
- <!-- <script src="script1.js"></script> -->
- <!-- <script src="./script1.js"></script> -->
- <!-- <script src="./script.js"></script> -->
- <!-- <script src="script.js"></script> -->
+  <section id="events" class="hidden">
+    <div id="eventsListContainer"></div>
+  </section>
 </body>
 </html>

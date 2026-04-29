@@ -12,6 +12,7 @@ import {
   Stats,
   Dialog,
   ProgressUI,
+  EventsUI,
 } from './index.js'
 
 export const Components = [
@@ -28,4 +29,5 @@ export const Components = [
   Stats,
   Dialog,
   ProgressUI,
+  EventsUI,
 ];

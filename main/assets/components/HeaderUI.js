@@ -12,10 +12,13 @@ export const HeaderUI = {
 
   selectors: {
     title: '#board-title',
+    topToolsBlock: '#top-tools',
     boardsButton: '#boards-button',
     toggleMenuButton: '#menu-toggle',
     toggleBooksMenuButton: '#books-menu-toggle',
+    addBookButton: '#addBook',
     menu: '#menu',
+    booksMenu: '#booksMenu',
     changeHeaderModeTriggers: 'header [data-header-mode-trigger]',
     reset: '.js-cancel-current',
     screenSwitch: '#switchScreen',
@@ -28,7 +31,6 @@ export const HeaderUI = {
     Bus.on(Bus.events.boardsChanged, this.render.bind(this));
     Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
     Bus.on(Bus.events.screenChanged, this.render.bind(this));
-
   },
 
   toggleMenu(el, e) {
@@ -37,13 +39,21 @@ export const HeaderUI = {
     this.render();
   },
 
+  toggleBookMenu(el, e) {
+    e.stopPropagation();
+    State.booksMenuOpen = !State.booksMenuOpen;
+    this.render();
+  },
+
   hideMenu(el, e) {
-    if(
-      !this.dom.menu.contains(el) &&
-      !this.dom.toggleMenuButton.contains(el) &&
-      State.menuOpen !== false
-    ) {
+    e.stopPropagation();
+    const clickIsWithinSomeMenuBlock = this.dom.menu.contains(el) || this.dom.booksMenu.contains(el);
+    const clickIsOnSomeMenuButton = this.dom.toggleMenuButton.contains(el) || this.dom.toggleBooksMenuButton.contains(el)
+    const someMenuOpened = State.menuOpen == true || State.booksMenuOpen == true;
+    const shouldHide = !clickIsOnSomeMenuButton && !clickIsOnSomeMenuButton && someMenuOpened;
+    if(shouldHide) {
       State.menuOpen = false;
+      State.booksMenuOpen = false;
       this.render();
     }
   },
@@ -71,6 +81,7 @@ export const HeaderUI = {
     this.dom.toggleMenuButton.classList.toggle('hidden', !isBoard || State.headerUiMode !== 'default');
     this.dom.toggleBooksMenuButton.classList.toggle('hidden', isBoard);
     this.dom.menu.classList.toggle('hidden', !State.menuOpen);
+    this.dom.booksMenu.classList.toggle('hidden', !State.booksMenuOpen);
     this.dom.boardsButton.classList.toggle('hidden', !isBoard);
     this.dom.screenSwitch.classList.toggle('hidden', isBoard && State.headerUiMode !== 'default');
     this.dom.screenSwitch.classList.toggle('books', !isBoard);
@@ -79,12 +90,16 @@ export const HeaderUI = {
       this.dom.title.innerHTML = board.name;
       this.dom.menu.querySelectorAll('button').forEach(el =>
         el.classList.toggle('hidden', board == null));
+      this.dom.addBookButton.classList.add('hidden');
     } else {
-      this.dom.title.innerHTML = 'books';
+      this.dom.title.innerHTML = App.isEvents() ? 'events' : 'books';
+      this.dom.addBookButton.classList.toggle('hidden', App.isEvents() || State.booksUi.addUiShown);
     }
 
     document.querySelectorAll('[data-header-mode]').forEach(el =>
       el.classList.toggle('hidden', State.headerUiMode !== el.dataset.headerMode));
+
+    this.dom.topToolsBlock.classList.remove('hidden');
   },
 
 };

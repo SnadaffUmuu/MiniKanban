@@ -4,7 +4,7 @@ import {State} from './State.js'
 import {App} from './App.js'
 import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js'
-import { EventsDomain } from './EventsDomain.js'
+import {EventsDomain} from './EventsDomain.js'
 
 export const BooksUI = {
 
@@ -16,6 +16,12 @@ export const BooksUI = {
     'おさらい': 'osarai',
   },
 
+  events : {
+    click : {
+      '@switchBooksViewsTriggers' : 'changeMode'
+    }
+  },
+
   getBoardCodeByBoard(boardId) {
     const bName = BoardDomain.getBoard(boardId).name;
     return this.boardCodesByName[Object.keys(this.boardCodesByName).find(k => bName.toLowerCase().indexOf(k) >= 0)]
@@ -24,7 +30,7 @@ export const BooksUI = {
   selectors: {
     container: '#books',
     booksListContainer: '#booksListContainer',
-    addBookButton: '#addBook',
+    //addBookButton: '#addBook',
     addBookUi: '#addBookUi',
     bookNameInput: '#bookName',
     bookKeyInput: '#bookKey',
@@ -46,6 +52,7 @@ export const BooksUI = {
     closeExtraUi: '.extraUi .js-cancel-current',
     addRangeButton: '.extraUi .addRange',
     removeRangeRowRutton: '.extraUi .removeRangeRow',
+    switchBooksViewsTriggers: 'header [data-books-mode-trigger]',
   },
 
   dom: {
@@ -56,6 +63,7 @@ export const BooksUI = {
     Bus.on(Bus.events.screenChanged, this.render.bind(this));
     Bus.on(Bus.events.booksUiChanged, this.render.bind(this));
     Bus.on(Bus.events.booksChanged, this.render.bind(this));
+    Bus.on(Bus.events.booksModeChanged, this.render.bind(this));
     // Bus.on(Bus.events.booksChanged, () => {
     //   State.booksUi.rowUi = {};
     //   this.render();
@@ -64,14 +72,13 @@ export const BooksUI = {
 
   render() {
     console.log('RENDER: BooksUI');
-    if(App.isBoard()) {
+    if(App.isBoard() || App.isEvents()) {
       this.dom.container.classList.add('hidden');
       return;
     }
     console.log('books render');
     this.dom.container.classList.remove('hidden');
     this.dom.booksListContainer.innerHTML = this.getListHtml();
-    this.dom.addBookButton.classList.toggle('hidden', State.booksUi.addUiShown);
     this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
     this.dom.bookBoardSelect.innerHTML = '<option value="" disabled selected>choose a board</option>'
       + App.data.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
@@ -174,6 +181,7 @@ export const BooksUI = {
                 .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
                 .join('')}
                 </select><br>
+                <button class="book-action delete js-delete-book"></button>
                 <button class="confirm">Save</button>
                 <button class="cancel">Cancel</button>
               </form>
@@ -186,14 +194,13 @@ export const BooksUI = {
       return `
       <tr ${rowStyle} data-book-key="${b.key}">
         <td ${cellStyle}>${b.name}</td>
-        <td ${cellStyle}>${b.key}</td>
         <td ${cellStyle}>${b.size}</td>
-        <td ${cellStyle}>${lastUpdated.length ? lastUpdated[0] : ''}</td>
+        <td ${cellStyle}><span class="nowrap">${lastUpdated.length ? lastUpdated[0].d : ''}</span></td>
+        <td>${this.renderProgressBar(b)}</td>
         <td ${cellStyle}>
           <div class="book-action-container">
             <button class="book-action state js-edit-state"></button>
             <button class="book-action edit js-edit-book"></button>
-            <button class="book-action delete js-delete-book"></button>
           </div>
         </td>
       </tr>
@@ -213,9 +220,9 @@ export const BooksUI = {
     return `<table id="booksList">
       <thead>
         <th>name</th>
-        <th>key</th>
         <th>size</th>
         <th>upd</th>
+        <th>progress</th>
         <th>actions</th>
       </thead>
       <tbody>
@@ -225,14 +232,19 @@ export const BooksUI = {
   },
 
   toggleAddUi(el, e, [toShow]) {
+    e.preventDefault();
     this.dom.addBookForm.reset();
     State.booksUi.addUiShown = toShow;
     Bus.emit(Bus.events.booksUiChanged);
+    Bus.emit(Bus.events.headerUIChanged);
   },
 
-  // getColCount(boardId, key) {
-  //   return BooksDomain.getBookStagesCountFromBoard(boardId, this.getBook(key).startIndex);
-  // },
+  changeMode(el, e) {
+    App.switchBookUiMode(el.dataset.booksModeTrigger);
+    State.booksMenuOpen = false;
+    Bus.emit(Bus.events.headerUIChanged);
+    Bus.emit(Bus.events.booksModeChanged);
+  },
 
   selectBoardHandler(el) {
     this.updateColorsDropdown(el);
@@ -362,7 +374,7 @@ export const BooksUI = {
             t: el.querySelector('[name="to"]').value,
           });
         });
-        const res = BooksDomain.updateBookState(key, ranges);
+        const res = BooksDomain.setBookRanges(key, ranges);
         if(res.result !== true) {
           State.booksUi.rowUi[key].error = `
             ${res.message}<br>
@@ -378,6 +390,70 @@ export const BooksUI = {
         el.closest('form').submit();
         break;
     }
+  },
+
+  getStageColor(stage, totalStages) {
+    // от светлого к тёмному синему
+    const lightnessStart = 85;
+    const lightnessEnd = 35;
+
+    const ratio = (stage - 1) / (totalStages - 1 || 1);
+    const lightness = lightnessStart - ratio * (lightnessStart - lightnessEnd);
+
+    return `hsl(210, 70%, ${lightness}%)`;
+  },
+
+  renderProgressBar(book) {
+    const size = Number(book.size);
+    const stagesCount = Number(book.stages);
+    const ranges = book.state?.ranges || [];
+
+    // 1. агрегируем страницы по стадиям
+    const stagePages = new Map(); // stage -> pages count
+
+    for(const {s, f, t} of ranges) {
+      const count = t - f + 1;
+      stagePages.set(s, (stagePages.get(s) || 0) + count);
+    }
+
+    // 2. формируем сегменты
+    const segments = [];
+
+    for(let stage = 1;stage <= stagesCount;stage++) {
+      const pages = stagePages.get(stage) || 0;
+      if(pages === 0) continue;
+
+      const percent = (pages / size) * 100;
+      const color = this.getStageColor(stage, stagesCount);
+
+      segments.push(`
+      <div 
+        class="segment" 
+        style="width:${percent}%; background:${color}"
+        title="Stage ${stage}: ${pages} pages"
+      ></div>
+    `);
+    }
+
+    // 3. незаполненная часть
+    const totalFilled = [...stagePages.values()].reduce((a, b) => a + b, 0);
+    const remainingPercent = ((size - totalFilled) / size) * 100;
+
+    if(remainingPercent > 0) {
+      segments.push(`
+      <div 
+        class="segment empty" 
+        style="width:${remainingPercent}%"
+      ></div>
+    `);
+    }
+
+    // 4. итоговый HTML
+    return `
+    <div class="progress-bar">
+      ${segments.join("")}
+    </div>
+  `;
   },
 
 };

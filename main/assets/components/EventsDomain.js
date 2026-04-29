@@ -13,8 +13,7 @@ export const EventsDomain = {
   },
 
   getEvents() {
-    const events = App.events ? App.events : App.loadEvents();
-    return events || [];
+    return App.events ? App.events : App.loadEvents();
   },
 
   getEventsForBook(bookKey, isAsc) {
@@ -44,34 +43,59 @@ export const EventsDomain = {
     }
   },
 
+  sortBy(events, key, isAsc) {
+    if(isAsc) {
+      return events.sort((a, b) => a[key] > b[key] ? 1 : -1);
+    } else {
+      return events.sort((a, b) => a[key] > b[key] ? -1 : 1);
+    }
+  },
+
   saveEvents(events) {
-    App.events = events;
-    App.saveEvents(App.events);
+    if(events) {
+      App.events = events;
+    }
+    App.saveEvents();
   },
 
   log({type, book, date, data}) {
     //TODO log for 
+    const response = {};
+    const ts = new Date();
     if(!date) {
-      const ts = new Date();
-      date = format(ts);
+      date = this.format(ts);
     }
     const events = this.getEvents();
-    if(data.type == this.eventTypes.rollback) {
-      this.saveEvents(App.events.filter(ev => ev.b == book && d == date));
-    } else {
-      const res = {
-        d: date,
-        b: book,
-        t: data.type,
-      };
-      if(type == this.eventTypes.progress) {
-        res.f = data.from,
-        res.to = data.to,
-        res.s = data.stage
+    try {
+      if(data.type == this.eventTypes.rollback) {
+        this.saveEvents(App.events.filter(ev => ev.b == book && d == date));
+      } else {
+        const res = {
+          ts: ts.getTime(),
+          d: date,
+          b: book,
+          t: type,
+        };
+        if(type == this.eventTypes.progress) {
+          res.r = data.ranges;
+            // res.f = data.f,
+            // res.to = data.to,
+            // res.s = data.s
+        }
+        //TODO: manual
+        events.push(res);
+        this.saveEvents(events);
       }
-      //TODO: manual
-      this.saveEvents(App.events.push(res));
+      response.result = true;
+      return response;
+    } catch(e) {
+      console.error(e);
+      response.result = false;
+      response.message = 'Ошибка при сохранении события';
+      response.details = e;
+      return response;
     }
+
 
   },
 

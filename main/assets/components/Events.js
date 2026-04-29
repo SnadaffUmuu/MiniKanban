@@ -39,9 +39,11 @@ export const Events = {
         'HeaderUI.hideMenu',
       ],
       [HeaderUI.selectors.toggleMenuButton]: 'HeaderUI.toggleMenu',
+      [HeaderUI.selectors.toggleBooksMenuButton]: 'HeaderUI.toggleBookMenu',
       [HeaderUI.selectors.changeHeaderModeTriggers]: 'HeaderUI.changeMode',
       [HeaderUI.selectors.reset]: 'HeaderUI.reset',
       [HeaderUI.selectors.screenSwitch]: 'HeaderUI.switchScreen',
+      [HeaderUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
 
       [RenameUI.selectors.confirmRenameButton]: 'RenameUI.renameBoard',
       [DeleteUI.selectors.deleteBoardConfirmButton]: 'DeleteUI.deleteBoard',
@@ -94,8 +96,7 @@ export const Events = {
       [Stats.selectors.confirmResetButton]: 'Stats.reset',
       [Stats.selectors.cancelResetButton]: 'Stats.resetUi',
 
-      [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
-      [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],
+      [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],      
       [BooksUI.selectors.deleteBookButton]: 'BooksUI.showDeleteBookUi',
       [BooksUI.selectors.editBookButton]: 'BooksUI.showEditBookUi',
       [BooksUI.selectors.editStateButton]: 'BooksUI.showEditStateUi',
@@ -105,7 +106,6 @@ export const Events = {
       [BooksUI.selectors.addRangeButton]: 'BooksUI.addRangeRow',
       [BooksUI.selectors.removeRangeRowRutton]: 'BooksUI.removeRangeRow',
 
-      //[ProgressUI.selectors.promptButton] : 'ProgressUI.hideUi',
     },
     'submit': {
       [BooksUI.selectors.addBookForm]: 'BooksUI.addBook',

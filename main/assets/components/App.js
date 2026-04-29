@@ -1,9 +1,10 @@
 import {Storage} from './Storage.js'
+import { State } from './State.js';
 
 export const App = {
   data: {},
-  books: {},
-  events: {},
+  books: [],
+  events: [],
   screens : {
     board : 'board',
     books : 'books',
@@ -36,6 +37,7 @@ export const App = {
     if(!this.events) {
       this.events = [];
     }
+    return this.events;
   },
 
   saveEvents() {
@@ -52,8 +54,18 @@ export const App = {
     this.saveData();
   },
 
+  switchBookUiMode(mode) {
+    this.data.booksUiMode = mode;
+    this.saveData();
+  },
+
   isBoard() {
     return this.data.screen == this.screens.board
+  },
+
+  isEvents() {
+    return this.data.screen == this.screens.books
+      && this.data.booksUiMode == 'events'
   }
 
 };

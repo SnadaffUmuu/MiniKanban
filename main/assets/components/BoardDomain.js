@@ -359,7 +359,6 @@ export const BoardDomain = {
       State.progressData = {
         taskId: task.id,
         boardId: board.id,
-        delta : delta,
         sourceIndex : sourceIndex,
         sourceColumnId: sourceCol.id,
         targetIndex : targetIndex,
