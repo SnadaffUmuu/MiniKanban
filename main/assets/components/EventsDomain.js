@@ -13,7 +13,7 @@ export const EventsDomain = {
   },
 
   getEvents() {
-    return App.events ? App.events : App.loadEvents();
+    return App.events.length ? App.events : App.loadEvents();
   },
 
   getEventsForBook(bookKey, isAsc) {

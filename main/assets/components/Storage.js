@@ -23,7 +23,7 @@ export const Storage = {
   saveData(data) {
     const raw = JSON.stringify(data);
     if(typeof Android !== 'undefined') {
-      Android.saveBoards(raw);
+      Android.saveData(raw);
     } else {
       localStorage.setItem('kanbanAppData', raw);
     }

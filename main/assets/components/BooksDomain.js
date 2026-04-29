@@ -51,11 +51,12 @@ export const BooksDomain = {
     }
     const books = this.getBooks();
     const book = books.find(b => b.key == key);
+    const stages = this.getBookStagesCountFromBoard(board, startIndex);
     if(book) {
       book.name = name;
       book.size = size;
       book.startIndex = startIndex;
-      book.stages = this.getBookStagesCountFromBoard(board, startIndex);
+      book.stages = stages;
       book.board = board;
       book.color = color;
       if(newKey) {
@@ -64,6 +65,7 @@ export const BooksDomain = {
       }
     } else {
       data.startIndex = startIndex;
+      data.stages = stages;
       books.push(data);
     }
 

@@ -110,9 +110,13 @@ export const BooksUI = {
 
   getRangesRowHtml(book, range, showAddButton, showRemoveButton) {
     return `<div class="rangesRow">
-      <label>from <input type="number" name="from" ${range ? `value="${range.f}" disabled` : ' required'}></label>
-      <label>to <input type="number" name="to" ${range ? `value="${range.t}" disabled` : ' required '}></label>
-      <label>stage 
+      <label>from<br>
+        <input type="number" name="from" ${range ? `value="${range.f}" disabled` : ' required'}>
+      </label>
+      <label>to<br>
+        <input type="number" name="to" ${range ? `value="${range.t}" disabled` : ' required '}>
+      </label>
+      <label>stage<br>
         <select ${range ? 'disabled' : 'required'} name="stage">
           ${Array.from({length: parseInt(book.stages)}).map((_, i) => `<option ${range && range.s == i + 1 ? 'selected' : ''} value="${i + 1}">${i + 1}</option>`).join('')}
         </select>
@@ -196,7 +200,7 @@ export const BooksUI = {
         <td ${cellStyle}>${b.name}</td>
         <td ${cellStyle}>${b.size}</td>
         <td ${cellStyle}><span class="nowrap">${lastUpdated.length ? lastUpdated[0].d : ''}</span></td>
-        <td>${this.renderProgressBar(b)}</td>
+        <td ${cellStyle}>${this.renderProgressBar(b)}</td>
         <td ${cellStyle}>
           <div class="book-action-container">
             <button class="book-action state js-edit-state"></button>

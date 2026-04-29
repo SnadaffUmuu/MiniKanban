@@ -977,6 +977,7 @@ select:invalid {
   display: flex;
   flex-flow: row nowrap;
   padding-bottom: 5px;
+  align-items: end;
 }
 
 .rangesRow label {

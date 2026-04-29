@@ -31,6 +31,7 @@ export const HeaderUI = {
     Bus.on(Bus.events.boardsChanged, this.render.bind(this));
     Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
     Bus.on(Bus.events.screenChanged, this.render.bind(this));
+    Bus.on(Bus.events.booksChanged, this.render.bind(this));
   },
 
   toggleMenu(el, e) {

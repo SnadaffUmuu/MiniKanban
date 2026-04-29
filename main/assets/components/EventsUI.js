@@ -16,10 +16,12 @@ export const EventsUI = {
 
   init() {
     Bus.on(Bus.events.booksModeChanged, this.render.bind(this));
+    Bus.on(Bus.events.screenChanged, this.render.bind(this));
     Bus.on(Bus.events.progress, this.render.bind(this));
   },
 
   render() {
+    console.log('RENDER: EventsUI');
     if (!App.isEvents()) {
       this.dom.container.classList.toggle('hidden', true);
       return;

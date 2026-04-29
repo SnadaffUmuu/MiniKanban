@@ -61,21 +61,21 @@ public class WebAppInterface {
     }
     
     @JavascriptInterface
-    public void loadData() {
-    	loadDataFromFile(DATA_FILE_NAME);
+    public String loadData() {
+    	return loadDataFromFile(DATA_FILE_NAME);
     }
     
     @JavascriptInterface
-    public void loadBooks() {
-    	loadDataFromFile(DATA_BOOKS_FILE_NAME);
+    public String loadBooks() {
+    	return loadDataFromFile(DATA_BOOKS_FILE_NAME);
     }   
     
     @JavascriptInterface
-    public void loadEvents() {
-    	loadDataFromFile(DATA_EVENTS_FILE_NAME);
+    public String loadEvents() {
+    	return loadDataFromFile(DATA_EVENTS_FILE_NAME);
     }   
 
-    private String loadDataFromFile(filename) {
+    private String loadDataFromFile(String filename) {
       Log.d(TAG, "loadDataFromFile called");
         Uri folderUri = getFolderUri();
         Log.d(TAG, "Got folder uri from prefs: " + folderUri);
