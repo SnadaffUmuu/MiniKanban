@@ -217,7 +217,7 @@ export const BoardDomain = {
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
 
-  moveTask(targetColumnId, taskId, insertIndex) {
+  moveTask(targetColumnId, taskId, insertIndex, position) {
     const board = this.getCurrentBoard();
     const targetColumn = board.columns.find(col => col.id === targetColumnId);
     //const targetColumnIndex = board.columns.findIndex(col => col.id === targetColumnId);
@@ -244,7 +244,8 @@ export const BoardDomain = {
     this.checkForProgress({
       task: task,
       sourceColumn: sourceColumn,
-      targetColumn: targetColumn
+      targetColumn: targetColumn,
+      position: position
     });
 
     this.saveBoards(App.data.boards, App.data.currentBoardId);
@@ -334,7 +335,7 @@ export const BoardDomain = {
     this.saveBoards(App.data.boards, App.data.currentBoardId);
   },
 
-  checkForProgress({task, sourceColumn, targetColumn}) {
+  checkForProgress({task, sourceColumn, targetColumn, position}) {
 
     console.log('BoardDomain checkForProgress ');
 
@@ -362,7 +363,9 @@ export const BoardDomain = {
         sourceIndex : sourceIndex,
         sourceColumnId: sourceCol.id,
         targetIndex : targetIndex,
-        targetColumnId : targetCol.id
+        targetColumnId : targetCol.id,
+        delta : delta,
+        position : position
       };
       State.progressPromptShown = true;
 

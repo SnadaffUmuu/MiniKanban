@@ -98,6 +98,7 @@ export const DragDrop = {
   dropTask(el, event) {
     if(!this.dragState.draggingTask || !this.dragState.clone) return;
     const cursorX = event.clientX || (event.touches && event.changedTouches[0].clientX);
+    const cursorY = event.clientY || (event.touches && event.changedTouches[0].clientY)
     let targetColumnEl = this.getColumnAtPoint(cursorX);
     const insertIndicator = document.querySelector('.insert-indicator');
     let insertIndex = insertIndicator ? Array.from(targetColumnEl.querySelectorAll('.task:not(.dragged):not(.dragging)')).findIndex(el =>
@@ -106,7 +107,8 @@ export const DragDrop = {
       BoardDomain.moveTask(
         targetColumnEl.dataset.id,
         this.dragState.draggingTask.dataset.id,
-        insertIndex
+        insertIndex,
+        [cursorX, cursorY]
       );
       Bus.emit(Bus.events.boardsChanged);
       this.restoreColsVertScroll();

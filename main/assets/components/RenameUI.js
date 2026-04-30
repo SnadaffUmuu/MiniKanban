@@ -35,9 +35,9 @@ export const RenameUI = {
   },
 
   render() {
-    console.log('RENDER: RenameUI');
     if(State.headerUiMode !== 'renameBoard') return;
     if(!App.data.currentBoardId) return;
+    console.log('RENDER: RenameUI');
     this.dom.renameInput.setAttribute('data-original-value', BoardDomain.getCurrentBoard().name);
     this.dom.renameInput.value = BoardDomain.getCurrentBoard().name;
     Utils.focusAndPlaceCursorAtEnd(this.dom.renameInput);

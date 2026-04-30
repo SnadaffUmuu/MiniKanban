@@ -68,8 +68,8 @@ export const RanksUI = {
   },
 
   render() {
-    console.log('RENDER: RanksUI');
     if(State.headerUiMode !== 'ranks') return;
+    console.log('RENDER: RanksUI');
     const board = BoardDomain.getCurrentBoard();
     if(!board) return;
     const ranks = board.ranks;

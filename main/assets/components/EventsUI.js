@@ -21,18 +21,17 @@ export const EventsUI = {
   },
 
   render() {
-    console.log('RENDER: EventsUI');
     if (!App.isEvents()) {
       this.dom.container.classList.toggle('hidden', true);
       return;
     }
+    console.log('RENDER: EventsUI');
     this.dom.container.classList.toggle('hidden', false);
     this.dom.listContainer.innerHTML = this.getListHtml();
   },
 
   getListHtml() {
-    console.log(EventsDomain.sortBy(EventsDomain.getEvents(), 'date', false));
-    const events = EventsDomain.sortBy(EventsDomain.getEvents(), 'date', false);
+    const events = EventsDomain.sortBy(EventsDomain.getEvents(), 'ts', false);
     return events.map(ev => `
       <div class="eventsEntry">
         ${ev.d}<br>

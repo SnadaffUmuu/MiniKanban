@@ -4,7 +4,7 @@ import { State } from './State.js';
 export const App = {
   data: {},
   books: [],
-  events: [],
+  events: null,
   screens : {
     board : 'board',
     books : 'books',

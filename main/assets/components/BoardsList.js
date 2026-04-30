@@ -22,9 +22,9 @@ export const BoardsList = {
   },
 
   render() {
-    console.log('RENDER: BoardsList');
     if(State.headerUiMode !== 'boardsList') return;
     if(!App.data.currentBoardId) return;
+    console.log('RENDER: BoardsList');
     let createButton = this.dom.createButton;
     if(createButton) {
       createButton = createButton.parentNode.removeChild(createButton);

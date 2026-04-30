@@ -13,7 +13,7 @@ export const EventsDomain = {
   },
 
   getEvents() {
-    return App.events.length ? App.events : App.loadEvents();
+    return App.events !== null ? App.events : App.loadEvents();
   },
 
   getEventsForBook(bookKey, isAsc) {
@@ -44,6 +44,7 @@ export const EventsDomain = {
   },
 
   sortBy(events, key, isAsc) {
+    console.log('isAcs', isAsc);
     if(isAsc) {
       return events.sort((a, b) => a[key] > b[key] ? 1 : -1);
     } else {

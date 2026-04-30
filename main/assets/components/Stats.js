@@ -29,8 +29,8 @@ export const Stats = {
   },
 
   render() {
-    console.log('RENDER: Stats');
     if(State.headerUiMode !== 'stats') return;
+    console.log('RENDER: Stats');
     this.dom.resetMessage.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
     this.dom.confirmResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
     this.dom.cancelResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');

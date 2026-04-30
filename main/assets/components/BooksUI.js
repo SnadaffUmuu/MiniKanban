@@ -71,12 +71,11 @@ export const BooksUI = {
   },
 
   render() {
-    console.log('RENDER: BooksUI');
     if(App.isBoard() || App.isEvents()) {
       this.dom.container.classList.add('hidden');
       return;
     }
-    console.log('books render');
+    console.log('RENDER: BooksUI');
     this.dom.container.classList.remove('hidden');
     this.dom.booksListContainer.innerHTML = this.getListHtml();
     this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
@@ -111,13 +110,13 @@ export const BooksUI = {
   getRangesRowHtml(book, range, showAddButton, showRemoveButton) {
     return `<div class="rangesRow">
       <label>from<br>
-        <input type="number" name="from" ${range ? `value="${range.f}" disabled` : ' required'}>
+        <input type="number" name="from" ${range ? `value="${range.f}"` : ' required'}>
       </label>
       <label>to<br>
-        <input type="number" name="to" ${range ? `value="${range.t}" disabled` : ' required '}>
+        <input type="number" name="to" ${range ? `value="${range.t}"` : ' required '}>
       </label>
       <label>stage<br>
-        <select ${range ? 'disabled' : 'required'} name="stage">
+        <select ${range ? '' : 'required'} name="stage">
           ${Array.from({length: parseInt(book.stages)}).map((_, i) => `<option ${range && range.s == i + 1 ? 'selected' : ''} value="${i + 1}">${i + 1}</option>`).join('')}
         </select>
       </label>
@@ -128,9 +127,9 @@ export const BooksUI = {
     </div>`;
   },
 
-  getCurrentRangesHtml(key) {
+  getCurrentRangesFormHtml(key) {
     const book = BooksDomain.getBook(key);
-    const ranges = book.state?.ranges;
+    const ranges = BooksDomain.getBookRanges(key);
     if(!ranges || !ranges.length) return this.getRangesRowHtml(book, null, true, false);
     return ranges.map((r, i) => this.getRangesRowHtml(book, r, (i == ranges.length - 1), true)).join('');
   },
@@ -159,7 +158,7 @@ export const BooksUI = {
               <form name="stateForm" action="javascript:void(0);">
                 <fieldset>
                   <legend>ranges</legend>
-                  ${this.getCurrentRangesHtml(b.key)}
+                  ${this.getCurrentRangesFormHtml(b.key)}
                 </fieldset>
                 <button class="confirm">Save</button>
                 <button class="cancel">Cancel</button>

@@ -58,6 +58,10 @@ export const ProgressUI = {
     console.log('dialogHidden', dialogHidden);
     console.log('buttonHidden', buttonHidden);
     this.dom.promptButton.classList.toggle('hidden', buttonHidden);
+    if (!buttonHidden) {
+      this.dom.promptButton.style.left = data.position[0] + 'px';
+      this.dom.promptButton.style.top = data.position[1] + 'px';
+    }
     this.dom.dialog.querySelector(this.selectors.dialogContent).innerHTML = hasData && buttonHidden ? `
       ${this.getFormHtml(book, task)}
     ` : '';
@@ -80,86 +84,141 @@ export const ProgressUI = {
     State.progressPromptShown = false;
     State.progressUpdateSuccess = null;
     State.progressUpdateError = null;
+    State.logUpdateError = null;
     this.render();
   },
 
   getFormHtml(book, task) {
     const board = BoardDomain.getCurrentBoard();
     const data = State.progressData;
-    const range = Utils.extractRange(task.description);
-    const stagesCountForTheBook = BooksDomain.getBookStagesCountFromBoard(board.id, Utils.toInt(book.startIndex));
     const stage = BooksDomain.getStageAtIndex(board.columns, Utils.toInt(book.startIndex), data.targetIndex);
     const hideForm = State.progressUpdateSuccess != null;
     const progressError = State.progressUpdateError;
+    const logError = stage.logUpdateError;
+    const range = Utils.extractRange(task.description);
+    const stagesCountForTheBook = BooksDomain.getBookStagesCountFromBoard(board.id, Utils.toInt(book.startIndex));
     return `
   <div id="progressUi">
-    <div id="taskData" style="background:${Colors[task.color]}">
-      book: ${book.name}<br>
-      startColIndex: ${book.startIndex || 0}<br>
-      description: ${task.description}<br>
-      color: ${task.color}<br>
-      from column "${BoardDomain.getColumn(data.sourceColumnId).name}"<br>
-      to column "${BoardDomain.getColumn(data.targetColumnId).name}"<br>
-      stage ${stage}<br>
-      progress or rollback? ${data.delta > 0 ? 'progress' : 'rollback'}
-    </div>
+    <h6>${task.description}</h6>
+    <table id="taskData" style="background:${Colors[task.color]}">
+      <tr><td>to stage</td><td>${stage}</td></tr>
+      <tr>
+        <td>
+          <div style="width:100%;height:100%;display:flex;flex-flow:row nowrap;justify-content:space-between;">
+            <span>${BoardDomain.getColumn(data.sourceColumnId).name}</span>
+            <span style="padding: 0 3px;">→</span>
+          </div>
+        </td>
+        <td>${BoardDomain.getColumn(data.targetColumnId).name}</td>
+      </tr>
+      <tr><td>startColIndex</td><td>${book.startIndex || 0}</td></tr>
+      <tr><td>progress?</td><td>${data.delta > 0 ? 'progress' : 'rollback'}</td></tr>
+    </table>
     <form ${hideForm ? 'class="hidden"' : ''} name="progressForm" action="javascript:void(0)" data-book-key="${book.key}">
-      <fieldset legend="progress data">
-        <label>book: 
-          <select name="book">
-          ${BooksDomain.getBooks()
-        .filter(b => b.board == board.id)
-        .map(b => `<option ${b.name == book.name && b.color == task.color ? ' selected' : ''} value="${b.key}">${b.name}</option>`).join('')}
-          </select>
-        </label><br>
-        <label>from page: <input type="number" name="from" value="${range ? range[0] : ''}" required></label><br>
-        <label>to page: <input type="number" name="to" value="${range ? range[1] : ''}" required></label><br>
-        <label>stage: 
-          <select name="stage">
-            ${Array.from({length: stagesCountForTheBook}).map((_, i) => `<option ${i + 1 == stage ? 'selected' : ''} value="${i + 1}">${i + 1}</option>`).join('')}
-          </select>
-        </label><br>
-      </fieldset>
-      <div class="formErrors ${progressError ? '' : 'hidden'}">
-        ${progressError ? `${progressError.message}<br>${progressError.details}` : ''}
+      <table>
+        <tr>
+          <td>book</td>
+          <td>${book.name}
+            <input type="hidden" name="book" value="${book.key}">
+          </td>
+        </tr>
+        <tr>
+          <td><label for="fromField">from page</label></td>
+          <td><input type="number" id="fromField" name="from" value="${range ? range[0] : ''}"></td>
+        </tr>
+        <tr>
+          <td><label for="toField">to page</label></td>
+          <td><input type="number" id="toField" name="to" value="${range ? range[1] : ''}"></td>
+        </tr>
+        <tr>
+          <td><label for="stageField">stage</label></td>
+          <td>
+            <select id="stageField" name="stage">
+            ${Array.from({length: stagesCountForTheBook}).map((_, i) => `
+              <option ${i + 1 == stage ? 'selected' : ''} value="${i + 1}">${i + 1}</option>
+              `).join('')}
+            </select>  
+          </td>
+        </tr>
+      </table>
+      <div class="formErrors ${progressError || logError ? '' : 'hidden'}">
+        ${progressError ? `
+          ${progressError.message}<br>
+          ${progressError.details}
+        ` : ''}
+        ${logError ? `<br>${logError.message}<br>${logError.details}` : ''}
       </div>
-      <button id="confirmLogProgress">Log</button>
-      </form>
-      <div class="successMessage ${State.progressUpdateSuccess ? '' : 'hidden'}">Success</div>
+      <button class="board-management-button" id="confirmLogProgress">Log</button>
+    </form>
+    <div class="successMessage ${State.progressUpdateSuccess ? '' : 'hidden'}">Success</div>
+    <div id="currentProgress">
+      Current progress:
+      ${this.getCurrentRangesHtml(book.key)}
+    </div>
   </div>    
     `;
   },
 
+  getCurrentRangesHtml(key) {
+    const ranges = BooksDomain.getBookRanges(key);
+    return `<table>
+    ${ranges.map((r, i) => {
+      return `
+      <tr>
+        <td>${r.f}-${r.t}</td>
+        <td>stage ${r.s}</td>
+      </tr>`;
+    }).join('')}
+    </table>`;
+  },  
+
   log() {
+
     State.progressUpdateError = null;
+    State.logUpdateError = null;
+    State.progressUpdateSuccess = null;
+
     const form = document.forms['progressForm'];
-    const range = {
-      s: form.stage.value,
-      f: form.from.value,
-      t: form.to.value
-    };
-    const res = BooksDomain.addOrUpdateRange(form.dataset.bookKey, range);
-    if(res.result !== true) {
-      State.progressUpdateError = res;
-    } else {
-      const logRes = EventsDomain.log({
-        type: EventsDomain.eventTypes.progress,
-        book: form.dataset.bookKey,
-        date: null,
-        data: {
-          ranges: [{
-            s: form.stage.value,
-            f: form.from.value,
-            to: form.to.value,
-          }]
-        }
-      });
-      if(logRes.result !== true) {
+    const hasRange = form.from.value !== '' && form.to.value !== '';
+    if(hasRange) {
+      const range = {
+        s: form.stage.value,
+        f: form.from.value,
+        t: form.to.value
+      };
+      const res = BooksDomain.addOrUpdateRange(form.dataset.bookKey, range);
+      if(res.result !== true) {
         State.progressUpdateError = res;
-      } else {
-        State.progressUpdateSuccess = true;
       }
-      //TODO what if we log multiple ranges?      
+    }
+
+    const type = State.progressData.delta > 0 ? EventsDomain.eventTypes.progress : EventsDomain.eventTypes.rollback;
+    const eventData = {
+      type: type,
+      book: form.dataset.bookKey,
+      date: null,
+    };
+    if (hasRange) {
+      eventData.data = {
+        ranges: [{
+          s: form.stage.value,
+          f: form.from.value,
+          t: form.to.value,
+        }]
+      };
+    } else {
+      eventData.data = {
+        stage : form.stage.value
+      };
+    }
+
+    const logRes = EventsDomain.log(eventData);
+
+    if(logRes.result !== true) {
+      State.logUpdateError = res;
+    }
+    if (!State.logUpdateError && !State.progressUpdateError) {
+      State.progressUpdateSuccess = true;
     }
     Bus.emit(Bus.events.progressUiChanged);
   },

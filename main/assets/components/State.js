@@ -18,6 +18,7 @@ export const State = {
   progressPromptShown : false,
   progressUpdateSuccess : null,
   progressUpdateError : null,
+  logUpdateError : null,
 
   afterRender: [],
 

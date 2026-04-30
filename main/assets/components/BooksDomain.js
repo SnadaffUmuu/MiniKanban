@@ -14,6 +14,10 @@ export const BooksDomain = {
     return App.books.find(b => b.key == key);
   },
 
+  getBookRanges(key) {
+    return this.getBook(key).state?.ranges;
+  },
+
   betBookByBoard(boardId, color) {
     return App.books.find(b => b.board == boardId && b.color == color);
   },

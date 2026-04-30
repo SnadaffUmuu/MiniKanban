@@ -1,5 +1,6 @@
 export const Storage = {
   loadData() {
+    console.log('LOADING data');
     if(typeof Android !== 'undefined') {
       return JSON.parse(Android.loadData());
     }
@@ -7,6 +8,7 @@ export const Storage = {
   },
 
   loadBooks() {
+    console.log('LOADING books');
     if(typeof Android !== 'undefined') {
       return JSON.parse(Android.loadBooks());
     }
@@ -14,6 +16,7 @@ export const Storage = {
   },
 
   loadEvents() {
+    console.log('LOADING events');
     if(typeof Android !== 'undefined') {
       return JSON.parse(Android.loadEvents());
     }
@@ -21,6 +24,7 @@ export const Storage = {
   },
 
   saveData(data) {
+    console.log('SAVING data');
     const raw = JSON.stringify(data);
     if(typeof Android !== 'undefined') {
       Android.saveData(raw);
@@ -30,6 +34,7 @@ export const Storage = {
   },
 
   saveBooks(data) {
+    console.log('SAVING books');
     const raw = JSON.stringify(data);
     if(typeof Android !== 'undefined') {
       Android.saveBooks(raw);
@@ -39,6 +44,7 @@ export const Storage = {
   },
 
   saveEvents(data) {
+    console.log('SAVING events');
     const raw = JSON.stringify(data);
     if(typeof Android !== 'undefined') {
       Android.saveEvents(raw);
