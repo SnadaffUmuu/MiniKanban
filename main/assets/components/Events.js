@@ -38,11 +38,11 @@ export const Events = {
       '##': [
         'HeaderUI.hideMenu',
       ],
-      [HeaderUI.selectors.toggleMenuButton]: 'HeaderUI.toggleMenu',
-      [HeaderUI.selectors.toggleBooksMenuButton]: 'HeaderUI.toggleBookMenu',
+      // [HeaderUI.selectors.toggleMenuButton]: 'HeaderUI.toggleMenu',
+      // [HeaderUI.selectors.toggleBooksMenuButton]: 'HeaderUI.toggleBookMenu',
       [HeaderUI.selectors.changeHeaderModeTriggers]: 'HeaderUI.changeMode',
       [HeaderUI.selectors.reset]: 'HeaderUI.reset',
-      [HeaderUI.selectors.screenSwitch]: 'HeaderUI.switchScreen',
+      //[HeaderUI.selectors.screenSwitch]: 'HeaderUI.switchScreen', //TODO [data-screen-switch]
       [HeaderUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
 
       [RenameUI.selectors.confirmRenameButton]: 'RenameUI.renameBoard',

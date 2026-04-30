@@ -1,4 +1,4 @@
-import {Storage} from './Storage.js'
+import { Storage } from './Storage.js'
 import { State } from './State.js';
 
 export const App = {
@@ -8,6 +8,7 @@ export const App = {
   screens : {
     board : 'board',
     books : 'books',
+    events : 'events',
   },
 
   loadData() {
@@ -49,13 +50,7 @@ export const App = {
   },
 
   switchScreen() {
-    const current = this.getCurrentScreen();
-    this.data.screen = current == this.screens.board ? this.screens.books : this.screens.board;
-    this.saveData();
-  },
-
-  switchBookUiMode(mode) {
-    this.data.booksUiMode = mode;
+    this.data.screen = State.currentScreen;
     this.saveData();
   },
 
@@ -64,8 +59,7 @@ export const App = {
   },
 
   isEvents() {
-    return this.data.screen == this.screens.books
-      && this.data.booksUiMode == 'events'
+    return this.data.screen == this.screens.events
   }
 
 };

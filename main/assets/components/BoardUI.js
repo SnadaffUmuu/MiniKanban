@@ -6,9 +6,12 @@ import {App} from './App.js'
 
 export const BoardUI = {
 
-  name : 'BoardUI',
+  name: 'BoardUI',
 
   selectors: {
+    appTitle: '[data-app-title="board"]',
+    topToolsBlock: '[data-screen-tools="board"]',
+    boardsListButton: '#boards-button',
     columnsContainer: '#columns',
     main: 'main#board',
     addColumnButton: '#add-column',
@@ -35,9 +38,20 @@ export const BoardUI = {
     });
   },
 
+  renderHeader() {
+    // this.dom.topToolsBlock.querySelectorAll('[data-screen-switch]').forEach(el =>
+    //   el.classList.toggle('hidden', State.headerUiMode !== 'default'));
+
+    // this.dom.appTitle.classList.toggle('hidden', State.headerUiMode !== 'default');
+    // this.dom.boardsListButton.classList.toggle('hidden', State.headerUiMode !== 'default');
+    
+    const board = BoardDomain.getCurrentBoard();
+    this.dom.appTitle.innerHTML = board.name;
+  },
+
   render() {
     console.log('RENDER: BoardUI');
-    if (!App.isBoard()) {
+    if(!App.isBoard()) {
       this.dom.main.classList.add('hidden');
       return;
     }

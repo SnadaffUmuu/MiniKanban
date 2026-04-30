@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>333Mvd Kanban App</title>
-  <!-- <link rel="stylesheet" href="styles.css"> -->
- <link rel="stylesheet" href="./styles.css">
- <!-- <script type="module" src="main.js"></script> -->
- <script type="module" src="./main.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <!-- <link rel="stylesheet" href="./styles.css"> -->
+  <script type="module" src="main.js"></script>
+  <!-- <script type="module" src="./main.js"></script> -->
 </head>
+
 <body>
-  <div class="hidden" id="growPrompt">go</div>
+  <div class="hidden" id="growPrompt"></div>
   <div id="dialog" class="hidden">
     <div id="dialogBody">
       <button class="button-close button-close__extra button-close__dialog"></button>
@@ -19,25 +21,47 @@
     </div>
   </div>
   <header>
-    <h1 id="board-title" class="top-menu-title"></h1>
-    <div id="top-tools" class="hidden">
-      <button id="addBook"></button>
-      <button id="switchScreen"></button>
-      <button id="boards-button" data-header-mode-trigger="boardsList"></button>
-      <button id="menu-toggle" class="menu-toggle hidden"></button>
-      <button id="books-menu-toggle" class="menu-toggle  hidden"></button>
+    <div id="headerWrap">
+      <h1 data-app-title="board" class="top-menu-title hidden">Board</h1>
+      <h1 data-app-title="books" class="top-menu-title hidden">Books</h1>
+      <h1 data-app-title="events" class="top-menu-title hidden">Events</h1>
+  
+      <div data-screen-tools="board" class="top-tools hidden">
+        <button data-screen-switch="events" class="switch-screen"></button>
+        <button data-screen-switch="books" class="switch-screen"></button>
+        <button id="boards-button" data-header-mode-trigger="boardsList"></button>
+        <button data-toggle-menu-trigger="board" class="menu-toggle"></button>
+      </div>
+  
+      <div data-screen-tools="books" class="top-tools hidden">
+        <button id="addBook"></button>
+        <button data-screen-switch="events" class="switch-screen"></button>
+        <button data-screen-switch="board" class="switch-screen"></button>
+        <button data-toggle-menu-trigger="books" class="menu-toggle"></button>
+      </div>
+  
+      <div data-screen-tools="events" class="top-tools hidden">
+        <button data-screen-switch="books" class="switch-screen"></button>
+        <button data-screen-switch="board" class="switch-screen"></button>
+        <button data-toggle-menu-trigger="events" class="menu-toggle"></button>
+      </div>
     </div>
-    <section id="menu" class="menu hidden">
+
+    <section data-toggle-menu-target="board" class="menu hidden">
       <div id="menu-content">
-        <button id="rename-board" data-header-mode-trigger="renameBoard" class="hidden">Rename board</button>
-        <button id="delete-board" data-header-mode-trigger="deleteBoard" class="hidden">Delete board</button>
-        <button id="manage-ranks"  data-header-mode-trigger="ranks" class="hidden">Manage ranks</button>
-        <button id="show-stats" class="hidden" data-header-mode-trigger="stats">Show stats</button>
+        <button id="rename-board" data-header-mode-trigger="renameBoard">Rename board</button>
+        <button id="delete-board" data-header-mode-trigger="deleteBoard">Delete board</button>
+        <button id="manage-ranks" data-header-mode-trigger="ranks">Manage ranks</button>
+        <button id="show-stats" data-header-mode-trigger="stats">Show stats</button>
       </div>
     </section>
-    <section id="booksMenu" class="menu hidden">
-      <button data-books-mode-trigger="events">events</button>
-      <button data-books-mode-trigger="books">books</button>
+
+    <section data-toggle-menu-target="books" class="menu hidden">
+      <button>some books action</button>
+    </section>
+
+    <section data-toggle-menu-target="events" class="menu hidden">
+      <button>some events action</button>
     </section>
 
     <div id="statsUI" data-header-mode="stats" class="hidden">
@@ -64,9 +88,9 @@
       <p>Delete this board with all columns and tasks?</p>
       <button id="delete-confirm" class="board-management-button">Delete</button>
       <button id="delete-cancel" class="js-cancel-current board-management-button">Cancel</button>
-    </div>      
+    </div>
 
-    <div id="ranks-block" data-header-mode="ranks" class="hidden"></div>      
+    <div id="ranks-block" data-header-mode="ranks" class="hidden"></div>
 
     <div id="boards-list" data-header-mode="boardsList" class="hidden">
       <h3 class="top-menu-title">Boards</h3>
@@ -102,4 +126,5 @@
     <div id="eventsListContainer"></div>
   </section>
 </body>
+
 </html>

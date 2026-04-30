@@ -18,7 +18,7 @@ export const BooksUI = {
 
   events : {
     click : {
-      '@switchBooksViewsTriggers' : 'changeMode'
+      //'@switchBooksViewsTriggers' : 'changeMode'
     }
   },
 
@@ -52,7 +52,7 @@ export const BooksUI = {
     closeExtraUi: '.extraUi .js-cancel-current',
     addRangeButton: '.extraUi .addRange',
     removeRangeRowRutton: '.extraUi .removeRangeRow',
-    switchBooksViewsTriggers: 'header [data-books-mode-trigger]',
+    //switchBooksViewsTriggers: 'header [data-books-mode-trigger]',
   },
 
   dom: {
@@ -68,6 +68,10 @@ export const BooksUI = {
     //   State.booksUi.rowUi = {};
     //   this.render();
     // });
+  },
+
+  renderHeader() {
+
   },
 
   render() {
@@ -242,12 +246,12 @@ export const BooksUI = {
     Bus.emit(Bus.events.headerUIChanged);
   },
 
-  changeMode(el, e) {
-    App.switchBookUiMode(el.dataset.booksModeTrigger);
-    State.booksMenuOpen = false;
-    Bus.emit(Bus.events.headerUIChanged);
-    Bus.emit(Bus.events.booksModeChanged);
-  },
+  // changeMode(el, e) {
+  //   App.switchBookUiMode(el.dataset.booksModeTrigger);
+  //   State.booksMenuOpen = false;
+  //   Bus.emit(Bus.events.headerUIChanged);
+  //   //Bus.emit(Bus.events.booksModeChanged);
+  // },
 
   selectBoardHandler(el) {
     this.updateColorsDropdown(el);

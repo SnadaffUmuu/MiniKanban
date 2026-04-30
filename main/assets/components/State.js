@@ -1,8 +1,7 @@
 export const State = {
-
+  currentScreen: 'board', 
   headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault
-  menuOpen: false,
-  booksMenuOpen: false,
+  openedTopMenu: null,
   statsUiMode: null,
   boardUi: {
     columnUi: {}, //default, menu, rename, move, delete

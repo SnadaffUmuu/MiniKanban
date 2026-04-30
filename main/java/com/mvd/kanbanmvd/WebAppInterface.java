@@ -11,7 +11,7 @@ public class WebAppInterface {
     private static final String TAG = "KanbanMvdLog";
     private static final String DATA_FILE_NAME = "kanban_mvd_data.json";
     private static final String DATA_BOOKS_FILE_NAME = "kanban_mvd_books.json";
-    private static final String DATA_EVENTS_FILE_NAME = "kanban_mvd_events.log";
+    private static final String DATA_EVENTS_FILE_NAME = "kanban_mvd_events.json";
     private Context context;
 
     WebAppInterface(Context ctx) {

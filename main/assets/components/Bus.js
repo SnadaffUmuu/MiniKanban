@@ -10,7 +10,7 @@ export const Bus = {
     ranksUiChanged: 'ranksUiChanged',
     screenChanged: 'screenChanged',
     booksUiChanged: 'booksUiChanged',
-    booksModeChanged: 'booksModeChanged',
+    //booksModeChanged: 'booksModeChanged',
     booksChanged: 'booksChanged',
     progress: 'progress',
     progressUiChanged : 'progressUiChanged',

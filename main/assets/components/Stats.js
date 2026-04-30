@@ -54,9 +54,12 @@ export const Stats = {
           ? roundUp1((this.idealMap[name] / idealTotal) * 100)
           : 0;
 
+        const delta = realPercent - idealPercent;
+
         return `
           <tr>
             <td>${name}</td>
+            <td>${delta.toFixed(1)}%</td>
             <td>${realPercent.toFixed(1)}%</td>
             <td>${idealPercent.toFixed(1)}%</td>
           </tr>
@@ -68,6 +71,7 @@ export const Stats = {
           <thead>
             <tr>
               <th></th>
+              <th>Δ</th>
               <th>real</th>
               <th>ideal</th>
             </tr>

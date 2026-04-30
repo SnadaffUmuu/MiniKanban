@@ -34,11 +34,18 @@ textarea::placeholder {
 
 header {
   background: #333533;
-  position: relative;
-  padding: 15px 15px 13px;
   box-shadow: 0px 10px 7px -7px black;
   margin-bottom: 5px !important;
   flex: 0 0 auto;
+}
+
+header.expanded {
+  padding: 15px 15px 13px;
+}
+
+#headerWrap {
+  display:flex;
+  flex-flow:row nowrap;
 }
 
 .hidden {
@@ -49,20 +56,32 @@ header {
   font-size: 20px;
   color: #f0f0f0;
   margin: 0;
-  min-height: 23px;
+  overflow: hidden;
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  padding-left:15px;
 }
 
-#top-tools {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  z-index: 300;
+header.expanded .top-menu-title {
+  padding-left:0;
+}
+
+@media screen and (max-width: 400px) {
+  .top-menu-title {
+    padding: 0 0 0 10px;
+    font-size: 16px;
+  }
+}
+
+.top-tools {
   display: flex;
   flex-flow: row nowrap;
   justify-content: flex-end;
 }
 
-#top-tools button {
+.top-tools button {
   width: 40px;
   height: 40px;
   margin: 5px;
@@ -291,7 +310,9 @@ button.dragging {
   opacity: 0.7;
 }
 
-main, #books, #events {
+main,
+#books,
+#events {
   width: 100%;
   max-width: 100%;
   min-height: 0;
@@ -860,14 +881,19 @@ body:has(.dragged) {
 
 /* BOOKS */
 
-#switchScreen {
+.switch-screen[data-screen-switch="books"] {
   background: url(images/branch.svg) 50% no-repeat;
   background-size: 50%;
 }
 
-#switchScreen.books {
+.switch-screen[data-screen-switch="board"] {
   background: url(images/boards.png) 50% no-repeat;
   background-size: contain;
+}
+
+.switch-screen[data-screen-switch="events"] {
+  background: url(images/go-colored.svg) 50% no-repeat;
+  background-size: 25px;
 }
 
 #books {
@@ -1044,7 +1070,7 @@ select:invalid {
 .dialogContent {}
 
 .button-close__dialog {
-  top:unset;
+  top: unset;
   bottom: 10px;
   right: 10px;
   box-shadow: -1px 1px 2px #47474775;
@@ -1055,15 +1081,14 @@ select:invalid {
   z-index: 1000;
   width: 50px;
   height: 50px;
-  background: #ffaa00;
   border-radius: 25px;
-  box-shadow: 4px 4px 5px #6f79f18c;
-  color: #fff;
+  box-shadow: 1px 2px 5px 4px #00000038;
   font-size: 25px;
   font-weight: bold;
   text-align: center;
   line-height: 50px;
-  border: 1px solid #b58600;
+  background: url(images/go.svg) 50% no-repeat #ffaa00;
+  background-size: 35px;
 }
 
 #progressUi .board-management-button {
@@ -1074,25 +1099,25 @@ select:invalid {
   background: white;
   box-sizing: border-box;
   box-shadow: 0px 4px 11px #47474733;
-  margin:15px auto 0;
+  margin: 15px auto 0;
 }
 
 #progressUi form table td {
-  padding:0 5px 5px;
+  padding: 0 5px 5px;
 }
 
 #progressUi h6 {
   margin: 0 0 15px 10px;
-  font-size:15px;
+  font-size: 15px;
 }
 
 #progressUi input[type="number"] {
   width: 50px;
-  display:inline-block;
+  display: inline-block;
 }
 
 #progressUi select {
-  width:50px;
+  width: 50px;
 }
 
 .successMessage,
@@ -1138,21 +1163,21 @@ select:invalid {
 
 #eventsListContainer {
   background: #f1f1ee;
-  padding:10px;
-  margin:5px;
+  padding: 10px;
+  margin: 5px;
   border-radius: 5px;
-  flex:1 0 auto;
+  flex: 1 0 auto;
 }
 
 .eventsEntry {
-  padding-bottom:15px;
+  padding-bottom: 15px;
 }
 
 #taskData {
-  margin-bottom:10px;
-  width:100%;
+  margin-bottom: 10px;
+  width: 100%;
   border-radius: 5px;
-  padding:10px;
+  padding: 10px;
 }
 
 #taskData tr:not(:last-child) td {
@@ -1160,10 +1185,10 @@ select:invalid {
 }
 
 #currentProgress {
-  margin-top:15px;
+  margin-top: 15px;
   color: #888;
 }
 
 #currentProgress table {
-  margin-top:10px;
+  margin-top: 10px;
 }
