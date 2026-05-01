@@ -26,6 +26,13 @@ export const TaskUI = {
     cloneTask: '.task-clone',
     colorPickerButton: '.task-change-color',
     cancelSetColorButton: '.cancel-set-color',
+    incrVocabPractice : '.incr-vocab-practice',
+  },
+
+  events : {
+    click : {
+      '@incrVocabPractice' : 'incrVocab',
+    },
   },
 
   init() {
@@ -147,10 +154,14 @@ export const TaskUI = {
   saveTask(el) {
     const taskEl = el.closest('.task');
     const columnEl = el.closest('.column');
-    BoardDomain.updateTask(this.getId(el), columnEl.dataset.id, {
+    const data = {
       color: taskEl.dataset.color,
       description: this.getInput(el).value
-    });
+    };
+    if (taskEl.dataset.vocabCount) {
+      data.vocabCount = taskEl.dataset.vocabCount;
+    }
+    BoardDomain.updateTask(this.getId(el), columnEl.dataset.id, data);
     Bus.emit(Bus.events.boardsChanged);
   },
 
@@ -164,6 +175,14 @@ export const TaskUI = {
       newTaskEl.querySelector('.task-edit-button').click();
     });
     Bus.emit(Bus.events.boardsChanged);
+  },
+
+  incrVocab(el) {
+    const taskEl = el.closest('.task');
+    const task = BoardDomain.getTask(taskEl.dataset.id);
+    const num = task.vocabCount ? Utils.toInt(task.vocabCount) + 1 : 1;
+    taskEl.dataset.vocabCount = num;
+    this.saveTask(el);
   },
 
   render(id) {
@@ -200,6 +219,8 @@ export const TaskUI = {
     const isDeleteConfirm = domainTask && uiTask && uiTask.mode === 'deleteConfirm';
     const isColorPicker = domainTask && uiTask && uiTask.mode === 'colors';
     const isDefault = !isCreate && !isEdit && !isMenuOpened && !isDeleteConfirm && !isColorPicker;
+    const isVocabCol = column.name == 'Лексика';
+    const showVocabDots = isVocabCol && domainTask.vocabCount;
 
     const origColor = domainTask ? domainTask.color : null;
     const descr = uiTask && uiTask.description ? uiTask.description : (domainTask ? domainTask.description : '');
@@ -209,12 +230,14 @@ export const TaskUI = {
     return `
     <div class="task ${isMenuOpened ? 'expanded' : ''}" style="background:${Colors[color]};" data-color="${color}" data-id="${id}">
       ${isDefault ? `<div class="ranks-info">${this.getTaskRanksInfo(domainTask, column, BoardDomain.getCurrentBoard())}</div>` : ''}
+      ${showVocabDots ? `<div class="vocab-count-dots">${Array.from({length:domainTask.vocabCount}).map((_,i) => '・').join('')}</div>` : ''}
       <div class="task-expand-button ${!isDefault ? 'hidden' : ''}"></div>
       <button class="task-info-toggle ${isEdit || isMenuOpened ? 'expanded' : ''}"></button>
       <div class="task-header ${!isDefault && !isMenuOpened ? 'hidden' : ''}">
         <span class="task-title">${descr}</span>
       </div>
       <div class="task-info ${!isMenuOpened ? 'hidden' : ''}">
+        <button class="incr-vocab-practice ${isVocabCol ? '' : 'hidden'}"></button>
         <button class="task-change-color"></button>
         <button class="task-delete"></button>
         <button class="task-clone"></button>

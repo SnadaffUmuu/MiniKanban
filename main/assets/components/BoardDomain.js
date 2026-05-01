@@ -181,7 +181,7 @@ export const BoardDomain = {
     }
   },
 
-  updateTask(id, colId, {color, description}) {
+  updateTask(id, colId, {color, description, vocabCount}) {
     const board = this.getCurrentBoard();
     let theTask = null;
     let theCol = null;
@@ -198,6 +198,9 @@ export const BoardDomain = {
 
       theTask.color = color;
       theTask.description = description;
+      if (vocabCount) {
+        theTask.vocabCount = vocabCount;
+      }
 
     } else {
 
@@ -206,6 +209,9 @@ export const BoardDomain = {
         color: color,
         description: description
       };
+      if (vocabCount) {
+        theTask.vocabCount = vocabCount;
+      }
 
       theCol = board.columns.find(col => col.id === colId);
       theCol.tasks = theCol.tasks ? [theTask, ...theCol.tasks] : [theTask];
@@ -234,12 +240,6 @@ export const BoardDomain = {
     //console.log(insertIndex);
     if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
     targetColumn.tasks.splice(insertIndex, 0, task);
-
-    // this.makeAMove({
-    //   color: task.color,
-    //   sourceColumn: sourceColumn,
-    //   targetColumn: targetColumn
-    // });
 
     this.checkForProgress({
       task: task,
@@ -378,20 +378,6 @@ export const BoardDomain = {
 
   makeMove(board, task, delta, skipMove) {
 
-    //   if(!sourceColumn || !targetColumn) return;
-    //   if(sourceColumn.id === targetColumn.id) return;
-    //   const board = this.getCurrentBoard();
-    //   const sourceIndex = board.columns.findIndex(c => c.id === sourceColumn.id);
-    //   const targetIndex = board.columns.findIndex(c => c.id === targetColumn.id);
-    //   const isGoingForward = targetIndex > sourceIndex;
-    //   const delta = isGoingForward ? 1 : -1;
-    //   const sourceCol = board.columns[sourceIndex];
-    //   const targetCol = board.columns[targetIndex];
-
-    //   const skipMove =
-    //     (isGoingForward && sourceCol.skipMove) ||
-    //     (!isGoingForward && targetCol.skipMove);
-
     const ranks = board.ranks;
     if(!ranks || !task) return;
 
@@ -436,18 +422,7 @@ export const BoardDomain = {
       board.rankCounters[level] = quotaOwn;
 
     } else {
-
-      // --- 6. Проверка “в долг”
-      // Ход вперёд в долг = у верхнего уровня нет ресурса
-      // Ход назад в долг = у верхнего уровня был компенсирующий долг
-      // const affectsOwn =
-      //   isGoingForward
-      //     ? upperCount > 0
-      //     : true; // назад всегда восстанавливаем симметрично
-
-      // if(affectsOwn) {
       board.rankCounters[level] = ownCount + delta;
-      // }
     }
 
     // --- 7. Корректировка верхнего уровня

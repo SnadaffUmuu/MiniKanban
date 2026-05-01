@@ -562,7 +562,8 @@ body:has(.dragged) {
 .add-task,
 .column-menu-toggle,
 .task-edit-button,
-.new-task-cancel {
+.new-task-cancel,
+.incr-vocab-practice {
   width: 25px;
   height: 25px;
   border: none;
@@ -582,6 +583,11 @@ body:has(.dragged) {
 .task-change-color {
   background: transparent url(images/colors.svg) 50% no-repeat;
   background-size: 17px;
+}
+
+.incr-vocab-practice {
+  background: transparent url(images/plus_gray.svg) 50% no-repeat;
+  background-size: 22px;
 }
 
 .task-info-toggle {
@@ -1217,4 +1223,13 @@ select:invalid {
 #currentProgress table, 
 #newRanges table {
   margin-top: 10px;
+}
+
+.vocab-count-dots {
+  position: absolute;
+  top: -5px;
+  left: 5px;
+  max-width: calc(100% - 45px);
+  overflow: hidden;
+  opacity: 0.3;
 }
