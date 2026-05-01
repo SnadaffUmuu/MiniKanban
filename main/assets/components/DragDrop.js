@@ -339,14 +339,14 @@ export const DragDrop = {
     if(!task) return;
     if(e.target.classList.contains('task-edit-input')
       || task.classList.contains('expanded')) return;
-    console.log('taskTouchStart', el);
+    //console.log('taskTouchStart', el);
 
     this.longPressTarget = task;
     this.longPressTimer = setTimeout(() => {
       if(e.target.classList.contains('task-edit-input')
         || task.classList.contains('expanded')) return;
       this.enableTextSelection(false);
-      console.log('taskTouchStart: startDrag');
+      //console.log('taskTouchStart: startDrag');
       this.startDrag(this.longPressTarget, e);
       this.blockContextMenuTemporarily(e);
       this.longPressTimer = null;

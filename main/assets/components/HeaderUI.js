@@ -4,6 +4,7 @@ import {BoardDomain} from './BoardDomain.js'
 import {BooksDomain} from './BooksDomain.js'
 import { BoardUI } from './BoardUI.js'
 import {State} from './State.js'
+import {BooksUI} from './BooksUI.js'
 
 export const HeaderUI = {
 

@@ -1,4 +1,5 @@
-import {App} from "./App.js";
+import {App} from "./App.js"
+import {Utils} from "./Utils.js";
 
 export const EventsDomain = {
 
@@ -18,38 +19,17 @@ export const EventsDomain = {
 
   getEventsForBook(bookKey, isAsc) {
     const res = this.getEvents().filter(ev => ev.b == bookKey);
-    if(isAsc) {
-      return res.sort((a, b) => a.date > b.date ? 1 : -1);
-    } else {
-      return res.sort((a, b) => a.date > b.date ? -1 : 1);
-    }
+    return Utils.sortBy(res, 'date', isAsc);
   },
 
   getEventsForDate(date, isAsc) {
     const res = this.getEvents().filter(ev => ev.d == date);
-    if(isAsc) {
-      return res.sort((a, b) => a.date > b.date ? 1 : -1);
-    } else {
-      return res.sort((a, b) => a.date > b.date ? -1 : 1);
-    }
+    return Utils.sortBy(res, 'date', isAsc);
   },
 
   getEventsForBookAndDate(bookKey, date, isAsc) {
     const res = this.getEvents().filter(ev => ev.d == date && ev.b == bookKey);
-    if(isAsc) {
-      return res.sort((a, b) => a.date > b.date ? 1 : -1);
-    } else {
-      return res.sort((a, b) => a.date > b.date ? -1 : 1);
-    }
-  },
-
-  sortBy(events, key, isAsc) {
-    console.log('isAcs', isAsc);
-    if(isAsc) {
-      return events.sort((a, b) => a[key] > b[key] ? 1 : -1);
-    } else {
-      return events.sort((a, b) => a[key] > b[key] ? -1 : 1);
-    }
+    return Utils.sortBy(res, 'date', isAsc);
   },
 
   saveEvents(events) {
@@ -79,9 +59,9 @@ export const EventsDomain = {
         };
         if(type == this.eventTypes.progress) {
           res.r = data.ranges;
-            // res.f = data.f,
-            // res.to = data.to,
-            // res.s = data.s
+          // res.f = data.f,
+          // res.to = data.to,
+          // res.s = data.s
         }
         //TODO: manual
         events.push(res);

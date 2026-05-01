@@ -60,6 +60,10 @@ export const App = {
 
   isEvents() {
     return this.data.screen == this.screens.events
-  }
+  },
+  
+  isBooks() {
+    return this.data.screen == this.screens.books
+  },
 
 };

@@ -311,7 +311,6 @@ button.dragging {
 }
 
 main,
-#books,
 #events {
   width: 100%;
   max-width: 100%;
@@ -899,6 +898,15 @@ body:has(.dragged) {
 #books {
   padding: 10px;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;  
 }
 
 #booksList {
@@ -933,10 +941,27 @@ body:has(.dragged) {
 #addBookUi {
   background: #f1f1ee;
   padding: 10px;
+  box-sizing: border-box;
+  width:100%;
+  margin-bottom:10px;
+  box-sizing: border-box;
 }
 
 .editBookUi {
   position: relative;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"] {
+  border-radius: 3px;
+  border-width:1px;
+  display:inline-block;
+  margin-bottom:3px;
+}
+
+select {
+  height:23px;
 }
 
 input[type="text"]:invalid,
@@ -1003,7 +1028,7 @@ select:invalid {
 .rangesRow {
   display: flex;
   flex-flow: row nowrap;
-  padding-bottom: 5px;
+  /* padding-bottom: 5px; */
   align-items: end;
 }
 
@@ -1079,9 +1104,9 @@ select:invalid {
 #growPrompt {
   position: absolute;
   z-index: 1000;
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
+  width: 70px;
+  height: 70px;
+  border-radius: 35px;
   box-shadow: 1px 2px 5px 4px #00000038;
   font-size: 25px;
   font-weight: bold;
@@ -1184,11 +1209,12 @@ select:invalid {
   border-bottom: 1px solid #b5b5b5;
 }
 
-#currentProgress {
+#currentProgress, #newRanges {
   margin-top: 15px;
   color: #888;
 }
 
-#currentProgress table {
+#currentProgress table, 
+#newRanges table {
   margin-top: 10px;
 }

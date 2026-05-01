@@ -2,6 +2,7 @@ import { Bus } from "./Bus.js";
 import { App } from "./App.js";
 import { EventsDomain } from "./EventsDomain.js";
 import { BooksDomain } from "./BooksDomain.js";
+import { Utils } from "./Utils.js";
 
 export const EventsUI = {
 
@@ -31,7 +32,7 @@ export const EventsUI = {
   },
 
   getListHtml() {
-    const events = EventsDomain.sortBy(EventsDomain.getEvents(), 'ts', false);
+    const events = Utils.sortBy(EventsDomain.getEvents(), 'ts', false);
     return events.map(ev => `
       <div class="eventsEntry">
         ${ev.d}<br>

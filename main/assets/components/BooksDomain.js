@@ -82,35 +82,63 @@ export const BooksDomain = {
     //TODO: should the history be deleted?
   },
 
-
-  setBookRanges(key, ranges) {
-    const normalized = ranges.map(r => ({
+  getNewRangesForRanges(rangesFromForm) {
+    const normalized = rangesFromForm.map(r => ({
       s: Number(r.s),
       f: Number(r.f),
       t: Number(r.t)
     }));
 
-    const conflicts = Utils.findCrossStageOverlaps(normalized);
+    // 1. базовая валидация
+    for(const r of normalized) {
+      if(r.f > r.t) {
+        return {
+          result: false,
+          message: `Invalid range ${r.f}-${r.t}`,
+          details: null
+        };
+      }
+    }
+
+    // 2. проверка неоднозначных пересечений
+    const conflicts = Utils.findAmbiguousOverlaps(normalized);
+
     if(conflicts.length) {
       return {
         result: false,
-        message: 'Ranges have overlaps',
+        message: 'Ambiguous overlaps detected',
         details: Utils.formatConflicts(conflicts)
       };
     }
 
-    const merged = Utils.mergeRanges([], normalized);
+    // 3. применяем ranges последовательно (порядок уже не важен!)
+    let result = [];
 
+    for(const r of normalized) {
+      result = this.applyRange(result, r);
+    }
+
+    return {
+      result: true,
+      ranges: result
+    };
+  },
+
+  setBookRanges(key, newRanges) {
     const book = this.getBook(key);
-    book.state = book.state || {};
-    book.state.ranges = merged;
+
+    if(!book.state) {
+      book.state = {};
+    }
+
+    book.state.ranges = newRanges;
 
     this.saveBooks(App.books);
 
     return {result: true};
   },
 
-  addOrUpdateRange(key, range) {
+  getNewRangesForRange(key, range) {
     const inc = {
       s: Number(range.s),
       f: Number(range.f),
@@ -119,47 +147,24 @@ export const BooksDomain = {
 
     const book = this.getBook(key);
 
-    let existing = book.state?.ranges || [];
-
-    existing = existing.map(r => ({
+    const existing = (book.state?.ranges || []).map(r => ({
       s: Number(r.s),
       f: Number(r.f),
       t: Number(r.t)
     }));
 
-    // 1. валидируем сам входящий диапазон (на случай мусора)
-    const incomingConflicts = Utils.findCrossStageOverlaps([inc]);
-    if(incomingConflicts.length) {
-      return {
-        result: false,
-        message: 'Incoming range has overlaps',
-        details: Utils.formatConflicts(incomingConflicts)
-      };
-    }
+    return this.applyRange(existing, inc);
+  },
 
-    // 2. убираем старую версию диапазона (если это update stage)
-    const filteredExisting = existing.filter(ex => {
-      return !(ex.f === inc.f && ex.t === inc.t);
-    });
+  addOrUpdateRange(bookKey, newRanges) {
 
-    // 3. проверяем конфликты с остальными диапазонами
-    const conflicts = Utils.findConflictsBetween(filteredExisting, [inc]);
-    if(conflicts.length) {
-      return {
-        result: false,
-        message: 'Range conflicts with existing ranges',
-        details: Utils.formatConflicts(conflicts)
-      };
-    }
-
-    // 4. добавляем и нормализуем
-    const merged = Utils.mergeRanges(filteredExisting, [inc]);
+    const book = this.getBook(bookKey);
 
     if(!book.state) {
       book.state = {};
     }
 
-    book.state.ranges = merged;
+    book.state.ranges = newRanges;
 
     this.saveBooks(App.books);
 
@@ -170,71 +175,38 @@ export const BooksDomain = {
     };
   },
 
-  // updateBookState(key, incoming) {
-  //   incoming = incoming.map(r => ({
-  //     s: Number(r.s),
-  //     f: Number(r.f),
-  //     t: Number(r.t)
-  //   }));
-  //   const book = this.getBook(key);
-  //   const incomingConflicts = Utils.findCrossStageOverlaps(incoming);
-  //   if(incomingConflicts.length) {
-  //     return {
-  //       result: false,
-  //       message: 'Incoming ranges have overlaps',
-  //       details: Utils.formatConflicts(incomingConflicts)
-  //     }
-  //   }
-  //   let existing = book.state?.ranges || [];
-  //   if(existing.length) {
-  //     existing = existing.map(r => ({
-  //       s: Number(r.s),
-  //       f: Number(r.f),
-  //       t: Number(r.t)
-  //     }));
-  //     const existingConflicts = Utils.findCrossStageOverlaps(existing);
-  //     if(existingConflicts.length) {
-  //       return {
-  //         result: false,
-  //         message: 'Existing ranges have overlaps',
-  //         details: Utils.formatConflicts(existingConflicts)
-  //       }
-  //     }
+  applyRange(existing, inc) {
+    const result = [];
 
-  //     //если диапазон совпадает по f/t — считаем это обновлением stage
-  //     const updatedExisting = [];
-  //     for(const ex of existing) {
-  //       const replacement = incoming.find(inc => inc.f === ex.f && inc.t === ex.t);
-  //       if(!replacement) {
-  //         updatedExisting.push(ex);
-  //       }
-  //     }
-  //     existing = updatedExisting;
+    for(const ex of existing) {
+      // нет пересечения
+      if(ex.t < inc.f || ex.f > inc.t) {
+        result.push(ex);
+        continue;
+      }
 
-  //     const conflicts = Utils.findConflictsBetween(existing, incoming);
-  //     if(conflicts.length) {
-  //       return {
-  //         result: false,
-  //         message: 'There are overlaps between incoming and existing ranges',
-  //         details: Utils.formatConflicts(conflicts)
-  //       }
-  //     }
-  //   }
-  //   const merged = Utils.mergeRanges(existing, incoming);
+      // левая часть
+      if(ex.f < inc.f) {
+        result.push({
+          s: ex.s,
+          f: ex.f,
+          t: inc.f - 1
+        });
+      }
 
-  //   if(!book.state) {
-  //     book.state = {}
-  //   }
+      // правая часть
+      if(ex.t > inc.t) {
+        result.push({
+          s: ex.s,
+          f: inc.t + 1,
+          t: ex.t
+        });
+      }
+    }
 
-  //   book.state.ranges = merged;
+    result.push(inc);
 
-  //   this.saveBooks(App.books);
-
-  //   return {
-  //     result: true,
-  //     message: null,
-  //     details: null
-  //   }
-  // },
+    return Utils.mergeRanges(result, []);
+  },
 
 };

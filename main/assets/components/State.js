@@ -15,8 +15,9 @@ export const State = {
   },
   progressData : {},
   progressPromptShown : false,
+  newRangesDraft : null,
+  progressFormDraft : null,
   progressUpdateSuccess : null,
-  progressUpdateError : null,
   logUpdateError : null,
 
   afterRender: [],

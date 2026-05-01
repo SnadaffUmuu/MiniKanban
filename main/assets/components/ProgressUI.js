@@ -17,17 +17,34 @@ export const ProgressUI = {
     dialog: '#dialog',
     dialogClose: '.button-close',
     logProgressConfirmButton: '#confirmLogProgress',
+    logProgressPreviewButton: '#previewLogProgress',
+    form: '#progressUi form',
+    inputField: '#progressUi input',
+    selectField: '#progressUi select',
+    draftContainer: '#newRanges',
   },
 
   events: {
     click: {
-      '@promptButton': 'showUi',
       '##': 'hideUi',
+      '@promptButton': 'showUi',
+      '@logProgressPreviewButton': 'preview',
       '@logProgressConfirmButton': 'log',
-    }
+    },
+    input: {
+      '@inputField': 'formChangeHandler',
+    },
+    change: {
+      '@selectField': 'formChangeHandler',
+    },
   },
 
-  dom: {},
+  dom: {
+    form: null,
+    previewButton: null,
+    submitButton: null,
+    draftContainer: null,
+  },
 
   init() {
     Bus.batchedMethod(this, 'render');
@@ -58,14 +75,19 @@ export const ProgressUI = {
     console.log('dialogHidden', dialogHidden);
     console.log('buttonHidden', buttonHidden);
     this.dom.promptButton.classList.toggle('hidden', buttonHidden);
-    if (!buttonHidden) {
-      this.dom.promptButton.style.left = data.position[0] + 'px';
+    if(!buttonHidden) {
+      this.dom.promptButton.style.left = (data.position[0] - 35) + 'px';
       this.dom.promptButton.style.top = data.position[1] + 'px';
     }
     this.dom.dialog.querySelector(this.selectors.dialogContent).innerHTML = hasData && buttonHidden ? `
       ${this.getFormHtml(book, task)}
     ` : '';
     this.dom.dialog.classList.toggle('hidden', dialogHidden);
+
+    this.dom.form = document.querySelector(this.selectors.form);
+    this.dom.previewButton = document.querySelector(this.selectors.logProgressPreviewButton);
+    this.dom.submitButton = document.querySelector(this.selectors.logProgressConfirmButton);
+    this.dom.draftContainer = document.querySelector(this.selectors.draftContainer);
   },
 
   showUi() {
@@ -83,8 +105,9 @@ export const ProgressUI = {
     State.progressData = {};
     State.progressPromptShown = false;
     State.progressUpdateSuccess = null;
-    State.progressUpdateError = null;
+    State.newRangesDraft = null;
     State.logUpdateError = null;
+    State.progressFormDraft = null;
     this.render();
   },
 
@@ -93,8 +116,9 @@ export const ProgressUI = {
     const data = State.progressData;
     const stage = BooksDomain.getStageAtIndex(board.columns, Utils.toInt(book.startIndex), data.targetIndex);
     const hideForm = State.progressUpdateSuccess != null;
-    const progressError = State.progressUpdateError;
-    const logError = stage.logUpdateError;
+    const draft = State.newRangesDraft;
+    const formDraft = State.progressFormDraft;
+    const logError = State.logUpdateError;
     const range = Utils.extractRange(task.description);
     const stagesCountForTheBook = BooksDomain.getBookStagesCountFromBoard(board.id, Utils.toInt(book.startIndex));
     return `
@@ -124,43 +148,50 @@ export const ProgressUI = {
         </tr>
         <tr>
           <td><label for="fromField">from page</label></td>
-          <td><input type="number" id="fromField" name="from" value="${range ? range[0] : ''}"></td>
+          <td><input type="number" id="fromField" name="from" value="${formDraft && formDraft.from ? formDraft.from : range ? range[0] : ''}"></td>
         </tr>
         <tr>
           <td><label for="toField">to page</label></td>
-          <td><input type="number" id="toField" name="to" value="${range ? range[1] : ''}"></td>
+          <td><input type="number" id="toField" name="to" value="${formDraft && formDraft.to ? formDraft.to : range ? range[1] : ''}"></td>
         </tr>
         <tr>
           <td><label for="stageField">stage</label></td>
           <td>
             <select id="stageField" name="stage">
-            ${Array.from({length: stagesCountForTheBook}).map((_, i) => `
-              <option ${i + 1 == stage ? 'selected' : ''} value="${i + 1}">${i + 1}</option>
-              `).join('')}
+            ${Array.from({length: stagesCountForTheBook}).map((_, i) => {
+              const hasDraftStage = formDraft && formDraft.stage != null;
+              return `
+              <option ${(
+                (hasDraftStage && i + 1 == formDraft.stage) ||
+                (!hasDraftStage && i + 1 == stage))
+                  ? 'selected': ''} value="${i + 1}">${i + 1}</option>
+              `}).join('')}
             </select>  
           </td>
         </tr>
       </table>
-      <div class="formErrors ${progressError || logError ? '' : 'hidden'}">
-        ${progressError ? `
-          ${progressError.message}<br>
-          ${progressError.details}
-        ` : ''}
+      <div class="formErrors ${logError ? '' : 'hidden'}">
         ${logError ? `<br>${logError.message}<br>${logError.details}` : ''}
       </div>
-      <button class="board-management-button" id="confirmLogProgress">Log</button>
+      <button class="board-management-button ${!range || draft ? 'hidden' : ''}" id="previewLogProgress">preview</button>
+      <button class="board-management-button ${!range || draft ? '' : 'hidden'}" id="confirmLogProgress">Log</button>
     </form>
     <div class="successMessage ${State.progressUpdateSuccess ? '' : 'hidden'}">Success</div>
-    <div id="currentProgress">
+    <div id="currentProgress" ${range ? '' : 'class="hidden"'}>
       Current progress:
-      ${this.getCurrentRangesHtml(book.key)}
+      ${this.getRangesHtml(Utils.sortBy(BooksDomain.getBookRanges(book.key), 's', true))}
+    </div>
+    <div id="newRanges" ${draft ? '' : 'class="hidden"'}>
+      Ranges to be:
+      ${this.getRangesHtml(draft)}
     </div>
   </div>    
     `;
   },
 
-  getCurrentRangesHtml(key) {
-    const ranges = BooksDomain.getBookRanges(key);
+  getRangesHtml(ranges) {
+    if(!ranges) return '';
+
     return `<table>
     ${ranges.map((r, i) => {
       return `
@@ -170,11 +201,20 @@ export const ProgressUI = {
       </tr>`;
     }).join('')}
     </table>`;
-  },  
+  },
 
-  log() {
+  formChangeHandler(el, e) {
+    this.dom.previewButton.classList.remove('hidden');
+    this.dom.submitButton.classList.add('hidden');
+    this.dom.draftContainer.innerHTML = '';
+    if(!State.progressFormDraft) {
+      State.progressFormDraft = {};
+    }
+    State.progressFormDraft[el.name] = el.value;
+  },
 
-    State.progressUpdateError = null;
+  preview() {
+    State.newRangesDraft = null;
     State.logUpdateError = null;
     State.progressUpdateSuccess = null;
 
@@ -186,11 +226,20 @@ export const ProgressUI = {
         f: form.from.value,
         t: form.to.value
       };
-      const res = BooksDomain.addOrUpdateRange(form.dataset.bookKey, range);
-      if(res.result !== true) {
-        State.progressUpdateError = res;
-      }
+      //const res = BooksDomain.getNewRangesForRange(form.dataset.bookKey, range);
+      // if(res.result !== true) {
+      //   State.progressUpdateError = res;
+      // }
+      State.newRangesDraft = Utils.sortBy(BooksDomain.getNewRangesForRange(form.dataset.bookKey, range), 's', true);
+      Bus.emit(Bus.events.progressUiChanged);
     }
+
+  },
+
+  log() {
+    const form = this.dom.form;
+
+    BooksDomain.addOrUpdateRange(form.dataset.bookKey, State.newRangesDraft);
 
     const type = State.progressData.delta > 0 ? EventsDomain.eventTypes.progress : EventsDomain.eventTypes.rollback;
     const eventData = {
@@ -198,7 +247,8 @@ export const ProgressUI = {
       book: form.dataset.bookKey,
       date: null,
     };
-    if (hasRange) {
+
+    if(form.from.value !== '' && form.to.value !== '') {
       eventData.data = {
         ranges: [{
           s: form.stage.value,
@@ -208,7 +258,7 @@ export const ProgressUI = {
       };
     } else {
       eventData.data = {
-        stage : form.stage.value
+        stage: form.stage.value
       };
     }
 
@@ -217,7 +267,7 @@ export const ProgressUI = {
     if(logRes.result !== true) {
       State.logUpdateError = res;
     }
-    if (!State.logUpdateError && !State.progressUpdateError) {
+    if(!State.logUpdateError) {
       State.progressUpdateSuccess = true;
     }
     Bus.emit(Bus.events.progressUiChanged);

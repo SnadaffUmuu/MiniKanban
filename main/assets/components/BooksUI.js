@@ -5,6 +5,7 @@ import {App} from './App.js'
 import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js'
 import {EventsDomain} from './EventsDomain.js'
+import { Utils } from './Utils.js'
 
 export const BooksUI = {
 
@@ -30,7 +31,7 @@ export const BooksUI = {
   selectors: {
     container: '#books',
     booksListContainer: '#booksListContainer',
-    //addBookButton: '#addBook',
+    addBookButton: '#addBook',
     addBookUi: '#addBookUi',
     bookNameInput: '#bookName',
     bookKeyInput: '#bookKey',
@@ -52,7 +53,6 @@ export const BooksUI = {
     closeExtraUi: '.extraUi .js-cancel-current',
     addRangeButton: '.extraUi .addRange',
     removeRangeRowRutton: '.extraUi .removeRangeRow',
-    //switchBooksViewsTriggers: 'header [data-books-mode-trigger]',
   },
 
   dom: {
@@ -64,14 +64,6 @@ export const BooksUI = {
     Bus.on(Bus.events.booksUiChanged, this.render.bind(this));
     Bus.on(Bus.events.booksChanged, this.render.bind(this));
     Bus.on(Bus.events.booksModeChanged, this.render.bind(this));
-    // Bus.on(Bus.events.booksChanged, () => {
-    //   State.booksUi.rowUi = {};
-    //   this.render();
-    // });
-  },
-
-  renderHeader() {
-
   },
 
   render() {
@@ -86,6 +78,7 @@ export const BooksUI = {
     this.dom.bookBoardSelect.innerHTML = '<option value="" disabled selected>choose a board</option>'
       + App.data.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
     this.dom.bookBoardColorSelect.removeAttribute('style');
+    this.dom.addBookButton.classList.toggle('hidden', State.booksUi.addUiShown);
   },
 
   addRangeRow(el) {
@@ -119,7 +112,7 @@ export const BooksUI = {
       <label>to<br>
         <input type="number" name="to" ${range ? `value="${range.t}"` : ' required '}>
       </label>
-      <label>stage<br>
+      <label><br>
         <select ${range ? '' : 'required'} name="stage">
           ${Array.from({length: parseInt(book.stages)}).map((_, i) => `<option ${range && range.s == i + 1 ? 'selected' : ''} value="${i + 1}">${i + 1}</option>`).join('')}
         </select>
@@ -135,7 +128,7 @@ export const BooksUI = {
     const book = BooksDomain.getBook(key);
     const ranges = BooksDomain.getBookRanges(key);
     if(!ranges || !ranges.length) return this.getRangesRowHtml(book, null, true, false);
-    return ranges.map((r, i) => this.getRangesRowHtml(book, r, (i == ranges.length - 1), true)).join('');
+    return Utils.sortBy(ranges, 'f', true).map((r, i) => this.getRangesRowHtml(book, r, (i == ranges.length - 1), true)).join('');
   },
 
   getListHtml() {
@@ -148,7 +141,9 @@ export const BooksUI = {
       if(extra) {
         rowStyle += ' style="opacity:0.5"';
         switch(extra) {
+
           case 'delete':
+
             extraUi = `
               <h6>Delete book "${b.key}"?</h6>
               <label>Keep history? <input type="checkbox" id="keepHistory"></label><br>
@@ -156,7 +151,9 @@ export const BooksUI = {
               <button class="cancel">Cancel</button>
             `;
             break;
+
           case 'state':
+
             extraUi = `
               <h6>Set state</h6>
               <form name="stateForm" action="javascript:void(0);">
@@ -169,7 +166,9 @@ export const BooksUI = {
               </form>
             `;
             break;
+
           case 'edit':
+
             extraUi = `
             <div class="editBookUi">
               <form data-key="${b.key}" name="edit-book-${b.key}" class="js-edit-book-form" action="javascript:void(0);">
@@ -243,15 +242,7 @@ export const BooksUI = {
     this.dom.addBookForm.reset();
     State.booksUi.addUiShown = toShow;
     Bus.emit(Bus.events.booksUiChanged);
-    Bus.emit(Bus.events.headerUIChanged);
   },
-
-  // changeMode(el, e) {
-  //   App.switchBookUiMode(el.dataset.booksModeTrigger);
-  //   State.booksMenuOpen = false;
-  //   Bus.emit(Bus.events.headerUIChanged);
-  //   //Bus.emit(Bus.events.booksModeChanged);
-  // },
 
   selectBoardHandler(el) {
     this.updateColorsDropdown(el);
@@ -368,11 +359,15 @@ export const BooksUI = {
     const key = row.dataset.extraBookKey;
     const action = row.dataset.extra;
     switch(action) {
+
       case 'delete':
+
         BooksDomain.deleteBook(row.dataset.extraBookKey);
         Bus.emit(Bus.events.booksChanged);
         break;
+
       case 'state':
+
         const ranges = [];
         [...row.querySelectorAll('.rangesRow')].forEach(el => {
           ranges.push({
@@ -381,19 +376,24 @@ export const BooksUI = {
             t: el.querySelector('[name="to"]').value,
           });
         });
-        const res = BooksDomain.setBookRanges(key, ranges);
+        let res = BooksDomain.getNewRangesForRanges(ranges);
+        //TODO: do preview?
         if(res.result !== true) {
           State.booksUi.rowUi[key].error = `
-            ${res.message}<br>
-            ${res.details}
-            `;
+          ${res.message}<br>
+          ${res.details}
+          `;
           Bus.emit(Bus.events.booksUiChanged);
           return;
+        } else {
+          res = BooksDomain.setBookRanges(key, res.ranges);
         }
 
         Bus.emit(Bus.events.booksChanged);
         break;
+
       case 'edit':
+
         el.closest('form').submit();
         break;
     }

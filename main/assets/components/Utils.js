@@ -107,60 +107,25 @@ export const Utils = {
     return result;
   },
 
-  findCrossStageOverlaps(ranges) {
-    // копия + сортировка
-    const sorted = [...ranges].sort((a, b) => a.f - b.f);
-
-    const active = [];
-    const conflicts = [];
-
-    for(const curr of sorted) {
-      // выкидываем неактуальные
-      for(let i = active.length - 1;i >= 0;i--) {
-        if(active[i].t < curr.f) {
-          active.splice(i, 1);
-        }
-      }
-
-      // проверяем пересечения с активными
-      for(const other of active) {
-        if(other.s === curr.s) continue; // только разные стадии
-
-        // есть пересечение
-        if(curr.f <= other.t) {
-          conflicts.push({
-            a: other,
-            b: curr,
-            overlap: {
-              from: Math.max(curr.f, other.f),
-              to: Math.min(curr.t, other.t)
-            }
-          });
-        }
-      }
-
-      active.push(curr);
-    }
-
-    return conflicts;
+  isNestedRanges(a, b) {
+    return (a.f >= b.f && a.t <= b.t) ||
+      (b.f >= a.f && b.t <= a.t);
   },
 
-  findConflictsBetween(existing, incoming) {
+  findAmbiguousOverlaps(ranges) {
     const conflicts = [];
 
-    for(const inc of incoming) {
-      for(const ex of existing) {
-        if(inc.s === ex.s) continue;
+    for(let i = 0;i < ranges.length;i++) {
+      for(let j = i + 1;j < ranges.length;j++) {
+        const a = ranges[i];
+        const b = ranges[j];
 
-        if(inc.f <= ex.t && ex.f <= inc.t) {
-          conflicts.push({
-            a: ex,
-            b: inc,
-            overlap: {
-              from: Math.max(inc.f, ex.f),
-              to: Math.min(inc.t, ex.t)
-            }
-          });
+        // нет пересечения
+        if(a.t < b.f || b.t < a.f) continue;
+
+        // есть пересечение, но НЕ вложенность
+        if(!this.isNestedRanges(a, b)) {
+          conflicts.push({a, b});
         }
       }
     }
@@ -170,7 +135,9 @@ export const Utils = {
 
   formatConflicts(conflicts) {
     return conflicts.map(c => {
-      return `Stage ${c.a.s} (${c.a.f}-${c.a.t}) пересекается с stage ${c.b.s} (${c.b.f}-${c.b.t}) на ${c.overlap.from}-${c.overlap.to}`;
+      return `
+      Stage ${c.a.s} (${c.a.f}-${c.a.t}) пересекается с stage ${c.b.s} (${c.b.f}-${c.b.t}) на ${c.overlap.from}-${c.overlap.to}
+      `;
     });
   },
 
@@ -192,6 +159,35 @@ export const Utils = {
 
   toInt(v) {
     return v == null ? 0 : parseInt(v, 10);
-  }
+  },
+
+  sortBy(arr, key, asc = true) {
+    if (!arr) return [];
+    return [...arr].sort((a, b) => {
+      const va = a[key];
+      const vb = b[key];
+
+      const na = Number(va);
+      const nb = Number(vb);
+
+      const bothNumbers = !Number.isNaN(na) && !Number.isNaN(nb);
+
+      let result;
+
+      if(bothNumbers) {
+        // числовое сравнение
+        if(na === nb) result = 0;
+        else result = na < nb ? -1 : 1;
+      } else {
+        // строковое сравнение (поддержка локали)
+        result = String(va).localeCompare(String(vb), undefined, {
+          numeric: true,
+          sensitivity: 'base'
+        });
+      }
+
+      return asc ? result : -result;
+    });
+  },
 
 };

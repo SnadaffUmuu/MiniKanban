@@ -38,12 +38,8 @@ export const Events = {
       '##': [
         'HeaderUI.hideMenu',
       ],
-      // [HeaderUI.selectors.toggleMenuButton]: 'HeaderUI.toggleMenu',
-      // [HeaderUI.selectors.toggleBooksMenuButton]: 'HeaderUI.toggleBookMenu',
       [HeaderUI.selectors.changeHeaderModeTriggers]: 'HeaderUI.changeMode',
       [HeaderUI.selectors.reset]: 'HeaderUI.reset',
-      //[HeaderUI.selectors.screenSwitch]: 'HeaderUI.switchScreen', //TODO [data-screen-switch]
-      [HeaderUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
 
       [RenameUI.selectors.confirmRenameButton]: 'RenameUI.renameBoard',
       [DeleteUI.selectors.deleteBoardConfirmButton]: 'DeleteUI.deleteBoard',
@@ -96,6 +92,7 @@ export const Events = {
       [Stats.selectors.confirmResetButton]: 'Stats.reset',
       [Stats.selectors.cancelResetButton]: 'Stats.resetUi',
 
+      [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
       [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],      
       [BooksUI.selectors.deleteBookButton]: 'BooksUI.showDeleteBookUi',
       [BooksUI.selectors.editBookButton]: 'BooksUI.showEditBookUi',
@@ -335,7 +332,7 @@ export const Events = {
       return val;
     };
 
-    // 🔥 1. НОРМАЛИЗУЕМ ИСХОДНУЮ MAP
+    // НОРМАЛИЗУЕМ ИСХОДНУЮ MAP
     Object.keys(this.map).forEach(eventName => {
       const eventMap = this.map[eventName];
 
@@ -344,7 +341,7 @@ export const Events = {
       });
     });
 
-    // 🔥 2. ДОБАВЛЯЕМ EVENTS ИЗ КОМПОНЕНТОВ
+    // ДОБАВЛЯЕМ EVENTS ИЗ КОМПОНЕНТОВ
     Components.forEach(component => {
       if(!component.events) return;
 
@@ -369,7 +366,7 @@ export const Events = {
       });
     });
 
-    // 🔥 3. LISTENERS
+    // LISTENERS
     Object.keys(this.map).forEach(eventName => {
       document.addEventListener(eventName, (e) => {
         this.handler(e, eventName);
