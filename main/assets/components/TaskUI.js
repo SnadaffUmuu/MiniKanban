@@ -219,7 +219,7 @@ export const TaskUI = {
     const isDeleteConfirm = domainTask && uiTask && uiTask.mode === 'deleteConfirm';
     const isColorPicker = domainTask && uiTask && uiTask.mode === 'colors';
     const isDefault = !isCreate && !isEdit && !isMenuOpened && !isDeleteConfirm && !isColorPicker;
-    const isVocabCol = column.name == 'Лексика';
+    const isVocabCol = isEdit ? column.name == 'Лексика' : null;
     const showVocabDots = isVocabCol && domainTask.vocabCount;
 
     const origColor = domainTask ? domainTask.color : null;
@@ -237,7 +237,7 @@ export const TaskUI = {
         <span class="task-title">${descr}</span>
       </div>
       <div class="task-info ${!isMenuOpened ? 'hidden' : ''}">
-        <button class="incr-vocab-practice ${isVocabCol ? '' : 'hidden'}"></button>
+        ${isVocabCol ? '<button class="incr-vocab-practice"></button>' : ''}
         <button class="task-change-color"></button>
         <button class="task-delete"></button>
         <button class="task-clone"></button>
