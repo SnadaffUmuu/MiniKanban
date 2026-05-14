@@ -10,7 +10,6 @@ export const EventsDomain = {
 
   eventTypes: {
     progress: 'p',
-    manual: 'm',
     rollback: 'r'
   },
 
@@ -62,7 +61,7 @@ export const EventsDomain = {
     App.saveEvents();
   },
 
-  log({type, book, date, data}) {
+  log({type, book, date, col, data}) {
     const response = {};
     const ts = new Date();
     if(!date) {
@@ -78,6 +77,7 @@ export const EventsDomain = {
           d: date,
           b: book,
           t: type,
+          c: col,
         };
         if(type == this.eventTypes.progress) {
           res.r = data.ranges;

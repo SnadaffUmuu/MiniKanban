@@ -253,6 +253,7 @@ export const ProgressUI = {
       type: type,
       book: form.dataset.bookKey,
       date: null,
+      col: State.progressData.targetIndex
     };
 
     if(form.from.value !== '' && form.to.value !== '') {

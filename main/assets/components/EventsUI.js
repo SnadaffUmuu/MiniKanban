@@ -74,27 +74,33 @@ export const EventsUI = {
     return events.map(ev => {
       const book = BooksDomain.getBook(ev.b);
       const board = BoardDomain.getBoard(book.board);
+      const range = ev.r && ev.r.length ? ev.r[0] : null;
+      const targetColIndex = ev.c ? Utils.toInt(ev.c) : range !== null ? Utils.toInt(range.s) : null;
+      const targetColName = targetColIndex !== null ? board.columns[targetColIndex].name : null;
+      const sourceColumnIndex = targetColIndex !== null ? targetColIndex - 1 : null;
+      const sourceColName = sourceColumnIndex !== null ? board.columns[sourceColumnIndex].name : null;
       return `
       <div ${book.color ? ` style="background-color:${Colors[book.color]}"` : ''} class="eventsEntry board-${board.key}-border" data-type="${ev.t}" data-book="${ev.b}" data-date="${ev.d}">
         <div class="eventsEntry__summary">
           <span class="eventsEntry__date">${ev.d}</span>
           <span class="eventsEntry__bookname">${BooksDomain.getBook(ev.b)?.name}</span>
-          ${ev.r ? `
+          ${range !== null || targetColName !== null || sourceColName !== null ? `
             <details>
               <summary></summary>
               <div class="eventsEntry__details">
-                ${ev.r ? ev.r.map(r => {
-        const sourceColName = BoardDomain.getBoard(book.board).columns[Utils.toInt(r.s) - 1].name;
-        const targetColName = BoardDomain.getBoard(book.board).columns[r.s].name;
-        return `
-                <span class="tag">${r.f}${r.t !== r.f ? '-' + r.t : ''}</span>
+                ${range !== null ? `
+                  <span class="tag">${range.f}${range.t !== range.f ? '-' + range.t : ''}</span>
+                ` : ''}
+                ${sourceColName ? `
                 <div class="connector"></div>
                 <span class="tag">${sourceColName}</span>
+                ` : ''}
+                ${targetColName ? `
                 <div class="connector"></div>
-                <span class="tag">${targetColName}</span>`
-      }).join('') : ''}
+                <span class="tag">${targetColName}</span>
+                ` : ''}
               </div>
-            </details>            
+            </details> 
             ` : ''}
         </div>
       </div>
