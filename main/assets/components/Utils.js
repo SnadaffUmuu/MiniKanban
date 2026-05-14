@@ -37,9 +37,14 @@ export const Utils = {
     if(!component.dom) return;
     if(component.selectors) {
       Object.keys(component.selectors).forEach(selector => {
-        const el = document.querySelector(component.selectors[selector]);
-        if(el) {
-          component.dom[selector] = el;
+        let res = null;
+        if (selector.endsWith('sss')) {
+          res = document.querySelectorAll(component.selectors[selector]);
+        } else {
+          res = document.querySelector(component.selectors[selector]);
+        }
+        if(res) {
+          component.dom[selector] = res;
         }
       })
     }

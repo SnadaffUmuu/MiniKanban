@@ -5,28 +5,11 @@ import {App} from './App.js'
 import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js'
 import {EventsDomain} from './EventsDomain.js'
-import { Utils } from './Utils.js'
+import {Utils} from './Utils.js'
 
 export const BooksUI = {
 
   name: 'BooksUI',
-
-  boardCodesByName: {
-    'satori': 'satori',
-    'paper': 'paper',
-    'おさらい': 'osarai',
-  },
-
-  events : {
-    click : {
-      //'@switchBooksViewsTriggers' : 'changeMode'
-    }
-  },
-
-  getBoardCodeByBoard(boardId) {
-    const bName = BoardDomain.getBoard(boardId).name;
-    return this.boardCodesByName[Object.keys(this.boardCodesByName).find(k => bName.toLowerCase().indexOf(k) >= 0)]
-  },
 
   selectors: {
     container: '#books',
@@ -53,9 +36,20 @@ export const BooksUI = {
     closeExtraUi: '.extraUi .js-cancel-current',
     addRangeButton: '.extraUi .addRange',
     removeRangeRowRutton: '.extraUi .removeRangeRow',
+    progressBar: '.progress-bar:not(.popup)',
+    progressBarSegment: '.progress-bar:not(.popup) .segment',
+    progressBarPopup: '.progress-bar.popup',
   },
 
   dom: {
+  },
+
+  events: {
+    click: {
+      '##': 'hideProgress',
+      '@progressBar': 'showProgress',
+      '@progressBarSegment': 'showProgress',
+    }
   },
 
   init() {
@@ -92,10 +86,12 @@ export const BooksUI = {
   },
 
   removeRangeRow(el) {
+    const key = this.getRowKey(el);
+    const book = BooksDomain.getBook(key);
     const fieldset = el.closest('fieldset');
     const rows = [...fieldset.querySelectorAll('.rangesRow')];
     if(rows.length == 1) {
-      fieldset.insertAdjacentHTML('beforeend', this.getRangesRowHtml(null, true, false));
+      fieldset.insertAdjacentHTML('beforeend', this.getRangesRowHtml(book, null, true, false));
     }
     el.closest('.rangesRow').remove();
     const lastRowButton = rows[rows.length - 1].querySelector('.addRange');
@@ -133,8 +129,9 @@ export const BooksUI = {
 
   getListHtml() {
     const rows = BooksDomain.getBooks().sort((a, b) => a.board.localeCompare(b.board)).map(b => {
+      const board = BoardDomain.getBoard(b.board);
       const cellStyle = b.color ? ` style="background-color:${Colors[b.color]}"` : '';
-      let rowStyle = b.board ? `class="board-${this.getBoardCodeByBoard(b.board)}-border"` : '';
+      let rowStyle = b.board ? `class="board-${board.key}-border"` : '';
       const extra = State.booksUi.rowUi[b.key]?.extra;
       const error = State.booksUi.rowUi[b.key]?.error;
       let extraUi = '';
@@ -385,6 +382,8 @@ export const BooksUI = {
           `;
           Bus.emit(Bus.events.booksUiChanged);
           return;
+        } else if(!res.ranges.length || res.ranges.length == 1 && !res.ranges[0].f && !res.ranges[0].t) {
+          res = BooksDomain.setBookRanges(key, null); //deleting ranges
         } else {
           res = BooksDomain.setBookRanges(key, res.ranges);
         }
@@ -426,6 +425,7 @@ export const BooksUI = {
     // 2. формируем сегменты
     const segments = [];
 
+    let odd = true;
     for(let stage = 1;stage <= stagesCount;stage++) {
       const pages = stagePages.get(stage) || 0;
       if(pages === 0) continue;
@@ -435,11 +435,12 @@ export const BooksUI = {
 
       segments.push(`
       <div 
-        class="segment" 
+        class="segment ${odd ? 'odd' : ''}" 
         style="width:${percent}%; background:${color}"
         title="Stage ${stage}: ${pages} pages"
-      ></div>
+      ><span class="pagesCount">${pages}</span></div>
     `);
+      odd = !odd;
     }
 
     // 3. незаполненная часть
@@ -462,5 +463,21 @@ export const BooksUI = {
     </div>
   `;
   },
+
+  showProgress(el, e) {
+    const cursorY = e.clientY || (e.touches && e.changedTouches[0].clientY);
+    const cursorX = e.clientX || (e.touches && e.changedTouches[0].clientX);
+    const newPB = el.closest('.progress-bar').cloneNode(true);
+    newPB.classList.add('popup');
+    document.body.insertAdjacentElement('afterbegin', newPB);
+  },
+
+  hideProgress(el, e) {
+    if(el.matches(this.selectors.progressBarPopup)
+      || el.closest(this.selectors.progressBarPopup)) {
+      return;
+    }
+    document.querySelector(this.selectors.progressBarPopup)?.remove()
+  }
 
 };

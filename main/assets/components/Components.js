@@ -1,4 +1,5 @@
 import {
+  EventsFilterUI,
   HeaderUI,
   RenameUI,
   BoardsList,
@@ -10,12 +11,12 @@ import {
   TaskUI,
   RanksUI,
   Stats,
-  Dialog,
   ProgressUI,
   EventsUI,
 } from './index.js'
 
 export const Components = [
+  EventsFilterUI,
   HeaderUI,
   BoardsList,
   RenameUI,
@@ -27,7 +28,6 @@ export const Components = [
   RanksUI,
   DragDrop,
   Stats,
-  Dialog,
   ProgressUI,
   EventsUI,
 ];

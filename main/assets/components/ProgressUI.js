@@ -20,6 +20,8 @@ export const ProgressUI = {
     logProgressPreviewButton: '#previewLogProgress',
     form: '#progressUi form',
     inputField: '#progressUi input',
+    fromInputField: '#fromField',
+    toInputField: '#toField',
     selectField: '#progressUi select',
     draftContainer: '#newRanges',
   },
@@ -55,7 +57,6 @@ export const ProgressUI = {
   },
 
   render() {
-    //TODO: если стартовая колонка, нужно УДАЛИТЬ диапазон
     console.log('RENDER: ProgressUI');
     let book = null;
     let task = null;
@@ -88,6 +89,8 @@ export const ProgressUI = {
     this.dom.previewButton = document.querySelector(this.selectors.logProgressPreviewButton);
     this.dom.submitButton = document.querySelector(this.selectors.logProgressConfirmButton);
     this.dom.draftContainer = document.querySelector(this.selectors.draftContainer);
+    this.dom.fromInputField = document.querySelector(this.selectors.fromInputField);
+    this.dom.toInputField = document.querySelector(this.selectors.toInputField);
   },
 
   showUi() {
@@ -204,8 +207,14 @@ export const ProgressUI = {
   },
 
   formChangeHandler(el, e) {
-    this.dom.previewButton.classList.remove('hidden');
-    this.dom.submitButton.classList.add('hidden');
+    if (!this.dom.fromInputField.value && !this.dom.toInputField.value) {
+      //диапазон очищен - карточка без диапазона?
+      this.dom.previewButton.classList.add('hidden');
+      this.dom.submitButton.classList.remove('hidden');
+    } else {
+      this.dom.previewButton.classList.remove('hidden');
+      this.dom.submitButton.classList.add('hidden');
+    }
     this.dom.draftContainer.innerHTML = '';
     if(!State.progressFormDraft) {
       State.progressFormDraft = {};
@@ -226,10 +235,6 @@ export const ProgressUI = {
         f: form.from.value,
         t: form.to.value
       };
-      //const res = BooksDomain.getNewRangesForRange(form.dataset.bookKey, range);
-      // if(res.result !== true) {
-      //   State.progressUpdateError = res;
-      // }
       State.newRangesDraft = Utils.sortBy(BooksDomain.getNewRangesForRange(form.dataset.bookKey, range), 's', true);
       Bus.emit(Bus.events.progressUiChanged);
     }
@@ -239,7 +244,9 @@ export const ProgressUI = {
   log() {
     const form = this.dom.form;
 
-    BooksDomain.addOrUpdateRange(form.dataset.bookKey, State.newRangesDraft);
+    if (State.newRangesDraft) {
+      BooksDomain.addOrUpdateRange(form.dataset.bookKey, State.newRangesDraft);
+    }
 
     const type = State.progressData.delta > 0 ? EventsDomain.eventTypes.progress : EventsDomain.eventTypes.rollback;
     const eventData = {

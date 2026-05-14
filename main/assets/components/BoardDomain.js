@@ -8,6 +8,10 @@ import {State} from './State.js'
 
 export const BoardDomain = {
 
+  getBoards() {
+    return App.data.boards || [];
+  },
+
   getBoard(id) {
     return App.data.boards.find(b => b.id == id);
   },

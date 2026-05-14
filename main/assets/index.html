@@ -61,7 +61,7 @@
     </section>
 
     <section data-toggle-menu-target="events" class="menu hidden">
-      <button>some events action</button>
+      <button data-header-mode-trigger="eventsFilters">Filter</button>
     </section>
 
     <div id="statsUI" data-header-mode="stats" class="hidden">
@@ -98,6 +98,18 @@
       <button id="create-board">Create board</button>
       <button id="close-boards-list" class="js-cancel-current button-close"></button>
     </div>
+
+    <div id="events-filters" data-header-mode="eventsFilters" class="hidden">
+      <h3 class="top-menu-title">Filter events</h3>
+      <button class="js-cancel-current button-close"></button>
+      <br>
+      <select data-event-filter-param="board" id="events-filters-board"></select>
+      <select data-event-filter-param="book" id="events-filters-book"></select>
+      <div>
+        <button id="eventsFilterSubmit" class="board-management-button">Filter</button>
+        <button id="eventsFilterReset" class="board-management-button">Reset</button>
+      </div>
+    </div>
   </header>
 
 
@@ -123,7 +135,15 @@
   </section>
 
   <section id="events" class="hidden">
-    <div id="eventsListContainer"></div>
+    <div data-events-toolbar="list" class="toolbar">
+      <button id="toggleEventsExpand" class="toolbar__button expand"></button>
+      <button data-events-view-switch="calendar" class="toolbar__button toolbar__button-calendar"></button>
+    </div>
+    <div data-events-toolbar="calendar" class="toolbar">
+      <button data-events-view-switch="list" class="toolbar__button toolbar__button-list"></button>
+    </div>
+    <div data-events-view="list" id="eventsListContainer" class="hidden"></div>
+    <div data-events-view="calendar" id="eventsCalendarContainer" class="hidden"></div>
   </section>
 </body>
 

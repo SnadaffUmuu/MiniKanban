@@ -71,7 +71,7 @@ export const HeaderUI = {
 
   switchScreen(el) {
     State.currentScreen = el.dataset.screenSwitch;
-    App.switchScreen();
+    App.setStateProp('screen', State.currentScreen);
     Bus.emit(Bus.events.screenChanged);
   },
 

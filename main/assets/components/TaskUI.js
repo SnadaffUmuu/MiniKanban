@@ -219,8 +219,8 @@ export const TaskUI = {
     const isDeleteConfirm = domainTask && uiTask && uiTask.mode === 'deleteConfirm';
     const isColorPicker = domainTask && uiTask && uiTask.mode === 'colors';
     const isDefault = !isCreate && !isEdit && !isMenuOpened && !isDeleteConfirm && !isColorPicker;
-    const isVocabCol = isEdit ? column.name == 'Лексика' : null;
-    const showVocabDots = isVocabCol && domainTask.vocabCount;
+    const isVocabCol = !isCreate && isMenuOpened ? column.name == 'Лексика' : null;
+    const showVocabDots = !isCreate && column.name == 'Лексика' && domainTask.vocabCount;
 
     const origColor = domainTask ? domainTask.color : null;
     const descr = uiTask && uiTask.description ? uiTask.description : (domainTask ? domainTask.description : '');

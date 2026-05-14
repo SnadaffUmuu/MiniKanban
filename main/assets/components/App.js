@@ -49,11 +49,6 @@ export const App = {
     return this.screens[this.data.screen]
   },
 
-  switchScreen() {
-    this.data.screen = State.currentScreen;
-    this.saveData();
-  },
-
   isBoard() {
     return this.data.screen == this.screens.board
   },
@@ -65,5 +60,14 @@ export const App = {
   isBooks() {
     return this.data.screen == this.screens.books
   },
+
+  setStateProp(prop, value) {
+    this.data[prop] = value;
+    this.saveData();
+  },
+
+  getStateProp(prop) {
+    return this.data[prop];
+  }
 
 };

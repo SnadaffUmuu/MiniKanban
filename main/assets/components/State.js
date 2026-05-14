@@ -1,6 +1,6 @@
 export const State = {
   currentScreen: 'board', 
-  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault
+  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault, eventsFilter
   openedTopMenu: null,
   statsUiMode: null,
   boardUi: {
@@ -19,6 +19,14 @@ export const State = {
   progressFormDraft : null,
   progressUpdateSuccess : null,
   logUpdateError : null,
+  eventsUi : {
+    eventsFilter: {},
+    view : 'list', //calendar
+    calendar : {
+      start : { year : null, month: null},
+      end : {year : null, month: null}
+    },
+  },
 
   afterRender: [],
 

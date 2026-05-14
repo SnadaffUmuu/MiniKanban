@@ -10,8 +10,9 @@ import {
   RanksUI,
   Stats,
   BooksUI,
-  Dialog,
   ProgressUI,
+  EventsFilterUI,
+  EventsUI,
 } from './index.js'
 import {Components} from './Components.js';
 
@@ -29,8 +30,9 @@ export const Events = {
     'RanksUI': RanksUI,
     'Stats': Stats,
     'BooksUI': BooksUI,
-    'Dialog': Dialog,
     'ProgressUI': ProgressUI,
+    'EventsFilterUI' : EventsFilterUI,
+    'EventsUI' : EventsUI,
   },
 
   map: {
@@ -135,57 +137,6 @@ export const Events = {
       '##': ['DragDrop.touchMoveTask'],
     },
   },
-
-  // handler(e, eventName) {
-  //   const entry = this.map[eventName];
-  //   if(!entry) return;
-
-  //   const selectors = Object.keys(entry);
-  //   const normals = selectors.filter(s => s !== '##');
-  //   const globals = selectors.filter(s => s === '##');
-
-  //   [...normals, ...globals].forEach(selector => {
-  //     const callbackObj = entry[selector];
-
-  //     let callbacks = [];
-
-  //     // 1) строка
-  //     if(typeof callbackObj === 'string') {
-  //       callbacks = [[callbackObj, []]];
-  //     }
-
-  //     // 2) массив
-  //     else if(Array.isArray(callbackObj)) {
-
-  //       // случай [method, params]
-  //       if(
-  //         typeof callbackObj[0] === 'string' &&
-  //         Array.isArray(callbackObj[1])
-  //       ) {
-  //         callbacks = [[callbackObj[0], callbackObj[1]]];
-  //       }
-
-  //       // случай ['m1', 'm2', ...]
-  //       else {
-  //         callbacks = callbackObj.map(method => [method, []]);
-  //       }
-  //     }
-
-  //     callbacks.forEach(([methodPath, params]) => {
-
-  //       const shouldRun =
-  //         selector === '##' ||
-  //         (e.target.matches && e.target.matches(selector));
-
-  //       if(!shouldRun) return;
-
-  //       const resolved = this.resolveMethod(methodPath);
-  //       if(!resolved) return;
-
-  //       resolved.fn.call(resolved.ctx, e.target, e, params);
-  //     });
-  //   });
-  // },
 
   normalize(val) {
     if(!val) return [];

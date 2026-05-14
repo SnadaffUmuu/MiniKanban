@@ -44,8 +44,8 @@ header.expanded {
 }
 
 #headerWrap {
-  display:flex;
-  flex-flow:row nowrap;
+  display: flex;
+  flex-flow: row nowrap;
 }
 
 .hidden {
@@ -61,11 +61,11 @@ header.expanded {
   display: flex;
   flex-flow: column nowrap;
   justify-content: center;
-  padding-left:15px;
+  padding-left: 15px;
 }
 
 header.expanded .top-menu-title {
-  padding-left:0;
+  padding-left: 0;
 }
 
 @media screen and (max-width: 400px) {
@@ -196,7 +196,8 @@ header.expanded .top-menu-title {
 #rename-board-block,
 #delete-board-block,
 #ranks-block,
-#statsUI {
+#statsUI,
+#events-filters {
   position: relative;
 }
 
@@ -310,8 +311,7 @@ button.dragging {
   opacity: 0.7;
 }
 
-main,
-#events {
+main {
   width: 100%;
   max-width: 100%;
   min-height: 0;
@@ -912,7 +912,7 @@ body:has(.dragged) {
   flex: 1 1 auto;
   display: flex;
   flex-flow: column nowrap;
-  align-items: stretch;  
+  align-items: stretch;
 }
 
 #booksList {
@@ -948,8 +948,8 @@ body:has(.dragged) {
   background: #f1f1ee;
   padding: 10px;
   box-sizing: border-box;
-  width:100%;
-  margin-bottom:10px;
+  width: 100%;
+  margin-bottom: 10px;
   box-sizing: border-box;
 }
 
@@ -961,13 +961,13 @@ input[type="text"],
 input[type="search"],
 input[type="number"] {
   border-radius: 3px;
-  border-width:1px;
-  display:inline-block;
-  margin-bottom:3px;
+  border-width: 1px;
+  display: inline-block;
+  margin-bottom: 3px;
 }
 
 select {
-  height:23px;
+  height: 23px;
 }
 
 input[type="text"]:invalid,
@@ -1154,7 +1154,7 @@ select:invalid {
 .successMessage,
 .formErrors {
   font-size: 13px;
-  padding: 5px 5px 10px;
+  padding: 5px 0 10px;
 }
 
 .formErrors {
@@ -1163,7 +1163,20 @@ select:invalid {
 
 .successMessage {
   color: #3da004;
+  font-size: 18px;
+  padding-top: 15px;
+  font-weight: bold;
 }
+
+/* .progress-bar.popup {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 40px;
+  width: auto;
+  z-index: 500;
+  box-shadow: 1px 4px 20px 6px #474747a6;
+} */
 
 .progress-bar {
   display: flex;
@@ -1171,16 +1184,53 @@ select:invalid {
   height: 16px;
   border: 1px solid #000;
   border-radius: 3px;
-  overflow: hidden;
+  /* overflow: hidden; */
   background: #fff;
+}
+
+.progress-bar.popup {
+  position: fixed;
+  /* после rotate ширина станет высотой */
+  width: calc(100vh - 106px);
+  height: 40px;
+  left: 24px;
+  top: calc(100vh - 12px);
+  transform: rotate(-90deg);
+  transform-origin: top left;
+  z-index: 500;
+  box-shadow: 1px 4px 6px 4px #474747a6;
 }
 
 .segment {
   height: 100%;
+  position: relative;
 }
 
 .segment.empty {
   background: #eee;
+}
+
+.progress-bar .pagesCount {
+  display:none;
+}
+
+.progress-bar.popup .pagesCount {
+  position:absolute;
+  z-index:1;
+  display:block;
+  bottom:-20px;
+  transform:rotate(90deg);
+  padding:1px 3px;
+  background:white;
+  border-radius: 3px;
+  transform-origin: top left;
+  left: 20px;  
+  font-weight:bold;
+}
+
+.progress-bar.popup .odd .pagesCount {
+  bottom:auto;
+  top:3px;
 }
 
 .nowrap {
@@ -1192,16 +1242,93 @@ select:invalid {
   background-size: 27px;
 }
 
-#eventsListContainer {
+#events {
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+[data-events-view] {
+  overflow: auto;
+}
+
+#eventsListContainer,
+#eventsCalendarContainer {
   background: #f1f1ee;
   padding: 10px;
-  margin: 5px;
+  margin: 0 5px 5px;
   border-radius: 5px;
-  flex: 1 0 auto;
+  flex: 1 1 auto;
 }
 
 .eventsEntry {
-  padding-bottom: 15px;
+  padding-top: 7px;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.eventsEntry:not(first-child) {
+  margin-top: 7px;
+}
+
+.eventsEntry__summary {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: baseline;
+}
+
+.eventsEntry__date {
+  flex: 0 0 auto;
+  padding-right: 10px;
+}
+
+.eventsEntry__bookname {
+  flex: 1 0 auto;
+}
+
+.eventsEntry details {
+  margin-left: 10px;
+  font-size: 13px;
+}
+
+.eventsEntry details[open] {
+  width: 100%;
+  position: relative;
+  margin-left: 0;
+  padding: 7px 5px;
+}
+
+.eventsEntry details[open] summary {
+  position: absolute;
+  right: 0;
+  top: -12px;
+}
+
+.eventsEntry__details {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eventsEntry .tag {
+  padding: 2px 6px 3px;
+  border-radius: 10px;
+  display: inline-block;
+  background: #f1f1ee;
+  border: 1px solid #c3bfb6;
+}
+
+.eventsEntry .connector {
+  display: inline-block;
+  height: 2px;
+  background: #c3bfb6;
+  flex: 1 1 auto;
 }
 
 #taskData {
@@ -1215,12 +1342,13 @@ select:invalid {
   border-bottom: 1px solid #b5b5b5;
 }
 
-#currentProgress, #newRanges {
+#currentProgress,
+#newRanges {
   margin-top: 15px;
   color: #888;
 }
 
-#currentProgress table, 
+#currentProgress table,
 #newRanges table {
   margin-top: 10px;
 }
@@ -1232,4 +1360,45 @@ select:invalid {
   max-width: calc(100% - 45px);
   overflow: hidden;
   opacity: 0.3;
+}
+
+.toolbar {
+  border-radius: 5px;
+  margin: 0 5px 5px;
+  padding: 5px;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+.toolbar__button {
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  border-radius: 5px;
+  border: 0;
+  background-color: transparent;
+  outline: none;
+}
+
+.toolbar__button-calendar {
+  background: url(images/calendar.svg) 50% no-repeat;
+  background-size: 25px;
+}
+
+.toolbar__button-list {
+  background: url(images/list.svg) 50% no-repeat;
+  background-size: 25px;
+}
+
+#toggleEventsExpand.collapse {
+  background: url(images/collapse.svg) 50% no-repeat;
+  background-size: 50%;
+}
+
+#toggleEventsExpand.expand {
+  background: url(images/expand.svg) 50% no-repeat;
+  background-size: 50%;
 }

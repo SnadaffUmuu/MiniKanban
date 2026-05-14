@@ -1,5 +1,6 @@
 import {App} from "./App.js"
 import {Utils} from "./Utils.js";
+import { BooksDomain } from "./BooksDomain.js";
 
 export const EventsDomain = {
 
@@ -8,9 +9,9 @@ export const EventsDomain = {
   },
 
   eventTypes: {
-    progress: 'progress',
-    manual: 'manual',
-    rollback: 'rollback'
+    progress: 'p',
+    manual: 'm',
+    rollback: 'r'
   },
 
   getEvents() {
@@ -19,17 +20,39 @@ export const EventsDomain = {
 
   getEventsForBook(bookKey, isAsc) {
     const res = this.getEvents().filter(ev => ev.b == bookKey);
-    return Utils.sortBy(res, 'date', isAsc);
+    return Utils.sortBy(res, 'd', isAsc);
   },
 
   getEventsForDate(date, isAsc) {
     const res = this.getEvents().filter(ev => ev.d == date);
-    return Utils.sortBy(res, 'date', isAsc);
+    return Utils.sortBy(res, 'd', isAsc);
   },
 
   getEventsForBookAndDate(bookKey, date, isAsc) {
     const res = this.getEvents().filter(ev => ev.d == date && ev.b == bookKey);
-    return Utils.sortBy(res, 'date', isAsc);
+    return Utils.sortBy(res, 'd', isAsc);
+  },
+
+  getFilteredEvents(filter) {
+    let events = [...Utils.sortBy(this.getEvents(), 'ts', false)];
+    const params = Object.keys(filter);
+    if(params.length) {
+      events = events.filter(ev => {
+        let predicates = [];
+        params.forEach(param => {
+          switch(param) {
+            case 'board':
+              predicates.push(BooksDomain.getBook(ev.b).board == filter[param]);
+              break;
+            case 'book':
+              predicates.push(ev.b == filter[param]);
+              break;
+          }
+        });
+        return predicates.every(pr => pr === true);
+      });
+    }
+    return events;
   },
 
   saveEvents(events) {
@@ -40,7 +63,6 @@ export const EventsDomain = {
   },
 
   log({type, book, date, data}) {
-    //TODO log for 
     const response = {};
     const ts = new Date();
     if(!date) {
@@ -59,11 +81,7 @@ export const EventsDomain = {
         };
         if(type == this.eventTypes.progress) {
           res.r = data.ranges;
-          // res.f = data.f,
-          // res.to = data.to,
-          // res.s = data.s
         }
-        //TODO: manual
         events.push(res);
         this.saveEvents(events);
       }
@@ -76,7 +94,6 @@ export const EventsDomain = {
       response.details = e;
       return response;
     }
-
 
   },
 

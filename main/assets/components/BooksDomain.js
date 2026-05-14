@@ -127,11 +127,18 @@ export const BooksDomain = {
   setBookRanges(key, newRanges) {
     const book = this.getBook(key);
 
-    if(!book.state) {
-      book.state = {};
+    if (newRanges == null) {
+      //remove
+      if (book.state && book.state.ranges) {
+        delete book.state.ranges;
+      }
+    } else {
+      if(!book.state) {
+        book.state = {};
+      }
+  
+      book.state.ranges = newRanges;
     }
-
-    book.state.ranges = newRanges;
 
     this.saveBooks(App.books);
 
