@@ -26,6 +26,7 @@ export const State = {
       start : { year : null, month: null},
       end : {year : null, month: null}
     },
+    listExpanded : false,
   },
 
   afterRender: [],

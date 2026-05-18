@@ -1074,7 +1074,7 @@ select:invalid {
 }
 
 #dialog {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
@@ -1095,10 +1095,14 @@ select:invalid {
   box-sizing: border-box;
   position: relative;
   border-radius: 5px;
-  padding: 20px 20px 70px;
+  padding: 20px 20px 50px;
+  min-height:0;
 }
 
-.dialogContent {}
+.dialogContent {
+  overflow:auto;
+  height:100%;
+}
 
 .button-close__dialog {
   top: unset;
@@ -1386,6 +1390,7 @@ select:invalid {
   border: 0;
   background-color: transparent;
   outline: none;
+  margin-left:15px;
 }
 
 .toolbar__button-calendar {
@@ -1431,8 +1436,14 @@ select:invalid {
 }
 
 #Cal-bodyWrap {
+  background: #d1d1d1;
   flex:1 1 auto;
   overflow: auto;
+}
+
+#Cal-body {
+  background: #fff;
+  border-bottom:1px solid #858585;
 }
 
 #Cal-container ul {
@@ -1441,6 +1452,10 @@ select:invalid {
   padding:0;
   display:flex;
   flex-flow:row nowrap;
+}
+
+#Cal-container .Cal-month:first-child ul.partial:first-child {
+  background:#efeeeb;
 }
 
 #Cal-container ul li {
@@ -1453,6 +1468,13 @@ select:invalid {
   align-items: center;
   text-align: center;
   position: relative;
+  box-shadow: 0 -1px 0 #e9e9e9, inset 1px 0 0 #e9e9e9;
+}
+
+#Cal-container ul#Cal-weekdays li {
+  box-shadow: 
+    inset 0 -1px 0 #858585,
+    inset 1px 0 0 #e9e9e9;
 }
 
 .Cal-month {
@@ -1463,17 +1485,22 @@ select:invalid {
   justify-content: flex-end;
 }
 
+
 #Cal-container .Cal-month:not(:first-child) .Cal-week.partial:first-child {
   margin-top:-14.285714286%;
 }
 
 #Cal-container .Cal-week.partial:first-child li {
   background: #fff;
-  box-shadow: 0 -1px 0 #e9e9e9
+  box-shadow: 0 -1px 0 #a5a5a5;
 }
 
 #Cal-container .Cal-week.partial:first-child li:first-child {
-  box-shadow: 0 -1px 0 #e9e9e9, inset 1px 0 0 #e9e9e9;
+  box-shadow: 0 -1px 0 #a5a5a5, inset 1px 0 0 #a5a5a5;
+}
+
+#Cal-container .Cal-week.partial:last-child li {
+  box-shadow: inset 0 -2px 0 #85858573;
 }
 
 #Cal-container .Cal-month li .eventDots {

@@ -62,6 +62,8 @@ export const EventsUI = {
       case 'list':
         this.dom.listContainer.innerHTML = this.getListHtml();
         this.dom.eventEntriesss = document.querySelectorAll(this.selectors.eventEntriesss);
+        this.dom.toggleExpandButton.classList.toggle('expand', !State.eventsUi.listExpanded);
+        this.dom.toggleExpandButton.classList.toggle('collapse', State.eventsUi.listExpanded);
         break;
       case 'calendar':
         this.dom.calenderBody.innerHTML = this.getCalendarHtml();
@@ -88,7 +90,7 @@ export const EventsUI = {
           <span class="eventsEntry__date">${ev.d}</span>
           <span class="eventsEntry__bookname">${BooksDomain.getBook(ev.b)?.name}</span>
           ${range !== null || targetColName !== null || sourceColName !== null ? `
-            <details>
+            <details ${State.eventsUi.listExpanded ? 'open' : ''}>
               <summary></summary>
               <div class="eventsEntry__details">
                 ${range !== null ? `
@@ -153,13 +155,10 @@ export const EventsUI = {
     App.setStateProp('eventsView', State.eventsUi.view);
     Bus.emit(Bus.events.eventsUiChanged);
   },
-
+  
   toggleExpand(el) {
-    el.classList.toggle('expand');
-    el.classList.toggle('collapse');
-    this.dom.eventEntriesss.forEach(el => {
-      el.querySelector('summary')?.click();
-    });
+    State.eventsUi.listExpanded = !State.eventsUi.listExpanded;
+    Bus.emit(Bus.events.eventsUiChanged);
   },
 
   toggleEventDots(el) {
