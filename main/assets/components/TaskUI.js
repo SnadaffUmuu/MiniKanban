@@ -239,13 +239,13 @@ export const TaskUI = {
     if (Array.isArray(val)) {
       return val.reverse().reduce((res, it) => {
         if(/^\d+$/.test(it)) {
-          return res += '・<br>'
+          return res += Array.from({length:parseInt(it)}).map((_, i) => '・').join('&nbsp;') + '<br>';
         } else {
           return res += it + '<br>'
         }
       }, "");
     } else {
-      return val;
+      return Array.from({length:parseInt(val)}).map((_, i) => '・').join('&nbsp;');
     }
   },
 
