@@ -25,21 +25,21 @@
       <h1 data-app-title="board" class="top-menu-title hidden">Board</h1>
       <h1 data-app-title="books" class="top-menu-title hidden">Books</h1>
       <h1 data-app-title="events" class="top-menu-title hidden">Events</h1>
-  
+
       <div data-screen-tools="board" class="top-tools hidden">
         <button data-screen-switch="events" class="switch-screen"></button>
         <button data-screen-switch="books" class="switch-screen"></button>
         <button id="boards-button" data-header-mode-trigger="boardsList"></button>
         <button data-toggle-menu-trigger="board" class="menu-toggle"></button>
       </div>
-  
+
       <div data-screen-tools="books" class="top-tools hidden">
         <button id="addBook"></button>
         <button data-screen-switch="events" class="switch-screen"></button>
         <button data-screen-switch="board" class="switch-screen"></button>
         <button data-toggle-menu-trigger="books" class="menu-toggle"></button>
       </div>
-  
+
       <div data-screen-tools="events" class="top-tools hidden">
         <button data-screen-switch="books" class="switch-screen"></button>
         <button data-screen-switch="board" class="switch-screen"></button>
@@ -140,10 +140,27 @@
       <button data-events-view-switch="calendar" class="toolbar__button toolbar__button-calendar"></button>
     </div>
     <div data-events-toolbar="calendar" class="toolbar">
+      <button class="toolbar__button toolbar__button-toggle-events js-toggle-eventdots"></button>
       <button data-events-view-switch="list" class="toolbar__button toolbar__button-list"></button>
     </div>
     <div data-events-view="list" id="eventsListContainer" class="hidden"></div>
-    <div data-events-view="calendar" id="eventsCalendarContainer" class="hidden"></div>
+    <div data-events-view="calendar" id="eventsCalendarContainer" class="hidden">
+      <div id="Cal-container">
+        <div id="Cal-currentDateTitle"></div>
+        <ul id="Cal-weekdays">
+          <li data-day="">пн</li>
+          <li data-day="">вт</li>
+          <li data-day="">ср</li>
+          <li data-day="">чт</li>
+          <li data-day="">пт</li>
+          <li data-day="">сб</li>
+          <li data-day="">вс</li>
+        </ul>
+        <div id="Cal-bodyWrap">
+          <div id="Cal-body"></div>
+        </div>
+      </div>
+    </div>
   </section>
 </body>
 

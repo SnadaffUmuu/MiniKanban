@@ -15,19 +15,22 @@ export const EventsUI = {
     container: '#events',
     listContainer: '#eventsListContainer',
     calendarContainer: '#eventsCalendarContainer',
+    calenderBody: '#Cal-body',
     viewContainersss: '[data-events-view]',
     viewToolbarsss: '[data-events-toolbar]',
     viewSwitchesss: '[data-events-view-switch]',
-    toggleExpandButton : '#toggleEventsExpand',
-    eventEntriesss : '.eventsEntry',
+    toggleExpandButton: '#toggleEventsExpand',
+    eventEntriesss: '.eventsEntry',
+    toggleEventDots: '.js-toggle-eventdots',
   },
 
   dom: {},
 
   events: {
-    click : {
-      '@viewSwitchesss' : 'switchEventsView',
-      '@toggleExpandButton' : 'toggleExpand'
+    click: {
+      '@viewSwitchesss': 'switchEventsView',
+      '@toggleExpandButton': 'toggleExpand',
+      '@toggleEventDots' : 'toggleEventDots',
     },
   },
 
@@ -61,7 +64,7 @@ export const EventsUI = {
         this.dom.eventEntriesss = document.querySelectorAll(this.selectors.eventEntriesss);
         break;
       case 'calendar':
-        this.dom.calendarContainer.innerHTML = this.getCalendarHtml();
+        this.dom.calenderBody.innerHTML = this.getCalendarHtml();
         break;
     }
 
@@ -69,7 +72,7 @@ export const EventsUI = {
 
   getListHtml() {
 
-    const events = EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter);
+    const events = Utils.sortBy(EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', false);
 
     return events.map(ev => {
       const book = BooksDomain.getBook(ev.b);
@@ -109,13 +112,40 @@ export const EventsUI = {
   },
 
   getCalendarHtml() {
-
-    const events = EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter);
-
-    return events.map(ev => {
-      return `events calendar`;
+    const events = Utils.sortBy(EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter), 'd', true);
+    const calendar = EventsDomain.generateCalendar(events);
+    console.log(calendar);
+    let res = [];
+    let currYear = null;
+    calendar.forEach(({month, weeks, year}, i) => {
+      let weeksHtml = [];
+      weeks.forEach(({days, partial}, index) => {
+        let daysHtml = [];
+        days.forEach((day, iii) => {
+          let dayString = day.day;
+          if (index == 0 && iii == 0) {
+            dayString += '.' + month;
+            if (!currYear || year !== currYear) {
+              dayString += '<br>' + year;
+            }
+          }
+          let eventDots = [];
+          day.events.forEach(event => {
+            const book = BooksDomain.getBook(event.book);
+            const board = BoardDomain.getBoard(book.board);
+            eventDots.push(`<span class="board-${board.key}-border" style="background-color:${Colors[book.color]}"></span>`);
+          });
+          daysHtml.push(`<li data-day="${day.day}">${dayString}${eventDots.length ? `
+            <span class="eventDots">${eventDots.join('')}</span>
+          ` : ''}</li>`);
+        });
+        weeksHtml.push(`<ul class="Cal-week ${partial ? 'partial' : ''}">${daysHtml.join('')}</ul>`)
+      });
+      res.push(`<div class="Cal-month" data-month="${month}">${weeksHtml.join('')}</div>`);
+      currYear = year;
     });
 
+    return res.join('');
   },
 
   switchEventsView(el) {
@@ -131,5 +161,10 @@ export const EventsUI = {
       el.querySelector('summary')?.click();
     });
   },
+
+  toggleEventDots(el) {
+    el.classList.toggle('active');
+    this.dom.calendarContainer.classList.toggle('eventDotsHidden');
+  }
 
 };

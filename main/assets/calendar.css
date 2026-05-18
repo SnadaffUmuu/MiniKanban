@@ -1,0 +1,63 @@
+#Cal-container {
+  position: fixed;
+  top:0;
+  right:0;
+  bottom:0;
+  left:0;
+  overflow: auto;
+  display:flex;
+  flex-flow:column nowrap;
+}
+
+#Cal-currentDateTitle,
+#Cal-weekdays {
+  flex: 0 0 auto;
+}
+
+#Cal-weekdays {
+  box-shadow: inset 0 -1px rgba(0, 0, 0, .04);
+}
+
+#Cal-bodyWrap {
+  flex:1 1 auto;
+  overflow: auto;
+}
+
+#Cal-container ul {
+  list-style: none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-flow:row nowrap;
+}
+
+#Cal-container ul li {
+  width:14.285714286%;
+  flex: 0 0 auto;
+  /* height: 0;
+  padding-top: 14%; */
+  aspect-ratio: 1;
+  display:flex;
+  flex-flow:column nowrap;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.Cal-month {
+  background: linear-gradient(180deg, hsla(0, 0%, 100%, 0) 50%, rgba(0, 0, 0, .05));
+}
+
+#Cal-container .Cal-week.partial:first-child {
+  justify-content: flex-end;
+  margin-top:-14.285714286%;
+}
+
+#Cal-container .Cal-week.partial:first-child li {
+  background: #fff;
+  box-shadow: 0 -1px 0 #e9e9e9
+}
+
+#Cal-container .Cal-week.partial:first-child li:first-child {
+  box-shadow: 0 -1px 0 #e9e9e9, inset 1px 0 0 #e9e9e9;
+}
