@@ -27,6 +27,7 @@ export const State = {
       end : {year : null, month: null}
     },
     listExpanded : false,
+    dotsMerged : true,
   },
 
   afterRender: [],

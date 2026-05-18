@@ -22,6 +22,7 @@ export const EventsUI = {
     toggleExpandButton: '#toggleEventsExpand',
     eventEntriesss: '.eventsEntry',
     toggleEventDots: '.js-toggle-eventdots',
+    toggleMergeDots : '#toggleMergeDots',
   },
 
   dom: {},
@@ -31,6 +32,7 @@ export const EventsUI = {
       '@viewSwitchesss': 'switchEventsView',
       '@toggleExpandButton': 'toggleExpand',
       '@toggleEventDots' : 'toggleEventDots',
+      '@toggleMergeDots' : 'toggleMergeDots',
     },
   },
 
@@ -65,8 +67,10 @@ export const EventsUI = {
         this.dom.toggleExpandButton.classList.toggle('expand', !State.eventsUi.listExpanded);
         this.dom.toggleExpandButton.classList.toggle('collapse', State.eventsUi.listExpanded);
         break;
-      case 'calendar':
-        this.dom.calenderBody.innerHTML = this.getCalendarHtml();
+        case 'calendar':
+          this.dom.calenderBody.innerHTML = this.getCalendarHtml();
+          this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
+          this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
         break;
     }
 
@@ -131,14 +135,19 @@ export const EventsUI = {
               dayString += '<br>' + year;
             }
           }
-          let eventDots = [];
+          let dayBooks = [];
+          let dotsHtml = [];
           day.events.forEach(event => {
             const book = BooksDomain.getBook(event.book);
             const board = BoardDomain.getBoard(book.board);
-            eventDots.push(`<span class="board-${board.key}-border" style="background-color:${Colors[book.color]}"></span>`);
+            if (!State.eventsUi.dotsMerged || !dayBooks.includes(event.book)) {
+              const html = `<span class="board-${board.key}-border" style="background-color:${Colors[book.color]}"></span>`;
+              dotsHtml.push(html);
+              dayBooks.push(event.book);
+            }
           });
-          daysHtml.push(`<li data-day="${day.day}">${dayString}${eventDots.length ? `
-            <span class="eventDots">${eventDots.join('')}</span>
+          daysHtml.push(`<li data-day="${day.day}">${dayString}${dotsHtml.length ? `
+            <span class="eventDots">${dotsHtml.join('')}</span>
           ` : ''}</li>`);
         });
         weeksHtml.push(`<ul class="Cal-week ${partial ? 'partial' : ''}">${daysHtml.join('')}</ul>`)
@@ -160,10 +169,15 @@ export const EventsUI = {
     State.eventsUi.listExpanded = !State.eventsUi.listExpanded;
     Bus.emit(Bus.events.eventsUiChanged);
   },
-
+  
   toggleEventDots(el) {
     el.classList.toggle('active');
     this.dom.calendarContainer.classList.toggle('eventDotsHidden');
-  }
+  },
+
+  toggleMergeDots(el) {
+    State.eventsUi.dotsMerged = !State.eventsUi.dotsMerged;
+    Bus.emit(Bus.events.eventsUiChanged);
+  },
 
 };

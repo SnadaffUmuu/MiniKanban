@@ -1,4 +1,4 @@
-import {Utils} from './Utils.js' 
+import {Utils} from './Utils.js'
 import {Bus} from './Bus.js'
 import {BoardDomain} from './BoardDomain.js'
 import {State} from './State.js'
@@ -26,12 +26,16 @@ export const TaskUI = {
     cloneTask: '.task-clone',
     colorPickerButton: '.task-change-color',
     cancelSetColorButton: '.cancel-set-color',
-    incrVocabPractice : '.incr-vocab-practice',
+    incrVocabPractice: '.incr-vocab-practice',
+    vocabCount : '.vocab-count',
+    vocabCountDetails : '.vocab-count-details',
   },
 
-  events : {
-    click : {
-      '@incrVocabPractice' : 'incrVocab',
+  events: {
+    click: {
+      '@incrVocabPractice': 'incrVocab',
+      '@vocabCount' : 'showVocabDetails',
+      '@vocabCountDetails' : 'hideVocabDetails',
     },
   },
 
@@ -158,8 +162,8 @@ export const TaskUI = {
       color: taskEl.dataset.color,
       description: this.getInput(el).value
     };
-    if (taskEl.dataset.vocabCount) {
-      data.vocabCount = taskEl.dataset.vocabCount;
+    if(taskEl.dataset.vocabCount) {
+      data.vocabCount = taskEl.dataset.vocabCount.split(';');
     }
     BoardDomain.updateTask(this.getId(el), columnEl.dataset.id, data);
     Bus.emit(Bus.events.boardsChanged);
@@ -180,8 +184,11 @@ export const TaskUI = {
   incrVocab(el) {
     const taskEl = el.closest('.task');
     const task = BoardDomain.getTask(taskEl.dataset.id);
-    const num = task.vocabCount ? Utils.toInt(task.vocabCount) + 1 : 1;
-    taskEl.dataset.vocabCount = num;
+    const times = taskEl.dataset.vocabCount?.split(';') || [];
+    times.push((new Date()).toLocaleString('sv-SE').slice(0, 16));
+    //const num = task.vocabCount ? Utils.toInt(task.vocabCount) + 1 : 1;
+    //taskEl.dataset.vocabCount = num;
+    taskEl.dataset.vocabCount = times.join(';');
     this.saveTask(el);
   },
 
@@ -208,6 +215,40 @@ export const TaskUI = {
     }
   },
 
+  //обратная совместимость
+  getVocabCountString(task) {
+    const value = task.vocabCount;
+    if(!value) return '';
+    if(/^\d+$/.test(value)) {
+      return value;
+    } else {
+      return value.reduce((total, item) => {
+        // строка состоит только из цифр
+        if(/^\d+$/.test(item)) {
+          return total + Number(item);
+        }
+        // иначе считаем как 1
+        return total + 1;
+      }, 0);
+    }
+  },
+
+  getVocabCountDetails(task) {
+    const val = task.vocabCount;
+    if (!val) return '';
+    if (Array.isArray(val)) {
+      return val.reverse().reduce((res, it) => {
+        if(/^\d+$/.test(it)) {
+          return res += '・<br>'
+        } else {
+          return res += it + '<br>'
+        }
+      }, "");
+    } else {
+      return val;
+    }
+  },
+
   getTaskHtml(id) {
     const domainTask = BoardDomain.getTask(id);
     const uiTask = State.boardUi.taskUi[id];
@@ -220,7 +261,7 @@ export const TaskUI = {
     const isColorPicker = domainTask && uiTask && uiTask.mode === 'colors';
     const isDefault = !isCreate && !isEdit && !isMenuOpened && !isDeleteConfirm && !isColorPicker;
     const isVocabCol = !isCreate && isMenuOpened ? column.name == 'Лексика' : null;
-    const showVocabDots = !isCreate && column.name == 'Лексика' && domainTask.vocabCount;
+    const showVocabCount = !isCreate && column.name == 'Лексика' && domainTask.vocabCount;
 
     const origColor = domainTask ? domainTask.color : null;
     const descr = uiTask && uiTask.description ? uiTask.description : (domainTask ? domainTask.description : '');
@@ -228,9 +269,19 @@ export const TaskUI = {
     const color = uiTask && uiTask.color ? uiTask.color : (domainTask ? domainTask.color : 'white');
 
     return `
-    <div class="task ${isMenuOpened ? 'expanded' : ''}" style="background:${Colors[color]};" data-color="${color}" data-id="${id}">
+    <div class="task ${isMenuOpened ? 'expanded' : ''}" 
+      style="background:${Colors[color]};" 
+      data-color="${color}" 
+      data-id="${id}"
+      ${domainTask.vocabCount ? `data-vocab-count="${Array.isArray(domainTask.vocabCount) ? domainTask.vocabCount.join(';') : domainTask.vocabCount}"` : ''}
+    >
       ${isDefault ? `<div class="ranks-info">${this.getTaskRanksInfo(domainTask, column, BoardDomain.getCurrentBoard())}</div>` : ''}
-      ${showVocabDots ? `<div class="vocab-count-dots">${Array.from({length:domainTask.vocabCount}).map((_,i) => '・').join('')}</div>` : ''}
+      ${showVocabCount ? `
+        <div class="vocab-count">
+          ${this.getVocabCountString(domainTask)}
+          <div class="vocab-count-details">${this.getVocabCountDetails(domainTask)}</div>
+        </div>
+      ` : ''}
       <div class="task-expand-button ${!isDefault ? 'hidden' : ''}"></div>
       <button class="task-info-toggle ${isEdit || isMenuOpened ? 'expanded' : ''}"></button>
       <div class="task-header ${!isDefault && !isMenuOpened ? 'hidden' : ''}">
@@ -245,9 +296,9 @@ export const TaskUI = {
       </div>
       <div class="task-edit ${isCreate || isEdit ? '' : 'hidden'}">
         <textarea rows="1" ${origDescr
-          ? `data-original-value="${Utils.escapeAttr(origDescr)}"`
-          : `placeholder="Description"`
-        } class="task-edit-input">${Utils.escapeHtml(descr)}</textarea>
+        ? `data-original-value="${Utils.escapeAttr(origDescr)}"`
+        : `placeholder="Description"`
+      } class="task-edit-input">${Utils.escapeHtml(descr)}</textarea>
         ${isCreate ? `<div style="padding-left:10px;"><br>${this.getTaskColorPicker(color)}</div>` : ''}
         <button class="task-edit-save board-management-button" disabled>Save</button>
         <button class="${isCreate ? 'js-cancel-add-task' : 'js-cancel-edit-task'} task-edit-cancel board-management-button">Cancel</button>
@@ -309,6 +360,15 @@ export const TaskUI = {
       <ul class="colors-list">
         ${colors.join('')}
       </ul>`
+  },
+
+  showVocabDetails(el) {
+    console.log('!!!')
+    el.classList.add('expanded');
+  },
+  
+  hideVocabDetails(el) {
+    el.closest('.vocab-count').classList.remove('expanded');
   },
 
 };
