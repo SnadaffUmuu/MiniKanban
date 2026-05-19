@@ -892,7 +892,7 @@ body:has(.dragged) {
 
 .switch-screen[data-screen-switch="books"] {
   background: url(images/branch.svg) 50% no-repeat;
-  background-size: 50%;
+  background-size: 20px;
 }
 
 .switch-screen[data-screen-switch="board"] {
@@ -936,6 +936,10 @@ body:has(.dragged) {
   padding: 3px;
   font-size: 13px;
   border-radius: 3px;
+}
+
+#booksList td:first-child {
+  color:#02029d;
 }
 
 .board-osarai-border,
@@ -1426,12 +1430,17 @@ select:invalid {
 
 .toolbar__button-calendar {
   background: url(images/calendar.svg) 50% no-repeat;
-  background-size: 25px;
+  background-size: 22px;
 }
 
 .toolbar__button-list {
   background: url(images/list.svg) 50% no-repeat;
   background-size: 25px;
+}
+
+.toolbar__button-stats {
+  background: url(images/statistics.svg) 50% no-repeat;
+  background-size: 18px;
 }
 
 .collapse {

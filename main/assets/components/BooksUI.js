@@ -12,7 +12,8 @@ export const BooksUI = {
   name: 'BooksUI',
 
   selectors: {
-    container: '#books',
+    listModeContainer: '#books',
+    bookModeContainer: '#book',
     booksListContainer: '#booksListContainer',
     addBookButton: '#addBook',
     addBookUi: '#addBookUi',
@@ -39,6 +40,7 @@ export const BooksUI = {
     progressBar: '.progress-bar:not(.popup)',
     progressBarSegment: '.progress-bar:not(.popup) .segment',
     progressBarPopup: '.progress-bar.popup',
+    bookNameCell: '#booksList td:first-child',
   },
 
   dom: {
@@ -49,6 +51,7 @@ export const BooksUI = {
       '##': 'hideProgress',
       '@progressBar': 'showProgress',
       '@progressBarSegment': 'showProgress',
+      '@bookNameCell' : 'seeBook',
     }
   },
 
@@ -62,17 +65,27 @@ export const BooksUI = {
 
   render() {
     if(App.isBoard() || App.isEvents()) {
-      this.dom.container.classList.add('hidden');
+      this.dom.listModeContainer.classList.add('hidden');
+      this.dom.bookModeContainer.classList.add('hidden');
       return;
     }
     console.log('RENDER: BooksUI');
-    this.dom.container.classList.remove('hidden');
-    this.dom.booksListContainer.innerHTML = this.getListHtml();
-    this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
-    this.dom.bookBoardSelect.innerHTML = '<option value="" disabled selected>choose a board</option>'
-      + App.data.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
-    this.dom.bookBoardColorSelect.removeAttribute('style');
-    this.dom.addBookButton.classList.toggle('hidden', State.booksUi.addUiShown);
+    
+    const currentBook = State.booksUi.currentBook;
+
+    this.dom.listModeContainer.classList.toggle('hidden', currentBook);
+    this.dom.bookModeContainer.classList.toggle('hidden', !currentBook);
+
+    if (currentBook) {
+      //
+    } else { //list
+      this.dom.booksListContainer.innerHTML = this.getListHtml();
+      this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
+      this.dom.bookBoardSelect.innerHTML = '<option value="" disabled selected>choose a board</option>'
+        + App.data.boards.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+      this.dom.bookBoardColorSelect.removeAttribute('style');
+      this.dom.addBookButton.classList.toggle('hidden', State.booksUi.addUiShown);
+    }
   },
 
   addRangeRow(el) {
@@ -478,6 +491,11 @@ export const BooksUI = {
       return;
     }
     document.querySelector(this.selectors.progressBarPopup)?.remove()
-  }
+  },
+
+  seeBook(el) {
+    State.booksUi.currentBook = el.closest('tr').dataset.bookKey;
+    Bus.emit(Bus.events.booksUiChanged);
+  },
 
 };

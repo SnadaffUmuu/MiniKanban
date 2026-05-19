@@ -139,15 +139,28 @@
     <div id="booksListContainer"></div>
   </section>
 
+  <section id="book" class="hidden">
+    <div class="toolbar">
+      <button data-screen-switch="books" class="toolbar__button switch-screen"></button>
+    </div>
+    <div>some book's things go here</div>
+  </section>
+
   <section id="events" class="hidden">
     <div data-events-toolbar="list" class="toolbar">
       <button id="toggleEventsExpand" class="toolbar__button expand"></button>
+      <button data-events-view-switch="stats" class="toolbar__button toolbar__button-stats"></button>
       <button data-events-view-switch="calendar" class="toolbar__button toolbar__button-calendar"></button>
     </div>
     <div data-events-toolbar="calendar" class="toolbar">
       <button id="toggleMergeDots" class="toolbar__button collapse"></button>
       <button class="toolbar__button toolbar__button-toggle-events js-toggle-eventdots"></button>
+      <button data-events-view-switch="stats" class="toolbar__button toolbar__button-stats"></button>
       <button data-events-view-switch="list" class="toolbar__button toolbar__button-list"></button>
+    </div>
+    <div data-events-toolbar="stats" class="toolbar">
+      <button data-events-view-switch="list" class="toolbar__button toolbar__button-list"></button>
+      <button data-events-view-switch="calendar" class="toolbar__button toolbar__button-calendar"></button>
     </div>
     <div data-events-view="list" id="eventsListContainer" class="hidden"></div>
     <div data-events-view="calendar" id="eventsCalendarContainer" class="hidden">
@@ -167,6 +180,7 @@
         </div>
       </div>
     </div>
+    <div data-events-view="stats">stats go here</div>
   </section>
 </body>
 

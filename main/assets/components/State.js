@@ -11,7 +11,7 @@ export const State = {
   booksUi : {
     addUiShown : false,
     rowUi: {}, //delete, edit, state
-    mode : 'books', //events, todo
+    currentBook : null,
   },
   progressData : {},
   progressPromptShown : false,
@@ -21,11 +21,7 @@ export const State = {
   logUpdateError : null,
   eventsUi : {
     eventsFilter: {},
-    view : 'list', //calendar
-    calendar : {
-      start : { year : null, month: null},
-      end : {year : null, month: null}
-    },
+    view : 'list', //calendar, stats
     listExpanded : false,
     dotsMerged : true,
   },
