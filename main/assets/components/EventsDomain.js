@@ -34,7 +34,6 @@ export const EventsDomain = {
   },
 
   getFilteredEvents(filter) {
-    //let events = [...Utils.sortBy(this.getEvents(), 'ts', false)];
     let events = this.getEvents();
     const params = Object.keys(filter);
     if(params.length) {
@@ -45,8 +44,8 @@ export const EventsDomain = {
             case 'board':
               predicates.push(BooksDomain.getBook(ev.b).board == filter[param]);
               break;
-            case 'book':
-              predicates.push(ev.b == filter[param]);
+            case 'books':
+              predicates.push(filter[param].includes(ev.b));
               break;
           }
         });

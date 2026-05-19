@@ -210,8 +210,8 @@ header.expanded .top-menu-title {
   border: none;
   display: block;
   background: transparent;
-  outline: none;
-  border-bottom: 2px solid #f79d35;
+  outline: none;border-bottom: 2px solid #f79d35;
+  
   padding: 10px 0;
   color: #fff;
   width: 100%;
@@ -905,6 +905,11 @@ body:has(.dragged) {
   background-size: 25px;
 }
 
+#events-filters-button {
+  background: url(images/filter.svg) 50% no-repeat;
+  background-size: 20px;
+}
+
 #books {
   padding: 10px;
   box-sizing: border-box;
@@ -1567,3 +1572,35 @@ select:invalid {
   background: var(--paper);
   border-color:var(--satori);
 }
+
+.dropdown-list {
+  color:#f79d35;
+  font-weight: bold;
+  padding: 13px;
+  position: relative;
+  display:inline-block;
+  border-bottom: 2px solid #f79d35;
+  margin-left:10px;
+}
+
+.dropdown-list__body {
+  font-weight: normal;
+  position: absolute;
+  top: calc(100% + 2px);
+  left:0;
+  padding:10px 20px 5px 10px;
+  background: #333533;
+  z-index: 10;
+  border-radius: 5px;
+  width: max-content;
+  box-shadow: 0px 10px 7px -7px black;
+  max-height: calc(100vh - 150px);
+  overflow: auto;
+  color:white;
+}
+
+.dropdown-list__body label{
+  margin-bottom:10px;
+  display:block;
+}
+

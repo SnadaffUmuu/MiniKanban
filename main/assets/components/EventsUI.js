@@ -57,6 +57,7 @@ export const EventsUI = {
 
     this.dom.viewContainersss.forEach(el =>
       el.classList.toggle('hidden', el.dataset.eventsView !== view));
+
     this.dom.viewToolbarsss.forEach(el =>
       el.classList.toggle('hidden', el.dataset.eventsToolbar !== view));
 
@@ -118,7 +119,7 @@ export const EventsUI = {
   },
 
   getCalendarHtml() {
-    const events = Utils.sortBy(EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter), 'd', true);
+    const events = Utils.sortBy(EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', true);
     const calendar = EventsDomain.generateCalendar(events);
     console.log(calendar);
     let res = [];

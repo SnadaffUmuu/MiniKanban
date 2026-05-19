@@ -41,6 +41,7 @@
       </div>
 
       <div data-screen-tools="events" class="top-tools hidden">
+        <button data-header-mode-trigger="eventsFilters" id="events-filters-button"></button>
         <button data-screen-switch="books" class="switch-screen"></button>
         <button data-screen-switch="board" class="switch-screen"></button>
         <button data-toggle-menu-trigger="events" class="menu-toggle"></button>
@@ -61,7 +62,8 @@
     </section>
 
     <section data-toggle-menu-target="events" class="menu hidden">
-      <button data-header-mode-trigger="eventsFilters">Filter</button>
+      <!-- <button data-header-mode-trigger="eventsFilters">Filter</button> -->
+       some menu items
     </section>
 
     <div id="statsUI" data-header-mode="stats" class="hidden">
@@ -104,7 +106,10 @@
       <button class="js-cancel-current button-close"></button>
       <br>
       <select data-event-filter-param="board" id="events-filters-board"></select>
-      <select data-event-filter-param="book" id="events-filters-book"></select>
+      <details id="js-filter-books" class="dropdown-list">
+        <summary>Books</summary>
+        <div class="dropdown-list__body" id="js-filter-books-container"></div>
+      </details>
       <div>
         <button id="eventsFilterSubmit" class="board-management-button">Filter</button>
         <button id="eventsFilterReset" class="board-management-button">Reset</button>
