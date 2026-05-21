@@ -202,7 +202,7 @@ export const BoardDomain = {
 
       theTask.color = color;
       theTask.description = description;
-      if (vocabCount) {
+      if(vocabCount) {
         theTask.vocabCount = vocabCount;
       }
 
@@ -213,7 +213,7 @@ export const BoardDomain = {
         color: color,
         description: description
       };
-      if (vocabCount) {
+      if(vocabCount) {
         theTask.vocabCount = vocabCount;
       }
 
@@ -364,12 +364,12 @@ export const BoardDomain = {
       State.progressData = {
         taskId: task.id,
         boardId: board.id,
-        sourceIndex : sourceIndex,
+        sourceIndex: sourceIndex,
         sourceColumnId: sourceCol.id,
-        targetIndex : targetIndex,
-        targetColumnId : targetCol.id,
-        delta : delta,
-        position : position
+        targetIndex: targetIndex,
+        targetColumnId: targetCol.id,
+        delta: delta,
+        position: position
       };
       State.progressPromptShown = true;
 
@@ -434,5 +434,20 @@ export const BoardDomain = {
     board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
 
   },
+
+  getIdealMap() {
+    return this.getBoards()
+      .filter(b => b.key && b.ideal)
+      .reduce((res, b) => (res[b.key] = Utils.toInt(b.ideal), res), {});
+  },
+
+  getIdealPercents() {
+    const idealMap = this.getIdealMap();
+    const idealTotal = Object.values(idealMap).reduce((a, b) => a + b, 0);
+    return Object.keys(idealMap).reduce((res, board) => {
+      res[board] = Utils.roundUp1((idealMap[board] / idealTotal) * 100);
+      return res;
+    }, {});
+  }
 
 };

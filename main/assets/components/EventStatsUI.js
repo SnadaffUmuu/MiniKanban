@@ -6,6 +6,7 @@ import {Utils} from "./Utils.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {Colors} from "./Colors.js";
 import {State} from "./State.js";
+import { HeaderStats } from "./HeaderStats.js";
 
 export const EventStatsUI = {
 
@@ -76,7 +77,9 @@ export const EventStatsUI = {
 
   getBoardDistrHtml() {
     const data = EventsDomain.getBoardDistribution(EventsDomain.getFilteredEventsByDefaultOrder());
-    return data.map(({month, total, distribution}) => `
+    const ideal = BoardDomain.getIdealPercents();
+    return `<p>Ideal: ${Object.keys(ideal).join(' / ')}: ${Object.values(ideal).join(' / ')}</p>` 
+      + data.map(({month, total, distribution}) => `
       <h4>${month}</h4>
       <table class="stats-table" data-month="${month}">
         <thead>
@@ -98,7 +101,7 @@ export const EventStatsUI = {
   },
 
   getMonthlyRateHtml() {
-    const data = EventsDomain.calculateMonthlyRate(EventsDomain.getFilteredEventsByDefaultOrder());
+    const data = EventsDomain.calculateMonthlyRate(EventsDomain.getFilteredEventsByDefaultOrder(), EventsDomain.getEvents());
     console.log(data);
     return `
     <table class="stats-table">

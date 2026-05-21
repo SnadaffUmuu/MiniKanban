@@ -123,7 +123,7 @@ export const EventsUI = {
   },
 
   getCalendarHtml() {
-    const events = EventsDomain.getFilteredEventsByDefaultOrder();
+    const events = EventsDomain.getFilteredEventsByOrder(true);
     const calendar = EventsDomain.generateCalendar(events);
     console.log(calendar);
     let res = [];

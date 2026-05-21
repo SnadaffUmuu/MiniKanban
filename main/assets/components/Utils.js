@@ -195,4 +195,8 @@ export const Utils = {
     });
   },
 
+  roundUp1(num) { 
+    return Math.ceil(num * 10) / 10;
+  },
+
 };

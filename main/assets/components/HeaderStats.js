@@ -1,7 +1,7 @@
 import {Bus} from './Bus.js'
 import {BoardDomain} from './BoardDomain.js'
 import {State} from './State.js'
-import { Utils } from './Utils.js';
+import {Utils} from './Utils.js';
 
 export const HeaderStats = {
 
@@ -32,7 +32,7 @@ export const HeaderStats = {
     this.dom.resetButton.classList.toggle('hidden', State.statsUiMode == 'promptReset');
 
 
-    const idealMap = this.getIdealMap();
+    const idealMap = BoardDomain.getIdealMap();
     const roundUp1 = (num) => Math.ceil(num * 10) / 10;
     const stats = BoardDomain.getBoardsCounters();
     const total = Object.values(stats).reduce((a, b) => a + b, 0);
@@ -100,13 +100,6 @@ export const HeaderStats = {
   resetUi() {
     State.statsUiMode = null;
     Bus.emit(Bus.events.headerUIChanged);
-  },
-
-  getIdealMap() {
-    //todo use reduce
-    const res = {};
-    BoardDomain.getBoards().filter(b => b.key && b.ideal).forEach(b => res[b.key] = Utils.toInt(b.ideal));
-    return res;
   },
 
 };

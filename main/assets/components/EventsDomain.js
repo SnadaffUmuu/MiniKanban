@@ -60,6 +60,10 @@ export const EventsDomain = {
     return Utils.sortBy(this.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', false);
   },
 
+  getFilteredEventsByOrder(isAsc) {
+    return Utils.sortBy(this.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', isAsc);
+  },
+
   saveEvents(events) {
     if(events) {
       App.events = events;
@@ -124,7 +128,7 @@ export const EventsDomain = {
       const obj = {
         book: event.b,
         board: BoardDomain.getBoard(BooksDomain.getBook(event.b).board).key
-      };
+      }
       if(event.r) {
         obj.r = event.r;
       }
@@ -275,7 +279,6 @@ export const EventsDomain = {
 
   getBoardDistribution(events) {
     events = this.addBoardsDataToEvents(events);
-    console.log('getBoardDistribution', events);
     const months = this.groupByMonth(events);
 
     return Object.entries(months).map(([month, items]) => {
@@ -310,51 +313,68 @@ export const EventsDomain = {
 
   },
 
-  calculateMonthlyRate(events) {
-    events = this.addBoardsDataToEvents(events);
-    console.log('calculateMonthlyRate', events);
+  calculateMonthlyRate(events, allEvents = events) {
+
+    if(!events.length || !allEvents.length) {
+      return [];
+    }
+
     const grouped = {};
 
+    // --- глобальный период по ВСЕМ данным ---
+    const allDates = allEvents.map(
+      e => new Date(e.d)
+    );
+
+    const globalFirst = new Date(
+      Math.min(...allDates)
+    );
+
+    const globalLast = new Date(
+      Math.max(...allDates)
+    );
+
+    const globalDays = Math.max(
+      1,
+      Math.ceil(
+        (globalLast - globalFirst) /
+        (1000 * 60 * 60 * 24)
+      ) + 1
+    );
+
+    // --- группировка только видимых событий ---
     events.forEach(event => {
+
       grouped[event.b] ??= {
         board: event.board,
-        dates: []
+        totalEvents: 0
       };
 
-      grouped[event.b].dates.push(
-        new Date(event.d)
-      );
+      grouped[event.b].totalEvents++;
+
     });
 
+    // --- расчет ---
     const result = [];
 
-    Object.entries(grouped).forEach(([book, data]) => {
-      const sorted = data.dates.sort(
-        (a, b) => a - b
-      );
+    Object.entries(grouped).forEach(
+      ([book, data]) => {
 
-      const first = sorted[0];
-      const last = sorted[sorted.length - 1];
+        const monthlyRate =
+          data.totalEvents /
+          globalDays *
+          30;
 
-      const diffDays = Math.max(
-        1,
-        Math.ceil(
-          (last - first) / (1000 * 60 * 60 * 24)
-        ) + 1
-      );
+        result.push({
+          book,
+          board: BoardDomain
+            .getBoard(data.board).name,
+          totalEvents: data.totalEvents,
+          avgPerMonth: monthlyRate.toFixed(1)
+        });
 
-      const totalEvents = sorted.length;
-
-      const monthlyRate =
-        totalEvents / diffDays * 30;
-
-      result.push({
-        book,
-        board: BoardDomain.getBoard(data.board).name,
-        totalEvents,
-        avgPerMonth: monthlyRate.toFixed(1)
-      });
-    });
+      }
+    );
 
     return result;
   },
