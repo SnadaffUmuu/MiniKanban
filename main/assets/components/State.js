@@ -24,6 +24,7 @@ export const State = {
     view : 'list', //calendar, stats
     listExpanded : false,
     dotsMerged : true,
+    statTypes : [], //monthAcitvity, boardsDistr, monthlyRate
   },
 
   afterRender: [],

@@ -179,7 +179,20 @@
         </div>
       </div>
     </div>
-    <div data-events-view="stats">stats go here</div>
+    <div data-events-view="stats">
+      <details data-stat-type="monthlyRate" class="hidden" open>
+        <summary>Среднее в месяц</summary>
+        <div class="stat-content"></div>
+      </details>
+      <details data-stat-type="monthActivity" class="hidden">
+        <summary>Общая активность по месяцам</summary>
+        <div class="stat-content"></div>
+      </details>
+      <details data-stat-type="boardsDistr" class="hidden">
+        <summary>Распределение по доскам</summary>
+        <div class="stat-content"></div>
+      </details>
+    </div>
   </section>
 </body>
 

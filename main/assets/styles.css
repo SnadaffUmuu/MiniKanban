@@ -3,6 +3,8 @@
   --osarai: #52bb4b;
   /* --osarai: #ff00d4; */
   --paper: #7c46ff;
+  --text-accent : #f79d35;
+  --text-darker-accent : #bd6500;
 }
 
 html,
@@ -168,13 +170,13 @@ header.expanded .top-menu-title {
 }
 
 #boards-list button:not(#close-boards-list).active {
-  background: #f79d35;
+  background: var(--text-accent);
   color: #fff;
 }
 
 #boards-list button:not(#close-boards-list)#create-board {
-  color: #f79d35;
-  border: 1px solid #f79d35;
+  color: var(--text-accent);
+  border: 1px solid var(--text-accent);
   background: transparent url(images/plus.svg) 7px 50% no-repeat;
   background-size: 24px;
   padding-left: 35px;
@@ -210,7 +212,7 @@ header.expanded .top-menu-title {
   border: none;
   display: block;
   background: transparent;
-  outline: none;border-bottom: 2px solid #f79d35;
+  outline: none;border-bottom: 2px solid var(--text-accent);
   
   padding: 10px 0;
   color: #fff;
@@ -220,7 +222,7 @@ header.expanded .top-menu-title {
 
 .board-management-button {
   background: none;
-  color: #f79d35;
+  color: var(--text-accent);
   padding: 13px;
   float: right;
   font-weight: bold;
@@ -481,7 +483,7 @@ main {
 .rename-column-input {
   font-size: 16px;
   border: 0;
-  border-bottom: 2px solid #f79d35;
+  border-bottom: 2px solid var(--text-accent);
   display: block;
   padding: 15px 0 10px 0;
   box-sizing: border-box;
@@ -645,7 +647,7 @@ body:has(.dragged) {
   min-height: 1em;
   overflow-y: hidden;
   resize: none;
-  border-bottom: 2px solid #f79d35;
+  border-bottom: 2px solid var(--text-accent);
   width: calc(100% - 24px);
   display: block;
 }
@@ -721,7 +723,7 @@ body:has(.dragged) {
   background: transparent;
   color: white;
   padding: 10px;
-  border-bottom: 2px solid #f79d35;
+  border-bottom: 2px solid var(--text-accent);
   display: block;
   font-size: 14px;
   margin-top: 10px;
@@ -1277,10 +1279,6 @@ select:invalid {
 [data-events-view] {
   overflow: auto;
   position: relative;
-}
-
-#eventsListContainer,
-#eventsCalendarContainer {
   background: #f1f1ee;
   padding: 10px;
   margin: 0 5px 5px;
@@ -1587,12 +1585,12 @@ select:invalid {
 }
 
 .dropdown-list {
-  color:#f79d35;
+  color:var(--text-accent);
   font-weight: bold;
   padding: 13px;
   position: relative;
   display:inline-block;
-  border-bottom: 2px solid #f79d35;
+  border-bottom: 2px solid var(--text-accent);
   margin-left:10px;
 }
 
@@ -1617,3 +1615,30 @@ select:invalid {
   display:block;
 }
 
+[data-events-view="stats"] details {
+  display:flex;
+  flex-flow:column nowrap;
+}
+
+[data-events-view="stats"] details summary {
+  color:var(--text-darker-accent);
+  font-size:17px;
+  margin:15px 0;
+}
+
+.stats-table {
+  width:100%;
+  margin-bottom:15px;
+  border-collapse: collapse;
+}
+
+.stats-table td,
+.stats-table th {
+  border: 1px solid #a5a5a5;
+  padding:5px;
+  font-size:13px;
+}
+
+.stats-table tr[data-month] td {
+  white-space: nowrap;
+}

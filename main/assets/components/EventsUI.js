@@ -6,6 +6,7 @@ import {Utils} from "./Utils.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {Colors} from "./Colors.js";
 import {State} from "./State.js";
+import { EventStatsUI } from "./EventStatsUI.js";
 
 export const EventsUI = {
 
@@ -63,6 +64,7 @@ export const EventsUI = {
 
     switch(view) {
       case 'list':
+      default:
         this.dom.listContainer.innerHTML = this.getListHtml();
         this.dom.eventEntriesss = document.querySelectorAll(this.selectors.eventEntriesss);
         this.dom.toggleExpandButton.classList.toggle('expand', !State.eventsUi.listExpanded);
@@ -73,13 +75,15 @@ export const EventsUI = {
           this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
           this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
         break;
+        case 'stats':
+          EventStatsUI.render();
     }
 
   },
 
   getListHtml() {
 
-    const events = Utils.sortBy(EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', false);
+    const events = EventsDomain.getFilteredEventsByDefaultOrder();
 
     return events.map(ev => {
       const book = BooksDomain.getBook(ev.b);
@@ -119,7 +123,7 @@ export const EventsUI = {
   },
 
   getCalendarHtml() {
-    const events = Utils.sortBy(EventsDomain.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', true);
+    const events = EventsDomain.getFilteredEventsByDefaultOrder();
     const calendar = EventsDomain.generateCalendar(events);
     console.log(calendar);
     let res = [];

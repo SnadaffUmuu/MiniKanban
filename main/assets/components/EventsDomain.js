@@ -2,6 +2,7 @@ import {App} from "./App.js"
 import {Utils} from "./Utils.js";
 import {BooksDomain} from "./BooksDomain.js";
 import {BoardDomain} from "./BoardDomain.js";
+import {State} from "./State.js";
 
 export const EventsDomain = {
 
@@ -53,6 +54,10 @@ export const EventsDomain = {
       });
     }
     return events;
+  },
+
+  getFilteredEventsByDefaultOrder() {
+    return Utils.sortBy(this.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', false);
   },
 
   saveEvents(events) {
@@ -119,7 +124,7 @@ export const EventsDomain = {
       const obj = {
         book: event.b,
         board: BoardDomain.getBoard(BooksDomain.getBook(event.b).board).key
-      }
+      };
       if(event.r) {
         obj.r = event.r;
       }
@@ -163,8 +168,8 @@ export const EventsDomain = {
       // Monday = 1 ... Sunday = 0
       const jsWeekday = current.getDay();
       const weekday = jsWeekday === 0
-        ? 7 : jsWeekday;      
-        
+        ? 7 : jsWeekday;
+
       const dateString = year + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
       console.log(current)
       console.log(dateString)
@@ -227,6 +232,167 @@ export const EventsDomain = {
 
     return calendar;
 
-  }
+  },
+
+  addBoardsDataToEvents(events) {
+    events.forEach(ev => ev.board = BooksDomain.getBook(ev.b).board);
+    return events;
+  },
+
+  groupByMonth(events) {
+    const result = {};
+
+    events.forEach(event => {
+      const month = event.d.slice(0, 7);
+
+      if(!result[month]) {
+        result[month] = [];
+      }
+
+      result[month].push(event);
+    });
+
+    return result;
+  },
+
+
+  getMonthStats(events) {
+    const months = this.groupByMonth(events);
+
+    return Object.entries(months).map(([month, items]) => {
+      const uniqueDays = new Set(items.map(i => i.d));
+
+      return {
+        month,
+        totalEvents: items.length,
+        activeDays: uniqueDays.size,
+        avgPerDay: (
+          items.length / uniqueDays.size
+        ).toFixed(1)
+      };
+    });
+  },
+
+  getBoardDistribution(events) {
+    events = this.addBoardsDataToEvents(events);
+    console.log('getBoardDistribution', events);
+    const months = this.groupByMonth(events);
+
+    return Object.entries(months).map(([month, items]) => {
+      const total = items.length;
+
+      const grouped = {};
+
+      items.forEach(item => {
+        grouped[item.board] ??= 0;
+        grouped[item.board]++;
+      });
+
+      const distribution = Object.entries(grouped)
+        .map(([board, count]) => {
+          board = BoardDomain.getBoard(board).name;
+          return {
+            board,
+            count,
+            percent: (
+              count / total * 100
+            ).toFixed(1)
+          }
+        })
+        .sort((a, b) => b.count - a.count);
+
+      return {
+        month,
+        total,
+        distribution
+      };
+    });
+
+  },
+
+  calculateMonthlyRate(events) {
+    events = this.addBoardsDataToEvents(events);
+    console.log('calculateMonthlyRate', events);
+    const grouped = {};
+
+    events.forEach(event => {
+      grouped[event.b] ??= {
+        board: event.board,
+        dates: []
+      };
+
+      grouped[event.b].dates.push(
+        new Date(event.d)
+      );
+    });
+
+    const result = [];
+
+    Object.entries(grouped).forEach(([book, data]) => {
+      const sorted = data.dates.sort(
+        (a, b) => a - b
+      );
+
+      const first = sorted[0];
+      const last = sorted[sorted.length - 1];
+
+      const diffDays = Math.max(
+        1,
+        Math.ceil(
+          (last - first) / (1000 * 60 * 60 * 24)
+        ) + 1
+      );
+
+      const totalEvents = sorted.length;
+
+      const monthlyRate =
+        totalEvents / diffDays * 30;
+
+      result.push({
+        book,
+        board: BoardDomain.getBoard(data.board).name,
+        totalEvents,
+        avgPerMonth: monthlyRate.toFixed(1)
+      });
+    });
+
+    return result;
+  },
+
+  calculateExpectedShares(levels) {
+    const flows = {};
+
+    let currentFlow = 1;
+
+    Object.entries(levels).forEach(([level, data]) => {
+      flows[level] = currentFlow;
+
+      currentFlow = currentFlow / data.q;
+    });
+
+    const total =
+      Object.values(flows)
+        .reduce((a, b) => a + b, 0);
+
+    const result = {};
+
+    Object.entries(levels).forEach(([level, data]) => {
+      const levelShare =
+        flows[level] / total;
+
+      const perBook =
+        levelShare / data.c.length;
+
+      data.c.forEach(book => {
+        result[book] = {
+          level: Number(level),
+          expectedPercent:
+            (perBook * 100).toFixed(1)
+        };
+      });
+    });
+
+    return result;
+  },
 
 };
