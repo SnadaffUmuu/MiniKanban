@@ -8,11 +8,12 @@ import {
   ColumnHeaderUI,
   TaskUI,
   RanksUI,
-  Stats,
+  HeaderStats,
   BooksUI,
   ProgressUI,
   EventsFilterUI,
   EventsUI,
+  EventStatsUI,
 } from './index.js'
 import {Components} from './Components.js';
 
@@ -28,11 +29,12 @@ export const Events = {
     'ColumnHeaderUI': ColumnHeaderUI,
     'TaskUI': TaskUI,
     'RanksUI': RanksUI,
-    'Stats': Stats,
+    'HeaderStats': HeaderStats,
     'BooksUI': BooksUI,
     'ProgressUI': ProgressUI,
     'EventsFilterUI' : EventsFilterUI,
     'EventsUI' : EventsUI,
+    'EventStatsUI' : EventStatsUI,
   },
 
   map: {
@@ -90,9 +92,9 @@ export const Events = {
       [RanksUI.selectors.resetCountersCancelButton]: 'RanksUI.resetUi',
       [RanksUI.selectors.resetCountersConfirmButton]: 'RanksUI.resetCounters',
 
-      [Stats.selectors.resetButton]: 'Stats.promptReset',
-      [Stats.selectors.confirmResetButton]: 'Stats.reset',
-      [Stats.selectors.cancelResetButton]: 'Stats.resetUi',
+      [HeaderStats.selectors.resetButton]: 'HeaderStats.promptReset',
+      [HeaderStats.selectors.confirmResetButton]: 'HeaderStats.reset',
+      [HeaderStats.selectors.cancelResetButton]: 'HeaderStats.resetUi',
 
       [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
       [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],      

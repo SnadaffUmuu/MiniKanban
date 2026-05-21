@@ -3,9 +3,9 @@ import {BoardDomain} from './BoardDomain.js'
 import {State} from './State.js'
 import { Utils } from './Utils.js';
 
-export const Stats = {
+export const HeaderStats = {
 
-  name: 'Stats',
+  name: 'HeaderStats',
 
   selectors: {
     resetButton: '#reset-stats',
@@ -25,7 +25,7 @@ export const Stats = {
 
   render() {
     if(State.headerUiMode !== 'stats') return;
-    console.log('RENDER: Stats');
+    console.log('RENDER: HeaderStats');
     this.dom.resetMessage.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
     this.dom.confirmResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');
     this.dom.cancelResetButton.classList.toggle('hidden', State.statsUiMode !== 'promptReset');

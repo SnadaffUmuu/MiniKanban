@@ -273,7 +273,7 @@ export const TaskUI = {
       style="background:${Colors[color]};" 
       data-color="${color}" 
       data-id="${id}"
-      ${domainTask.vocabCount ? `data-vocab-count="${Array.isArray(domainTask.vocabCount) ? domainTask.vocabCount.join(';') : domainTask.vocabCount}"` : ''}
+      ${showVocabCount && domainTask.vocabCount ? `data-vocab-count="${Array.isArray(domainTask.vocabCount) ? domainTask.vocabCount.join(';') : domainTask.vocabCount}"` : ''}
     >
       ${isDefault ? `<div class="ranks-info">${this.getTaskRanksInfo(domainTask, column, BoardDomain.getCurrentBoard())}</div>` : ''}
       ${showVocabCount ? `

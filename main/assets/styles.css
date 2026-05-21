@@ -295,6 +295,10 @@ header.expanded .top-menu-title {
   position: relative;
 }
 
+.task:has(.vocab-count.expanded) {
+  z-index:100;
+}
+
 button.dragging {
   border-radius: 15px;
   border: 1px solid transparent;

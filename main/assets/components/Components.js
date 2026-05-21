@@ -10,9 +10,10 @@ import {
   ColumnHeaderUI,
   TaskUI,
   RanksUI,
-  Stats,
+  HeaderStats,
   ProgressUI,
   EventsUI,
+  EventStatsUI,
 } from './index.js'
 
 export const Components = [
@@ -27,7 +28,8 @@ export const Components = [
   TaskUI,
   RanksUI,
   DragDrop,
-  Stats,
+  HeaderStats,
   ProgressUI,
   EventsUI,
+  EventStatsUI,
 ];
