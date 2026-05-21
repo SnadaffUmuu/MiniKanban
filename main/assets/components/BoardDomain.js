@@ -16,6 +16,10 @@ export const BoardDomain = {
     return App.data.boards.find(b => b.id == id);
   },
 
+  getBoardByKey(key) {
+    return App.data.boards.find(b => b.key == key);
+  },
+
   getCurrentBoard() {
     return App.data.boards.find(b => b.id == App.data.currentBoardId);
   },

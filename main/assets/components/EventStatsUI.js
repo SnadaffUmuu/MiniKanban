@@ -21,6 +21,9 @@ export const EventStatsUI = {
     monthAcitvity : 'monthActivity',
     boardsDistr : 'boardsDistr',
     monthlyRate : 'monthlyRate',
+    boardStats : 'boardStats',
+    boardHierarchy : 'boardHierarchy',
+    expectedShares : 'expectedShares',
   },
 
   dom : {},
@@ -36,6 +39,9 @@ export const EventStatsUI = {
       [this.statTypes.monthAcitvity] : this.getGeneralMonthActivityHtml,
       [this.statTypes.boardsDistr] : this.getBoardDistrHtml,
       [this.statTypes.monthlyRate] : this.getMonthlyRateHtml,
+      [this.statTypes.boardStats] : this.getBoardStatsHtml,
+      [this.statTypes.boardHierarchy] : this.getBoardHierarchyHtml,
+      [this.statTypes.expectedShares] : this.getExpectedSharesHtml,
     };
     const showAll = !State.eventsUi.statTypes.length;
     Object.keys(map).forEach(methodName => {
@@ -121,6 +127,94 @@ export const EventStatsUI = {
           <td>${avgPerMonth}</td>
         </tr>`;
         }).join('')}
+      </tbody>
+    </table>  
+    `;
+  },
+
+  getBoardStatsHtml() {
+    const data = EventsDomain.getBoardStats(EventsDomain.getEvents());
+    console.log(data);
+    return `соответствует ли фактическая работа по доскам их целевому ratio<br>
+    <table class="stats-table">
+      <thead>
+        <th>board</th>
+        <th>actual</th>
+        <th>target</th>
+        <th>delta</th>
+      </thead>
+      <tbody>
+        ${data.map(({key,actual,target,delta}) => {
+          return `
+        <tr>
+          <td>${key}</td>
+          <td>${actual}</td>
+          <td>${target}</td>
+          <td>${delta}</td>
+        </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>  
+    `;
+  },
+
+  getBoardHierarchyHtml() {
+    const selectedBoard = State.eventsUi.eventsFilter.board;
+    if (!selectedBoard) return 'Не выбрана доска';
+
+    const data = EventsDomain.buildBoardHierarchy(EventsDomain.getEvents(), selectedBoard);
+    console.log(data);
+    return `
+    как внутри одной доски распределились реальные ходы между книгами
+    <table class="stats-table">
+    <thead>
+      <th>book</th>
+      <th>level</th>
+      <th>moves</th>
+      <th>share</th>
+    </thead>
+    <tbody>
+      ${data.map(({book, level, moves, share}) => {
+        return `
+      <tr>
+        <td>${book}</td>
+        <td>${level}</td>
+        <td>${moves}</td>
+        <td>${share}</td>
+      </tr>
+        `;
+      }).join('')}
+    </tbody>
+  </table> 
+    `;
+  },
+
+  getExpectedSharesHtml() {
+    const selectedBoard = State.eventsUi.eventsFilter.board;
+    if (!selectedBoard) return 'Не выбрана доска';
+
+    const data = EventsDomain.calculateExpectedShares(selectedBoard);
+    console.log(data);
+    return `
+    какой theoretical share ДОЛЖЕН быть у каждой книги, исходя из структуры квот
+    <table class="stats-table">
+      <thead>
+        <th>color</th>
+        <th>level</th>
+        <th>expected percent</th>
+      </thead>
+      <tbody>
+      ${Object.keys(data).map(color => {
+        const d = data[color];
+        return `
+        <tr>
+          <td>${color}</td>
+          <td>${d.level}</td>
+          <td>${d.expectedPercent}</td>
+        </tr>
+        `;
+      }).join('')}
       </tbody>
     </table>  
     `;

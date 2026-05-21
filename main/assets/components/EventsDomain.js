@@ -3,6 +3,7 @@ import {Utils} from "./Utils.js";
 import {BooksDomain} from "./BooksDomain.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {State} from "./State.js";
+import {RanksUI} from "./RanksUI.js";
 
 export const EventsDomain = {
 
@@ -379,12 +380,84 @@ export const EventsDomain = {
     return result;
   },
 
-  calculateExpectedShares(levels) {
+  //соответствует ли фактическая работа по доскам их целевому ratio
+  getBoardStats(events) {
+
+    const boardRanks = BoardDomain.getIdealMap();
+
+    events = this.addBoardsDataToEvents(events);
+
+    const counts = {};
+    let total = 0;
+
+    events.forEach(e => {
+      counts[e.board] ??= 0;
+      counts[e.board]++;
+      total++;
+    });
+
+    const targetTotal =
+      Object.values(boardRanks)
+        .reduce((a, b) => a + b, 0);
+
+    return Object.entries(counts).map(([board, count]) => {
+      const actual = count / total * 100;
+
+      const key = BoardDomain.getBoard(board).key;
+
+      const target =
+        boardRanks[key] / targetTotal * 100;
+
+      return {
+        key,
+        actual: actual.toFixed(1),
+        target: target.toFixed(1),
+        delta: (
+          actual - target
+        ).toFixed(1)
+      };
+    });
+  },
+
+  //как внутри одной доски распределились реальные ходы между книгами
+  buildBoardHierarchy(events, boardName) {
+
+    events = this.addBoardsDataToEvents(events);
+
+    const ranks = BoardDomain.getBoard(boardName).ranks;
+
+    const filtered =
+      events.filter(e => e.board === boardName);
+
+    const total = filtered.length;
+
+    const books = {};
+
+    filtered.forEach(e => {
+      books[e.b] ??= 0;
+      books[e.b]++;
+    });
+
+    return Object.entries(books)
+      .map(([book, moves]) => ({
+        book,
+        level: RanksUI.getLevelOfColor(BooksDomain.getBook(book).color),
+        moves,
+        share: (
+          moves / total * 100
+        ).toFixed(1)
+      }))
+      .sort((a, b) => a.level - b.level);
+  },
+
+  calculateExpectedShares(boardId) {
     const flows = {};
 
     let currentFlow = 1;
 
-    Object.entries(levels).forEach(([level, data]) => {
+    const ranks = BoardDomain.getBoard(boardId).ranks;
+
+    Object.entries(ranks).forEach(([level, data]) => {
       flows[level] = currentFlow;
 
       currentFlow = currentFlow / data.q;
@@ -396,7 +469,7 @@ export const EventsDomain = {
 
     const result = {};
 
-    Object.entries(levels).forEach(([level, data]) => {
+    Object.entries(ranks).forEach(([level, data]) => {
       const levelShare =
         flows[level] / total;
 
@@ -413,6 +486,8 @@ export const EventsDomain = {
     });
 
     return result;
+
   },
+
 
 };

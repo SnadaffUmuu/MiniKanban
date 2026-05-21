@@ -321,8 +321,6 @@ export const RanksUI = {
     `;
   },
 
-
-
   getLevelOfColor(color, ranks) {
     if(ranks == undefined) {
       ranks = BoardDomain.getCurrentBoard().ranks;
