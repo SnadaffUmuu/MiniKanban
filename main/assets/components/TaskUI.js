@@ -27,15 +27,15 @@ export const TaskUI = {
     colorPickerButton: '.task-change-color',
     cancelSetColorButton: '.cancel-set-color',
     incrVocabPractice: '.incr-vocab-practice',
-    vocabCount : '.vocab-count',
-    vocabCountDetails : '.vocab-count-details',
+    vocabCount: '.vocab-count',
+    vocabCountDetails: '.vocab-count-details',
   },
 
   events: {
     click: {
       '@incrVocabPractice': 'incrVocab',
-      '@vocabCount' : 'showVocabDetails',
-      '@vocabCountDetails' : 'hideVocabDetails',
+      '@vocabCount': 'showVocabDetails',
+      '@vocabCountDetails': 'hideVocabDetails',
     },
   },
 
@@ -163,7 +163,11 @@ export const TaskUI = {
       description: this.getInput(el).value
     };
     if(taskEl.dataset.vocabCount) {
-      data.vocabCount = taskEl.dataset.vocabCount.split(';');
+      data.vocabCount = taskEl.dataset.vocabCount.split(';').sort((a, b) => {
+        if(a === "・") return 1;
+        if(b === "・") return -1;
+        return b.localeCompare(a);
+      });
     }
     BoardDomain.updateTask(this.getId(el), columnEl.dataset.id, data);
     Bus.emit(Bus.events.boardsChanged);
@@ -235,17 +239,17 @@ export const TaskUI = {
 
   getVocabCountDetails(task) {
     const val = task.vocabCount;
-    if (!val) return '';
-    if (Array.isArray(val)) {
+    if(!val) return '';
+    if(Array.isArray(val)) {
       return val.reverse().reduce((res, it) => {
         if(/^\d+$/.test(it)) {
-          return res += Array.from({length:parseInt(it)}).map((_, i) => '・').join('&nbsp;') + '<br>';
+          return res += Array.from({length: parseInt(it)}).map((_, i) => '・').join('&nbsp;') + '<br>';
         } else {
           return res += it + '<br>'
         }
       }, "");
     } else {
-      return Array.from({length:parseInt(val)}).map((_, i) => '・').join('&nbsp;');
+      return Array.from({length: parseInt(val)}).map((_, i) => '・').join('&nbsp;');
     }
   },
 
@@ -366,7 +370,7 @@ export const TaskUI = {
     console.log('!!!')
     el.classList.add('expanded');
   },
-  
+
   hideVocabDetails(el) {
     el.closest('.vocab-count').classList.remove('expanded');
   },

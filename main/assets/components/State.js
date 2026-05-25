@@ -1,5 +1,6 @@
 export const State = {
   currentScreen: 'board', 
+  nightModeOn: false,
   headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault, eventsFilter
   openedTopMenu: null,
   statsUiMode: null,

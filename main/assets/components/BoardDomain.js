@@ -399,20 +399,21 @@ export const BoardDomain = {
     const absCount = Utils.toInt(board.rankCountersAbs[level]);
     const upperCount = level > 1 ? Utils.toInt(board.rankCounters[level - 1]) : 0;
 
-    // --- 1. Абсолютный счётчик — всегда меняется
+    
+    // --- 3. Если skipMove — логику рангов не трогаем
+    if(skipMove) {
+      return;
+    }
+
+    // --- 1. Абсолютный счётчик — меняется с учетом skipMove
     board.rankCountersAbs[level] = absCount + delta;
 
-    // --- 2. Глобальный счётчик доски — всегда меняется
+    // --- 2. Глобальный счётчик доски — меняется с учетом skipMove
     const boardsCounters = this.getBoardsCounters();
     const boardTotal = Utils.toInt(boardsCounters[board.id]);
     boardsCounters[board.id] = boardTotal + delta;
 
     this.saveCounters(boardsCounters);
-
-    // --- 3. Если skipMove — логику рангов не трогаем
-    if(skipMove) {
-      return;
-    }
 
     // --- 4. Первый уровень — всегда меняет свой счётчик
     if(level === 1) {

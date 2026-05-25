@@ -22,12 +22,14 @@ export const HeaderUI = {
     changeHeaderModeTriggers: 'header [data-header-mode-trigger]',
     reset: '.js-cancel-current',
     screenSwitch: '[data-screen-switch]',
+    nightModeToggle: '#toggleNightMode',
   },
 
   events: {
     click: {
       '@screenSwitch' : 'switchScreen',
       '@menuButton' : 'toggleMenu',
+      '@nightModeToggle' : 'toggleNightMode',
     },
   },
 
@@ -78,6 +80,8 @@ export const HeaderUI = {
   render() {
     console.log('RENDER: HeaderUI');
 
+    document.body.classList.toggle('night', State.nightModeOn);
+
     const currentScreen = App.getCurrentScreen();
     console.log('currentScreen', currentScreen);
     console.log('State.openedTopMenu', State.openedTopMenu);
@@ -108,5 +112,10 @@ export const HeaderUI = {
       el.classList.toggle('hidden', State.headerUiMode !== el.dataset.headerMode));
 
   },
+
+  toggleNightMode(el) {
+    State.nightModeOn = !State.nightModeOn;
+    Bus.emit(Bus.events.headerUIChanged);
+  }
 
 };
