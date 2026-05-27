@@ -10,4 +10,15 @@ export const Colors = {
   yellow: "#FFFFB3",
   white: "#FFFFFF",
   beige: "#e5d9d6",
+
+};
+
+export const getColorsStyleHtml = () => {
+  return `<style>
+  ${Object.keys(Colors).map(key => `
+    .${key} {
+      background-color:${Colors[key]} !important;
+    }
+  `).join('\n')}
+  </style>`;
 };

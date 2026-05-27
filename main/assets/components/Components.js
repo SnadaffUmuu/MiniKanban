@@ -1,5 +1,5 @@
 import {
-  EventsFilterUI,
+  FiltersUI,
   HeaderUI,
   RenameUI,
   BoardsList,
@@ -17,7 +17,7 @@ import {
 } from './index.js'
 
 export const Components = [
-  EventsFilterUI,
+  FiltersUI,
   HeaderUI,
   BoardsList,
   RenameUI,

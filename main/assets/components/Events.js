@@ -11,7 +11,7 @@ import {
   HeaderStats,
   BooksUI,
   ProgressUI,
-  EventsFilterUI,
+  FiltersUI,
   EventsUI,
   EventStatsUI,
 } from './index.js'
@@ -32,7 +32,7 @@ export const Events = {
     'HeaderStats': HeaderStats,
     'BooksUI': BooksUI,
     'ProgressUI': ProgressUI,
-    'EventsFilterUI' : EventsFilterUI,
+    'FiltersUI' : FiltersUI,
     'EventsUI' : EventsUI,
     'EventStatsUI' : EventStatsUI,
   },

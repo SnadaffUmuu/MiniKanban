@@ -6,29 +6,33 @@ import {Utils} from "./Utils.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {Colors} from "./Colors.js";
 import {State} from "./State.js";
-import { HeaderStats } from "./HeaderStats.js";
+import {HeaderStats} from "./HeaderStats.js";
 
 export const EventStatsUI = {
 
-  name : 'EventStatsUI',
+  name: 'EventStatsUI',
 
-  selectors : {
-    container : '[data-events-view="stats"]',
-    statTypeContainersss : '[data-stat-type]',
+  selectors: {
+    container: '[data-events-view="stats"]',
+    statTypeContainersss: '[data-stat-type]',
+    sortColTriger: '.stats-table th',
   },
 
-  statTypes : {
-    monthAcitvity : 'monthActivity',
-    boardsDistr : 'boardsDistr',
-    monthlyRate : 'monthlyRate',
-    boardStats : 'boardStats',
-    boardHierarchy : 'boardHierarchy',
-    expectedShares : 'expectedShares',
+  statTypes: {
+    monthAcitvity: 'monthActivity',
+    boardsDistr: 'boardsDistr',
+    monthlyRate: 'monthlyRate',
+    boardStats: 'boardStats',
+    boardAttentionBalance: 'boardAttentionBalance',
   },
 
-  dom : {},
+  dom: {},
 
-  events : {},
+  events: {
+    click: {
+      '@sortColTriger': 'sortByColumn',
+    },
+  },
 
   // init() {
 
@@ -36,18 +40,17 @@ export const EventStatsUI = {
 
   render() {
     const map = {
-      [this.statTypes.monthAcitvity] : this.getGeneralMonthActivityHtml,
-      [this.statTypes.boardsDistr] : this.getBoardDistrHtml,
-      [this.statTypes.monthlyRate] : this.getMonthlyRateHtml,
-      [this.statTypes.boardStats] : this.getBoardStatsHtml,
-      [this.statTypes.boardHierarchy] : this.getBoardHierarchyHtml,
-      [this.statTypes.expectedShares] : this.getExpectedSharesHtml,
+      [this.statTypes.monthAcitvity]: this.getGeneralMonthActivityHtml,
+      [this.statTypes.boardsDistr]: this.getBoardDistrHtml,
+      [this.statTypes.monthlyRate]: this.getMonthlyRateHtml,
+      [this.statTypes.boardStats]: this.getBoardStatsHtml,
+      [this.statTypes.boardAttentionBalance]: this.getBoardAttentionBalanceHtml,
     };
     const showAll = !State.eventsUi.statTypes.length;
     Object.keys(map).forEach(methodName => {
       const container = document.querySelector(`[data-stat-type="${methodName}"]`);
       const body = container.querySelector('.stat-content');
-      if (!showAll && !State.eventsUi.statTypes.includes(methodName)) {
+      if(!showAll && !State.eventsUi.statTypes.includes(methodName)) {
         container.classList.add('hidden');
       } else {
         container.classList.remove('hidden');
@@ -59,6 +62,7 @@ export const EventStatsUI = {
 
   getGeneralMonthActivityHtml() {
     const data = EventsDomain.getMonthStats(EventsDomain.getFilteredEventsByDefaultOrder());
+    console.log('getGeneralMonthActivityHtml', data);
     return `
       <table class="stats-table">
         <thead>
@@ -84,7 +88,8 @@ export const EventStatsUI = {
   getBoardDistrHtml() {
     const data = EventsDomain.getBoardDistribution(EventsDomain.getFilteredEventsByDefaultOrder());
     const ideal = BoardDomain.getIdealPercents();
-    return `<p>Ideal: ${Object.keys(ideal).join(' / ')}: ${Object.values(ideal).join(' / ')}</p>` 
+    console.log('getBoardDistrHtml', data);
+    return `<p>Ideal: ${Object.keys(ideal).join(' / ')}: ${Object.values(ideal).join(' / ')}</p>`
       + data.map(({month, total, distribution}) => `
       <h4>${month}</h4>
       <table class="stats-table" data-month="${month}">
@@ -108,7 +113,7 @@ export const EventStatsUI = {
 
   getMonthlyRateHtml() {
     const data = EventsDomain.calculateMonthlyRate(EventsDomain.getFilteredEventsByDefaultOrder(), EventsDomain.getEvents());
-    console.log(data);
+    console.log('getMonthlyRateHtml', data);
     return `
     <table class="stats-table">
       <thead>
@@ -119,14 +124,14 @@ export const EventStatsUI = {
       </thead>
       <tbody>
         ${data.map(({book, board, totalEvents, avgPerMonth}) => {
-          return `
+      return `
         <tr>
           <td>${book}</td>
           <td>${board}</td>
           <td>${totalEvents}</td>
           <td>${avgPerMonth}</td>
         </tr>`;
-        }).join('')}
+    }).join('')}
       </tbody>
     </table>  
     `;
@@ -134,7 +139,7 @@ export const EventStatsUI = {
 
   getBoardStatsHtml() {
     const data = EventsDomain.getBoardStats(EventsDomain.getEvents());
-    console.log(data);
+    console.log('getBoardStatsHtml', data);
     return `соответствует ли фактическая работа по доскам их целевому ratio<br>
     <table class="stats-table">
       <thead>
@@ -144,8 +149,8 @@ export const EventStatsUI = {
         <th>delta</th>
       </thead>
       <tbody>
-        ${data.map(({key,actual,target,delta}) => {
-          return `
+        ${data.map(({key, actual, target, delta}) => {
+      return `
         <tr>
           <td>${key}</td>
           <td>${actual}</td>
@@ -153,72 +158,100 @@ export const EventStatsUI = {
           <td>${delta}</td>
         </tr>
           `;
-        }).join('')}
+    }).join('')}
       </tbody>
     </table>  
     `;
   },
 
-  getBoardHierarchyHtml() {
-    const selectedBoard = State.eventsUi.eventsFilter.board;
-    if (!selectedBoard) return 'Не выбрана доска';
+  getBoardAttentionBalanceHtml() {
+    const selectedBoard = App.getFilter().board;
+    if(!selectedBoard) return 'Не выбрана доска';
+    const data = EventsDomain.buildBoardAttentionBalance(EventsDomain.getFilteredEventsByDefaultOrder(), selectedBoard);
+    console.log('getBoardAttentionBalanceHtml', data);
 
-    const data = EventsDomain.buildBoardHierarchy(EventsDomain.getEvents(), selectedBoard);
-    console.log(data);
     return `
-    как внутри одной доски распределились реальные ходы между книгами
-    <table class="stats-table">
-    <thead>
-      <th>book</th>
-      <th>level</th>
-      <th>moves</th>
-      <th>share</th>
-    </thead>
-    <tbody>
-      ${data.map(({book, level, moves, share}) => {
-        return `
-      <tr>
-        <td>${book}</td>
-        <td>${level}</td>
-        <td>${moves}</td>
-        <td>${share}</td>
-      </tr>
-        `;
-      }).join('')}
-    </tbody>
-  </table> 
-    `;
-  },
-
-  getExpectedSharesHtml() {
-    const selectedBoard = State.eventsUi.eventsFilter.board;
-    if (!selectedBoard) return 'Не выбрана доска';
-
-    const data = EventsDomain.calculateExpectedShares(selectedBoard);
-    console.log(data);
-    return `
-    какой theoretical share ДОЛЖЕН быть у каждой книги, исходя из структуры квот
     <table class="stats-table">
       <thead>
-        <th>color</th>
         <th>level</th>
-        <th>expected percent</th>
+        <th>expected</th>
+        <th>actual</th>
+        <th>delta</th>
+        <th>ratio</th>
+        <th>book</th>
+        <th>moves</th>
+        <th>b.expected</th>
+        <th>b.actual</th>
+        <th>b.delta</th>
+        <th>b.ratio</th>
       </thead>
       <tbody>
-      ${Object.keys(data).map(color => {
-        const d = data[color];
+      ${data.map(d => {
+        const book1 = d.books[0];
+        const rowspan = d.books.length > 1 ? ` rowspan="${d.books.length}"` : '';
         return `
         <tr>
-          <td>${color}</td>
-          <td>${d.level}</td>
-          <td>${d.expectedPercent}</td>
+          <td ${rowspan}>${d.level}</td>
+          <td ${rowspan}>${d.expectedPercent}</td>
+          <td ${rowspan}>${d.actualPercent}</td>
+          <td ${rowspan}>${d.delta}</td>
+          <td ${rowspan}>${d.ratio}</td>
+          <td class="${book1.color}">${book1.book}</td>
+          <td class="${book1.color}">${book1.moves}</td>
+          <td class="${book1.color}">${book1.expectedPercent}</td>
+          <td class="${book1.color}">${book1.actualPercent}</td>
+          <td class="${book1.color}">${book1.delta}</td>
+          <td class="${book1.color}">${book1.ratio}</td>
         </tr>
+        ${d.books.length > 1 ? d.books.slice(1).map(book => `
+        <tr>
+          <td class="${book.color}">${book.book}</td>
+          <td class="${book.color}">${book.moves}</td>
+          <td class="${book.color}">${book.expectedPercent}</td>
+          <td class="${book.color}">${book.actualPercent}</td>
+          <td class="${book.color}">${book.delta}</td>
+          <td class="${book.color}">${book.ratio}</td>
+        </tr>
+          `).join('') : ''}
         `;
       }).join('')}
       </tbody>
-    </table>  
+    </table> 
     `;
   },
+
+  sortByColumn(th) {
+    const table = th.closest('table');
+    const tbody = table.querySelector('tbody');
+
+    const colIndex = [...th.parentNode.children].indexOf(th);
+
+    const dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+    th.dataset.dir = dir;
+
+    const factor = dir === 'asc' ? -1 : 1;
+
+    const rows = [...tbody.querySelectorAll('tr')];
+
+    const isNumeric = rows.every(row => {
+      const text = row.children[colIndex].textContent.trim();
+      return text !== '' && !Number.isNaN(Number(text));
+    });
+
+    rows.sort((a, b) => {
+      const av = a.children[colIndex].textContent.trim();
+      const bv = b.children[colIndex].textContent.trim();
+
+      if(isNumeric) {
+        return factor * (Number(av) - Number(bv));
+      }
+
+      return factor * av.localeCompare(bv);
+    });
+
+    tbody.append(...rows);
+  },
+
 
 };
 

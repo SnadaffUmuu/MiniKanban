@@ -1,7 +1,7 @@
 export const State = {
   currentScreen: 'board', 
   nightModeOn: false,
-  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault, eventsFilter
+  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault, filters
   openedTopMenu: null,
   statsUiMode: null,
   boardUi: {
@@ -21,7 +21,6 @@ export const State = {
   progressUpdateSuccess : null,
   logUpdateError : null,
   eventsUi : {
-    eventsFilter: {},
     view : 'list', //calendar, stats
     listExpanded : false,
     dotsMerged : true,

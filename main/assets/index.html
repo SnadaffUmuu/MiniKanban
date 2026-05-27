@@ -27,6 +27,7 @@
       <h1 data-app-title="events" class="top-menu-title hidden">Events</h1>
 
       <div data-screen-tools="board" class="top-tools hidden">
+        <button data-header-mode-trigger="ranks"></button>
         <button data-screen-switch="events" class="switch-screen"></button>
         <button data-screen-switch="books" class="switch-screen"></button>
         <button id="boards-button" data-header-mode-trigger="boardsList"></button>
@@ -35,13 +36,13 @@
 
       <div data-screen-tools="books" class="top-tools hidden">
         <button id="addBook"></button>
+        <button data-header-mode-trigger="filters" id="filters-button"></button>
         <button data-screen-switch="events" class="switch-screen"></button>
         <button data-screen-switch="board" class="switch-screen"></button>
-        <!-- <button data-toggle-menu-trigger="books" class="menu-toggle"></button> -->
       </div>
 
       <div data-screen-tools="events" class="top-tools hidden">
-        <button data-header-mode-trigger="eventsFilters" id="events-filters-button"></button>
+        <button data-header-mode-trigger="filters" id="filters-button"></button>
         <button data-screen-switch="books" class="switch-screen"></button>
         <button data-screen-switch="board" class="switch-screen"></button>
         <!-- <button data-toggle-menu-trigger="events" class="menu-toggle"></button> -->
@@ -52,7 +53,7 @@
       <div id="menu-content">
         <button id="rename-board" data-header-mode-trigger="renameBoard">Rename board</button>
         <button id="delete-board" data-header-mode-trigger="deleteBoard">Delete board</button>
-        <button id="manage-ranks" data-header-mode-trigger="ranks">Manage ranks</button>
+        <!-- <button id="manage-ranks" data-header-mode-trigger="ranks">Manage ranks</button> -->
         <button id="show-stats" data-header-mode-trigger="stats">Show stats</button>
       </div>
     </section>
@@ -100,18 +101,18 @@
       <button id="close-boards-list" class="js-cancel-current button-close"></button>
     </div>
 
-    <div id="events-filters" data-header-mode="eventsFilters" class="hidden">
-      <h3 class="top-menu-title">Filter events</h3>
+    <div id="filters" data-header-mode="filters" class="hidden">
+      <h3 class="top-menu-title">Filter</h3>
       <button class="js-cancel-current button-close"></button>
       <br>
-      <select data-event-filter-param="board" id="events-filters-board"></select>
+      <select data-filter-param="board" id="filters-board"></select>
       <details id="js-filter-books" class="dropdown-list">
         <summary>Books</summary>
         <div class="dropdown-list__body" id="js-filter-books-container"></div>
       </details>
       <div>
-        <button id="eventsFilterSubmit" class="board-management-button">Filter</button>
-        <button id="eventsFilterReset" class="board-management-button">Reset</button>
+        <button id="filterSubmit" class="board-management-button">Filter</button>
+        <button id="filterReset" class="board-management-button">Reset</button>
       </div>
     </div>
   </header>
@@ -180,7 +181,7 @@
       </div>
     </div>
     <div data-events-view="stats">
-      <details data-stat-type="monthlyRate" class="hidden" open>
+      <details data-stat-type="monthlyRate" class="hidden">
         <summary>Среднее в месяц</summary>
         <div class="stat-content"></div>
       </details>
@@ -193,15 +194,11 @@
         <div class="stat-content"></div>
       </details>
       <details data-stat-type="boardStats" class="hidden">
-        <summary>boardStats</summary>
+        <summary>Boards balance</summary>
         <div class="stat-content"></div>
       </details>
-      <details data-stat-type="boardHierarchy" class="hidden">
-        <summary>boardHierarchy</summary>
-        <div class="stat-content"></div>
-      </details>
-      <details data-stat-type="expectedShares" class="hidden">
-        <summary>expectedShares</summary>
+      <details data-stat-type="boardAttentionBalance" class="hidden">
+        <summary>Attention balance</summary>
         <div class="stat-content"></div>
       </details>
     </div>

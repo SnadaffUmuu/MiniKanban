@@ -166,7 +166,7 @@ export const TaskUI = {
       data.vocabCount = taskEl.dataset.vocabCount.split(';').sort((a, b) => {
         if(a === "・") return 1;
         if(b === "・") return -1;
-        return b.localeCompare(a);
+        return a.localeCompare(b);
       });
     }
     BoardDomain.updateTask(this.getId(el), columnEl.dataset.id, data);

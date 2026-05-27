@@ -41,6 +41,7 @@ export const EventsUI = {
     Bus.on(Bus.events.screenChanged, this.render.bind(this));
     Bus.on(Bus.events.progress, this.render.bind(this));
     Bus.on(Bus.events.eventsUiChanged, this.render.bind(this));
+    Bus.on(Bus.events.filtersChanged, this.render.bind(this));
   },
 
   render() {

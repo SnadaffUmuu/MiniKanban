@@ -138,6 +138,11 @@ header.expanded .top-menu-title {
   background: url(images/menu_dots.svg) 50% no-repeat;
 }
 
+[data-header-mode-trigger="ranks"] {
+  background: url(images/ranks.svg) 50% no-repeat;
+  background-size: 30px;
+}
+
 .menu {
   position: absolute;
   top: 5px;
@@ -237,7 +242,7 @@ header.expanded .top-menu-title {
 #delete-board-block,
 #ranks-block,
 #statsUI,
-#events-filters {
+#filters {
   position: relative;
 }
 
@@ -949,7 +954,7 @@ body:has(.dragged) {
   background-size: 25px;
 }
 
-#events-filters-button {
+#filters-button {
   background: url(images/filter.svg) 50% no-repeat;
   background-size: 20px;
 }

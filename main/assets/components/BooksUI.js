@@ -61,6 +61,7 @@ export const BooksUI = {
     Bus.on(Bus.events.booksUiChanged, this.render.bind(this));
     Bus.on(Bus.events.booksChanged, this.render.bind(this));
     Bus.on(Bus.events.booksModeChanged, this.render.bind(this));
+    Bus.on(Bus.events.filtersChanged, this.render.bind(this));
   },
 
   render() {
@@ -141,7 +142,9 @@ export const BooksUI = {
   },
 
   getListHtml() {
-    const rows = BooksDomain.getBooks().sort((a, b) => a.board.localeCompare(b.board)).map(b => {
+    const books = BooksDomain.getFilteredBooksByOrder('board');
+    //BooksDomain.getBooks().sort((a, b) => a.board.localeCompare(b.board))
+    const rows = books.map(b => {
       const board = BoardDomain.getBoard(b.board);
       const cellStyle = b.color ? ` style="background-color:${Colors[b.color]}"` : '';
       let rowStyle = b.board ? `class="board-${board.key}-border"` : '';

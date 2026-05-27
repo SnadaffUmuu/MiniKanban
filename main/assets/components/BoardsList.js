@@ -23,7 +23,7 @@ export const BoardsList = {
 
   render() {
     if(State.headerUiMode !== 'boardsList') return;
-    if(!App.data.currentBoardId) return;
+    const currentBoard = BoardDomain.getCurrentBoard();
     console.log('RENDER: BoardsList');
     let createButton = this.dom.createButton;
     if(createButton) {
@@ -34,7 +34,7 @@ export const BoardsList = {
       const btn = document.createElement('button');
       btn.dataset.id = board.id;
       btn.textContent = board.name;
-      if(board.id === App.data.currentBoardId) {
+      if(currentBoard && board.id === currentBoard.id) {
         btn.classList.add('active');
       }
       this.dom.boardsListButtonsContainer.appendChild(btn);

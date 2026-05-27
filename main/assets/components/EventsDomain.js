@@ -58,11 +58,11 @@ export const EventsDomain = {
   },
 
   getFilteredEventsByDefaultOrder() {
-    return Utils.sortBy(this.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', false);
+    return Utils.sortBy(this.getFilteredEvents(App.getFilter()), 'ts', false);
   },
 
   getFilteredEventsByOrder(isAsc) {
-    return Utils.sortBy(this.getFilteredEvents(State.eventsUi.eventsFilter), 'ts', isAsc);
+    return Utils.sortBy(this.getFilteredEvents(App.getFilter()), 'ts', isAsc);
   },
 
   saveEvents(events) {
@@ -419,75 +419,133 @@ export const EventsDomain = {
     });
   },
 
-  //как внутри одной доски распределились реальные ходы между книгами
-  buildBoardHierarchy(events, boardName) {
+  //joined data (expected + real)
+  buildBoardAttentionBalance(events, boardId) {
 
     events = this.addBoardsDataToEvents(events);
 
-    const ranks = BoardDomain.getBoard(boardName).ranks;
+    const board =
+      BoardDomain.getBoard(boardId);
+
+    const ranks = board.ranks;
 
     const filtered =
-      events.filter(e => e.board === boardName);
+      events.filter(e => e.board === boardId);
 
-    const total = filtered.length;
+    const totalMoves = filtered.length;
 
-    const books = {};
+    /* Real moves per book */
+
+    const movesByBook = {};
 
     filtered.forEach(e => {
-      books[e.b] ??= 0;
-      books[e.b]++;
+      movesByBook[e.b] ??= 0;
+      movesByBook[e.b]++;
     });
 
-    return Object.entries(books)
-      .map(([book, moves]) => ({
-        book,
-        level: RanksUI.getLevelOfColor(BooksDomain.getBook(book).color),
-        moves,
-        share: (
-          moves / total * 100
-        ).toFixed(1)
-      }))
-      .sort((a, b) => a.level - b.level);
-  },
+    /* Expected shares */
 
-  calculateExpectedShares(boardId) {
     const flows = {};
 
     let currentFlow = 1;
 
-    const ranks = BoardDomain.getBoard(boardId).ranks;
-
     Object.entries(ranks).forEach(([level, data]) => {
       flows[level] = currentFlow;
-
-      currentFlow = currentFlow / data.q;
+      currentFlow /= data.q;
     });
 
-    const total =
+    const totalFlow =
       Object.values(flows)
         .reduce((a, b) => a + b, 0);
 
-    const result = {};
+    /* Build levels */
+
+    const result = [];
 
     Object.entries(ranks).forEach(([level, data]) => {
-      const levelShare =
-        flows[level] / total;
 
-      const perBook =
-        levelShare / data.c.length;
+      level = Number(level);
 
-      data.c.forEach(book => {
-        result[book] = {
-          level: Number(level),
+      const expectedLevelPercent =
+        flows[level] / totalFlow * 100;
+
+      const books = data.c.map(color => {
+
+        const book =
+          BooksDomain
+            .getBooks()
+            .find(b =>
+              b.board === boardId &&
+              b.color === color
+            );
+
+        const moves =
+          movesByBook[book?.key] ?? 0;
+
+        const actualPercent =
+          totalMoves === 0
+            ? 0
+            : moves / totalMoves * 100;
+
+        const expectedBookPercent =
+          expectedLevelPercent / data.c.length;
+
+        return {
+          book: book?.key,
+          color,
+
+          moves,
+
+          actualPercent:
+            +actualPercent.toFixed(1),
+
           expectedPercent:
-            (perBook * 100).toFixed(1)
+            +expectedBookPercent.toFixed(1),
+
+          delta:
+            +(actualPercent - expectedBookPercent)
+              .toFixed(1),
+
+          ratio:
+            expectedBookPercent === 0
+              ? 0
+              : +(actualPercent / expectedBookPercent)
+                .toFixed(2)
         };
       });
+
+      const actualLevelPercent =
+        books.reduce(
+          (sum, b) => sum + b.actualPercent,
+          0
+        );
+
+      result.push({
+
+        level,
+
+        expectedPercent:
+          +expectedLevelPercent.toFixed(1),
+
+        actualPercent:
+          +actualLevelPercent.toFixed(1),
+
+        delta:
+          +(actualLevelPercent - expectedLevelPercent)
+            .toFixed(1),
+
+        ratio:
+          expectedLevelPercent === 0
+            ? 0
+            : +(actualLevelPercent / expectedLevelPercent)
+              .toFixed(2),
+
+        books
+      });
+
     });
 
     return result;
-
   },
-
 
 };

@@ -14,6 +14,7 @@ export const Bus = {
     progress: 'progress',
     progressUiChanged : 'progressUiChanged',
     eventsUiChanged : 'eventsUiChanged',
+    filtersChanged: 'filtersChanged',
   },
 
   listeners: {},

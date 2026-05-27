@@ -15,6 +15,7 @@ export const BoardUI = {
     columnsContainer: '#columns',
     main: 'main#board',
     addColumnButton: '#add-column',
+    noBoards: '#no-boards',
   },
 
   dom: {},
@@ -39,14 +40,8 @@ export const BoardUI = {
   },
 
   renderHeader() {
-    // this.dom.topToolsBlock.querySelectorAll('[data-screen-switch]').forEach(el =>
-    //   el.classList.toggle('hidden', State.headerUiMode !== 'default'));
-
-    // this.dom.appTitle.classList.toggle('hidden', State.headerUiMode !== 'default');
-    // this.dom.boardsListButton.classList.toggle('hidden', State.headerUiMode !== 'default');
-    
     const board = BoardDomain.getCurrentBoard();
-    this.dom.appTitle.innerHTML = board.name;
+    this.dom.appTitle.innerHTML = board ? board.name : 'not selected';
   },
 
   render() {
@@ -56,19 +51,24 @@ export const BoardUI = {
       return;
     }
     this.dom.columnsContainer.innerHTML = '';
+    
     const board = BoardDomain.getCurrentBoard();
 
-    if(!board) {
+    if(!BoardDomain.getBoards().length) {
       this.dom.main.insertAdjacentHTML('afterbegin', `
       <div id="no-boards">
         <button id="create-default-board">
           Click to create a board
         </button>
-      </div>
-      `);
+        </div>
+        `);
+        this.dom.main.classList.remove('hidden');
+        return;
+    } else if (!board) {
       return;
     }
 
+    this.dom.main.classList.remove('hidden');
     board.columns.forEach(column => {
       // Карточки
       let tasksHtml = [];
@@ -118,9 +118,10 @@ export const BoardUI = {
       </div>
     `;
       this.dom.columnsContainer.insertAdjacentHTML('beforeend', columnHtml);
-      this.dom.main.classList.remove('hidden');
-
+      
     });
+
+    this.dom.main.querySelector(this.selectors.noBoards)?.remove();
 
     while(State.afterRender.length) {
       const effect = State.afterRender.shift();

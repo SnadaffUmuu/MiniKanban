@@ -1,4 +1,15 @@
 export const Storage = {
+
+  loadLocal() {
+    console.log('LOADING local storage');
+    const data = localStorage.getItem('kanbanLocal');
+    return data ? JSON.parse(localStorage.getItem('kanbanLocal')) : null;
+  },
+
+  saveLocal(data) {
+    localStorage.setItem('kanbanLocal', JSON.stringify(data));
+  },
+
   loadData() {
     console.log('LOADING data');
     if(typeof Android !== 'undefined') {

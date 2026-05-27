@@ -21,7 +21,7 @@ export const BoardDomain = {
   },
 
   getCurrentBoard() {
-    return App.data.boards.find(b => b.id == App.data.currentBoardId);
+    return this.getBoard(App.getLocalProp('currentBoard'));
   },
 
   getColumn(id) {
@@ -49,20 +49,19 @@ export const BoardDomain = {
   },
 
   switchBoard(boardId) {
-    if(App.data.boards.find(b => b.id == boardId)) {
-      App.data.currentBoardId = boardId;
-      Storage.saveData(App.data);
+    if(this.getBoard(boardId)) {
+      App.setLocalProp('currentBoard', boardId);
     }
   },
 
   saveBoards(updatedBoards, currentBoardId) {
     App.data.boards = updatedBoards;
     if(currentBoardId === null) {
-      delete App.data.currentBoardId
-    } else {
-      App.data.currentBoardId = currentBoardId ? currentBoardId : App.data.currentBoardId;
+      App.setLocalProp('currentBoard', null);
+    } else if (currentBoardId) {
+      App.setLocalProp('currentBoard', currentBoardId);
     }
-    Storage.saveData(App.data);
+    App.saveData();
   },
 
   saveCounters(counters) {
@@ -86,7 +85,7 @@ export const BoardDomain = {
     const board = this.getCurrentBoard();
     board.rankCounters = {};
     board.rankCountersAbs = {};
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   create() {
@@ -104,8 +103,8 @@ export const BoardDomain = {
   },
 
   delete() {
-    const currentIndex = App.data.boards.findIndex(b => b.id === App.data.currentBoardId);
-    const newBoards = App.data.boards.filter(b => b.id !== App.data.currentBoardId);
+    const currentIndex = App.data.boards.findIndex(b => b.id === this.getCurrentBoard().id);
+    const newBoards = App.data.boards.filter(b => b.id !== this.getCurrentBoard().id);
 
     if(newBoards.length > 0) {
       // Выбираем следующую (или предыдущую, если удалили последнюю)
@@ -128,7 +127,7 @@ export const BoardDomain = {
     App.data.boards = App.data.boards.filter(b => b.id !== draggedBoardId);
     if(insertIndex === -1) insertIndex = App.data.boards.length;
     App.data.boards.splice(insertIndex, 0, draggedBoard);
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   createColumn() {
@@ -139,7 +138,7 @@ export const BoardDomain = {
       tasks: []
     };
     this.getCurrentBoard().columns.push(newColumn);
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
     return newUid;
   },
 
@@ -147,7 +146,7 @@ export const BoardDomain = {
     const board = this.getCurrentBoard();
     const currentIndex = board.columns.findIndex(c => c.id === id);
     board.columns = board.columns.filter((c, i) => i !== currentIndex);
-    this.saveBoards(App.data.boards, board.id);
+    this.saveBoards(App.data.boards);
   },
 
   moveColumn(currentColumnId, doMoveRight) {
@@ -163,18 +162,18 @@ export const BoardDomain = {
     currentBoard.columns = currentBoard.columns.filter(col => col != currentColumn);
     const insertIndex = doMoveRight ? currentColumnIndex + 1 : currentColumnIndex - 1;
     currentBoard.columns.splice(insertIndex, 0, currentColumn);
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   setColumnSkipMove(colId, value) {
     this.getColumn(colId)['skipMove'] = value;
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   renameColumn(id, name) {
     if(!name) return;
     this.getColumn(id).name = name;
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   deleteTask(id) {
@@ -183,7 +182,7 @@ export const BoardDomain = {
       const index = col.tasks.findIndex(task => task.id === id);
       if(index !== -1) {
         col.tasks.splice(index, 1);
-        this.saveBoards(App.data.boards, App.data.currentBoardId);
+        this.saveBoards(App.data.boards);
         return;
       }
     }
@@ -228,13 +227,12 @@ export const BoardDomain = {
 
     this.checkAndUpdateRanks(board, color);
 
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   moveTask(targetColumnId, taskId, insertIndex, position) {
     const board = this.getCurrentBoard();
     const targetColumn = board.columns.find(col => col.id === targetColumnId);
-    //const targetColumnIndex = board.columns.findIndex(col => col.id === targetColumnId);
     if(!targetColumn.tasks) targetColumn.tasks = [];
     const sourceColumn = this.getColumnByTaskId(taskId);
     const task = sourceColumn.tasks.find(c => c.id === taskId);
@@ -256,7 +254,7 @@ export const BoardDomain = {
       position: position
     });
 
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   cloneTask(currentTaskId) {
@@ -271,7 +269,7 @@ export const BoardDomain = {
     };
     const currentTaskIndex = column.tasks.findIndex(task => task.id == currentTaskId);
     column.tasks.splice(currentTaskIndex + 1, 0, newTask);
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
     return newId;
   },
 
@@ -330,7 +328,7 @@ export const BoardDomain = {
     console.log('ranks', board.ranks);
     console.log('ranksRaw', board.ranksRaw);
 
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   deleteRanks() {
@@ -340,7 +338,7 @@ export const BoardDomain = {
     delete board.rankCounters;
     delete board.rankCountersAbs;
     this.deleteBoardCounters(board, false);
-    this.saveBoards(App.data.boards, App.data.currentBoardId);
+    this.saveBoards(App.data.boards);
   },
 
   checkForProgress({task, sourceColumn, targetColumn, position}) {

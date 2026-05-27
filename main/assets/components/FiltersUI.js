@@ -3,17 +3,18 @@ import {State} from "./State.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {BooksDomain} from "./BooksDomain.js";
 import {Utils} from "./Utils.js";
+import { App } from "./App.js";
 
-export const EventsFilterUI = {
+export const FiltersUI = {
 
-  name: 'EventsFilterUI',
+  name: 'FiltersUI',
 
   selectors: {
-    filterSelectBoards: '#events-filters-board',
+    filterSelectBoards: '#filters-board',
     filterBooksToggleBlock: '#js-filter-books',
     filterBooksContainer: '#js-filter-books-container',
-    submit: '#eventsFilterSubmit',
-    reset: '#eventsFilterReset',
+    submit: '#filterSubmit',
+    reset: '#filterReset',
     selectedBooksCheckboxes : '#js-filter-books-container input[name="book"]:checked'},
 
   dom: {},
@@ -31,13 +32,13 @@ export const EventsFilterUI = {
   init() {
     Bus.batchedMethod(this, 'render');
     Bus.on(Bus.events.headerUIChanged, this.render.bind(this));
-    Bus.on(Bus.events.eventsUiChanged, this.render.bind(this));
+    Bus.on(Bus.events.filtersChanged, this.render.bind(this));
   },
 
   render() {
-    if(State.headerUiMode !== 'eventsFilters') return;
-    console.log('RENDER EventsFilterUI');
-    const filters = State.eventsUi.eventsFilter;
+    if(State.headerUiMode !== 'filters') return;
+    console.log('RENDER FiltersUI');
+    const filters = App.getFilter();
     const allBooks = BooksDomain.getBooks();
     const bookBoards = allBooks.map(book => book.board);
     const relevantBoards = BoardDomain.getBoards().filter(board =>
@@ -53,7 +54,7 @@ export const EventsFilterUI = {
     const relevantBooks = filters && filters.board ? allBooks.filter(book => book.board == filters.board) : allBooks;
     this.dom.filterBooksContainer.innerHTML = `
       ${Utils.sortBy(relevantBooks, 'board', true).map(book => {
-        return `<label><input data-event-filter-param="book" type="checkbox" name="book" ${filters && filters.books && filters.books.includes(book.key) ? 'checked' : ''} value="${book.key}">&nbsp;${book.name}</label>`
+        return `<label><input data-filter-param="book" type="checkbox" name="book" ${filters && filters.books && filters.books.includes(book.key) ? 'checked' : ''} value="${book.key}">&nbsp;${book.name}</label>`
       }
     ).join('')}    
     `;
@@ -69,7 +70,7 @@ export const EventsFilterUI = {
     }
     this.dom.filterBooksContainer.innerHTML = `
       ${Utils.sortBy(books, 'board', true).map(book =>
-      `<label><input data-event-filter-param="book" type="checkbox" name="book" value="${book.key}">&nbsp;${book.name}</label>`
+      `<label><input data-filter-param="book" type="checkbox" name="book" value="${book.key}">&nbsp;${book.name}</label>`
     ).join('')}
     `;
   },
@@ -83,13 +84,13 @@ export const EventsFilterUI = {
     if (checkedBooksCheckboxes.length) {
       filter.books = [...checkedBooksCheckboxes].map(el => el.value);
     }
-    State.eventsUi.eventsFilter = filter;
-    Bus.emit(Bus.events.eventsUiChanged);
+    App.setFilter(filter);
+    Bus.emit(Bus.events.filtersChanged);
   },
   
   reset() {
-    State.eventsUi.eventsFilter = {};
-    Bus.emit(Bus.events.eventsUiChanged);
+    App.setFilter({});
+    Bus.emit(Bus.events.filtersChanged);
   }
 
 };

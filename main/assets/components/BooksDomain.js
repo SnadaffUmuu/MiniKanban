@@ -3,6 +3,7 @@ import {Storage} from './Storage.js'
 import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js';
 import {Utils} from './Utils.js'
+import { State } from './State.js';
 
 export const BooksDomain = {
 
@@ -12,6 +13,32 @@ export const BooksDomain = {
 
   getBook(key) {
     return App.books.find(b => b.key == key);
+  },
+
+  getFilteredBooksByOrder(orderProp) {
+    return Utils.sortBy(this.getFilteredBooks(App.getFilter()), orderProp, true);
+  },
+
+  getFilteredBooks(filter) {
+    let books = this.getBooks();
+    const params = Object.keys(filter);
+    if(params.length) {
+      books = books.filter(book => {
+        let predicates = [];
+        params.forEach(param => {
+          switch(param) {
+            case 'board':
+              predicates.push(book.board == filter[param]);
+              break;
+            case 'books':
+              predicates.push(filter[param].includes(book.key));
+              break;
+          }
+        });
+        return predicates.every(pr => pr === true);
+      });
+    }
+    return books;
   },
 
   getBookRanges(key) {
