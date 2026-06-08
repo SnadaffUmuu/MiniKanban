@@ -59,19 +59,23 @@ export const App = {
   },
 
   getCurrentScreen() {
-    return this.screens[this.data.screen]
+    return this.getLocalProp('screen')
+  },
+
+  setScreen(screen) {
+    this.setLocalProp('screen', screen);
   },
 
   isBoard() {
-    return this.data.screen == this.screens.board
+    return this.getCurrentScreen() == this.screens.board
   },
 
   isEvents() {
-    return this.data.screen == this.screens.events
+    return this.getCurrentScreen() == this.screens.events
   },
   
   isBooks() {
-    return this.data.screen == this.screens.books
+    return this.getCurrentScreen() == this.screens.books
   },
 
   getFilter() {

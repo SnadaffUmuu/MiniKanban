@@ -34,10 +34,6 @@ export const EventStatsUI = {
     },
   },
 
-  // init() {
-
-  // },
-
   render() {
     const map = {
       [this.statTypes.monthAcitvity]: this.getGeneralMonthActivityHtml,
@@ -86,7 +82,7 @@ export const EventStatsUI = {
   },
 
   getBoardDistrHtml() {
-    const data = EventsDomain.getBoardDistribution(EventsDomain.getFilteredEventsByDefaultOrder());
+    const data = EventsDomain.getBoardDistribution(EventsDomain.getEvents());
     const ideal = BoardDomain.getIdealPercents();
     console.log('getBoardDistrHtml', data);
     return `<p>Ideal: ${Object.keys(ideal).join(' / ')}: ${Object.values(ideal).join(' / ')}</p>`
@@ -112,7 +108,7 @@ export const EventStatsUI = {
   },
 
   getMonthlyRateHtml() {
-    const data = EventsDomain.calculateMonthlyRate(EventsDomain.getFilteredEventsByDefaultOrder(), EventsDomain.getEvents());
+    const data = EventsDomain.calculateMonthlyRate(EventsDomain.getFilteredEventsByDefaultOrder());
     console.log('getMonthlyRateHtml', data);
     return `
     <table class="stats-table">

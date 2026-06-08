@@ -36,7 +36,8 @@ export const EventsDomain = {
   },
 
   getFilteredEvents(filter) {
-    let events = this.getEvents();
+    let events = this.checkSkipMoved(this.getEvents());
+
     const params = Object.keys(filter);
     if(params.length) {
       events = events.filter(ev => {
@@ -54,6 +55,7 @@ export const EventsDomain = {
         return predicates.every(pr => pr === true);
       });
     }
+    console.log('filtered events', events);
     return events;
   },
 
@@ -72,7 +74,7 @@ export const EventsDomain = {
     App.saveEvents();
   },
 
-  log({type, book, date, col, data}) {
+  log({type, book, date, col, skipMove, from, to}) {
     const response = {};
     const ts = new Date();
     if(!date) {
@@ -80,8 +82,16 @@ export const EventsDomain = {
     }
     const events = this.getEvents();
     try {
-      if(data.type == this.eventTypes.rollback) {
-        this.saveEvents(App.events.filter(ev => ev.b == book && d == date));
+      if(type == this.eventTypes.rollback) {
+        //TODO: log UI when doing rollback
+        this.saveEvents(App.events.filter(ev => 
+          ev.b == book 
+          && d == date 
+          && ev.c == col 
+          && ev.fr == from 
+          && ev.to == to
+          && ev.sm == skipMove
+        ));
       } else {
         const res = {
           ts: ts.getTime(),
@@ -89,9 +99,11 @@ export const EventsDomain = {
           b: book,
           t: type,
           c: col,
+          sm: skipMove
         };
         if(type == this.eventTypes.progress) {
-          res.r = data.ranges;
+          res.fr = from;
+          res.to = to
         }
         events.push(res);
         this.saveEvents(events);
@@ -128,10 +140,13 @@ export const EventsDomain = {
       }
       const obj = {
         book: event.b,
-        board: BoardDomain.getBoard(BooksDomain.getBook(event.b).board).key
+        board: BoardDomain.getBoard(BooksDomain.getBook(event.b).board).key,
       }
       if(event.r) {
         obj.r = event.r;
+      }
+      if(event.sm) {
+        obj.sm = event.sm;
       }
       eventsMap[event.d].push(obj);
 
@@ -240,8 +255,10 @@ export const EventsDomain = {
   },
 
   addBoardsDataToEvents(events) {
-    events.forEach(ev => ev.board = BooksDomain.getBook(ev.b).board);
-    return events;
+    return events.map(ev => ({
+      ...ev, 
+      board : BooksDomain.getBook(ev.b).board
+    }));
   },
 
   groupByMonth(events) {
@@ -260,9 +277,8 @@ export const EventsDomain = {
     return result;
   },
 
-
   getMonthStats(events) {
-    const months = this.groupByMonth(events);
+    const months = this.groupByMonth(this.checkSkipMoved(events));
 
     return Object.entries(months).map(([month, items]) => {
       const uniqueDays = new Set(items.map(i => i.d));
@@ -279,7 +295,7 @@ export const EventsDomain = {
   },
 
   getBoardDistribution(events) {
-    events = this.addBoardsDataToEvents(events);
+    events = this.addBoardsDataToEvents(this.checkSkipMoved(events));
     const months = this.groupByMonth(events);
 
     return Object.entries(months).map(([month, items]) => {
@@ -315,6 +331,8 @@ export const EventsDomain = {
   },
 
   calculateMonthlyRate(events, allEvents = events) {
+    events = this.checkSkipMoved(this.addBoardsDataToEvents(events));
+    allEvents = this.checkSkipMoved(allEvents);
 
     if(!events.length || !allEvents.length) {
       return [];
@@ -369,7 +387,7 @@ export const EventsDomain = {
         result.push({
           book,
           board: BoardDomain
-            .getBoard(data.board).name,
+            .getBoard(BooksDomain.getBook(book).board).name,
           totalEvents: data.totalEvents,
           avgPerMonth: monthlyRate.toFixed(1)
         });
@@ -385,7 +403,7 @@ export const EventsDomain = {
 
     const boardRanks = BoardDomain.getIdealMap();
 
-    events = this.addBoardsDataToEvents(events);
+    events = this.addBoardsDataToEvents(this.checkSkipMoved(events));
 
     const counts = {};
     let total = 0;
@@ -547,5 +565,12 @@ export const EventsDomain = {
 
     return result;
   },
+
+  checkSkipMoved(events, filter = App.getFilter()) {
+    if (filter?.includeSkipMove != true) {
+      return events.filter(ev => !ev.sm);
+    }
+    return events;
+  }
 
 };

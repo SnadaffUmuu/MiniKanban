@@ -114,6 +114,9 @@ export const ColumnHeaderUI = {
 
   setSkipMove(el, e) {
     BoardDomain.setColumnSkipMove(Utils.getColumnEl(el).dataset.id, el.checked);
+    Bus.emit(Bus.events.boardsChanged);
   },
 
 };
+
+//@DiscoursVpnBot,

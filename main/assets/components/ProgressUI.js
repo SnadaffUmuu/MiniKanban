@@ -117,18 +117,19 @@ export const ProgressUI = {
   getFormHtml(book, task) {
     const board = BoardDomain.getCurrentBoard();
     const data = State.progressData;
-    const stage = BooksDomain.getStageAtIndex(board.columns, Utils.toInt(book.startIndex), data.targetIndex);
+    const colIndex = data.targetIndex;
+    const targetColName = BoardDomain.getColumnByIndex(colIndex).name;
     const hideForm = State.progressUpdateSuccess != null;
     const draft = State.newRangesDraft;
     const formDraft = State.progressFormDraft;
     const logError = State.logUpdateError;
     const range = Utils.extractRange(task.description);
-    const stagesCountForTheBook = BooksDomain.getBookStagesCountFromBoard(board.id, Utils.toInt(book.startIndex));
+    const colCountForTheBook = board.columns.length;
     return `
   <div id="progressUi">
     <h6>${task.description}</h6>
     <table id="taskData" style="background:${Colors[task.color]}">
-      <tr><td>to stage</td><td>${stage}</td></tr>
+      <tr><td>to column</td><td>${targetColName}</td></tr>
       <tr>
         <td>
           <div style="width:100%;height:100%;display:flex;flex-flow:row nowrap;justify-content:space-between;">
@@ -140,9 +141,10 @@ export const ProgressUI = {
       </tr>
       <tr><td>startColIndex</td><td>${book.startIndex || 0}</td></tr>
       <tr><td>progress?</td><td>${data.delta > 0 ? 'progress' : 'rollback'}</td></tr>
+      ${data.skipMove ? '<tr><td>skipMove?</td><td>yes</td></tr>' : ''}
     </table>
     <form ${hideForm ? 'class="hidden"' : ''} name="progressForm" action="javascript:void(0)" data-book-key="${book.key}">
-      <table>
+      <table style="width:100%;">
         <tr>
           <td>book</td>
           <td>${book.name}
@@ -158,16 +160,16 @@ export const ProgressUI = {
           <td><input type="number" id="toField" name="to" value="${formDraft && formDraft.to ? formDraft.to : range ? range[1] : ''}"></td>
         </tr>
         <tr>
-          <td><label for="stageField">stage</label></td>
+          <td><label for="colField">column</label></td>
           <td>
-            <select id="stageField" name="stage">
-            ${Array.from({length: stagesCountForTheBook}).map((_, i) => {
-              const hasDraftStage = formDraft && formDraft.stage != null;
+            <select id="colField" name="column">
+            ${Array.from({length: board.columns.length}).map((_, i) => {
+              const hasDraftCol = formDraft && formDraft.c != null;
               return `
               <option ${(
-                (hasDraftStage && i + 1 == formDraft.stage) ||
-                (!hasDraftStage && i + 1 == stage))
-                  ? 'selected': ''} value="${i + 1}">${i + 1}</option>
+                (hasDraftCol && i == formDraft.c) ||
+                (!hasDraftCol && i == colIndex))
+                  ? 'selected': ''} value="${i}">${BoardDomain.getColumnByIndex(i).name} [${i}]</option>
               `}).join('')}
             </select>  
           </td>
@@ -182,13 +184,13 @@ export const ProgressUI = {
     <div class="successMessage ${State.progressUpdateSuccess ? '' : 'hidden'}">Success</div>
     <div id="currentProgress" ${range ? '' : 'class="hidden"'}>
       Current progress:
-      ${this.getRangesHtml(Utils.sortBy(BooksDomain.getBookRanges(book.key), 's', true))}
+      ${this.getRangesHtml(Utils.sortBy(BooksDomain.getBookRanges(book.key), 'c', true))}
     </div>
     <div id="newRanges" ${draft ? '' : 'class="hidden"'}>
       Ranges to be:
       ${this.getRangesHtml(draft)}
     </div>
-  </div>    
+  </div>
     `;
   },
 
@@ -199,8 +201,9 @@ export const ProgressUI = {
     ${ranges.map((r, i) => {
       return `
       <tr>
-        <td>${r.f}-${r.t}</td>
-        <td>stage ${r.s}</td>
+        <td style="text-align:right;">${r.f}${r.t !== r.f ? `-${r.t}` : ''}</td>
+        <td>${BoardDomain.getColumnByIndex(r.c).name}</td>
+        <td>[${r.c}]</td>
       </tr>`;
     }).join('')}
     </table>`;
@@ -231,11 +234,11 @@ export const ProgressUI = {
     const hasRange = form.from.value !== '' && form.to.value !== '';
     if(hasRange) {
       const range = {
-        s: form.stage.value,
+        c: form.column.value,
         f: form.from.value,
         t: form.to.value
       };
-      State.newRangesDraft = Utils.sortBy(BooksDomain.getNewRangesForRange(form.dataset.bookKey, range), 's', true);
+      State.newRangesDraft = Utils.sortBy(BooksDomain.getNewRangesForRange(form.dataset.bookKey, range), 'c', true);
       Bus.emit(Bus.events.progressUiChanged);
     }
 
@@ -253,22 +256,14 @@ export const ProgressUI = {
       type: type,
       book: form.dataset.bookKey,
       date: null,
-      col: State.progressData.targetIndex
+      col: State.progressData.targetIndex,
+      skipMove: State.progressData.skipMove,
     };
 
     if(form.from.value !== '' && form.to.value !== '') {
-      eventData.data = {
-        ranges: [{
-          s: form.stage.value,
-          f: form.from.value,
-          t: form.to.value,
-        }]
-      };
-    } else {
-      eventData.data = {
-        stage: form.stage.value
-      };
-    }
+      eventData.from = form.from.value;
+      eventData.to = form.to.value;
+    } 
 
     const logRes = EventsDomain.log(eventData);
 

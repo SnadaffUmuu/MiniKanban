@@ -1,6 +1,4 @@
 export const State = {
-  currentScreen: 'board', 
-  nightModeOn: false,
   headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault, filters
   openedTopMenu: null,
   statsUiMode: null,
@@ -21,7 +19,6 @@ export const State = {
   progressUpdateSuccess : null,
   logUpdateError : null,
   eventsUi : {
-    view : 'list', //calendar, stats
     listExpanded : false,
     dotsMerged : true,
     statTypes : [], //monthAcitvity, boardsDistr, monthlyRate

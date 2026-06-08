@@ -3,7 +3,7 @@ import {Storage} from './Storage.js'
 import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js';
 import {Utils} from './Utils.js'
-import { State } from './State.js';
+import {State} from './State.js';
 
 export const BooksDomain = {
 
@@ -38,6 +38,7 @@ export const BooksDomain = {
         return predicates.every(pr => pr === true);
       });
     }
+    console.log('filtered books', books);
     return books;
   },
 
@@ -82,12 +83,12 @@ export const BooksDomain = {
     }
     const books = this.getBooks();
     const book = books.find(b => b.key == key);
-    const stages = this.getBookStagesCountFromBoard(board, startIndex);
+    //const stages = this.getBookStagesCountFromBoard(board, startIndex);
     if(book) {
       book.name = name;
       book.size = size;
       book.startIndex = startIndex;
-      book.stages = stages;
+      //book.stages = stages;
       book.board = board;
       book.color = color;
       if(newKey) {
@@ -96,7 +97,7 @@ export const BooksDomain = {
       }
     } else {
       data.startIndex = startIndex;
-      data.stages = stages;
+      //data.stages = stages;
       books.push(data);
     }
 
@@ -111,7 +112,7 @@ export const BooksDomain = {
 
   getNewRangesForRanges(rangesFromForm) {
     const normalized = rangesFromForm.map(r => ({
-      s: Number(r.s),
+      c: Number(r.c),
       f: Number(r.f),
       t: Number(r.t)
     }));
@@ -154,16 +155,16 @@ export const BooksDomain = {
   setBookRanges(key, newRanges) {
     const book = this.getBook(key);
 
-    if (newRanges == null) {
+    if(newRanges == null) {
       //remove
-      if (book.state && book.state.ranges) {
+      if(book.state && book.state.ranges) {
         delete book.state.ranges;
       }
     } else {
       if(!book.state) {
         book.state = {};
       }
-  
+
       book.state.ranges = newRanges;
     }
 
@@ -174,7 +175,7 @@ export const BooksDomain = {
 
   getNewRangesForRange(key, range) {
     const inc = {
-      s: Number(range.s),
+      c: Number(range.c),
       f: Number(range.f),
       t: Number(range.t)
     };
@@ -182,7 +183,7 @@ export const BooksDomain = {
     const book = this.getBook(key);
 
     const existing = (book.state?.ranges || []).map(r => ({
-      s: Number(r.s),
+      c: Number(r.c),
       f: Number(r.f),
       t: Number(r.t)
     }));
@@ -222,7 +223,7 @@ export const BooksDomain = {
       // левая часть
       if(ex.f < inc.f) {
         result.push({
-          s: ex.s,
+          c: ex.c,
           f: ex.f,
           t: inc.f - 1
         });
@@ -231,7 +232,7 @@ export const BooksDomain = {
       // правая часть
       if(ex.t > inc.t) {
         result.push({
-          s: ex.s,
+          c: ex.c,
           f: inc.t + 1,
           t: ex.t
         });
@@ -242,5 +243,75 @@ export const BooksDomain = {
 
     return Utils.mergeRanges(result, []);
   },
+
+  buildTreeLayout(pageCount, width = 300, height = 300) {
+    // Подбираем число рядов так, чтобы вместить все страницы.
+    // Для 300 страниц получится около 24 рядов.
+    const rowsCount = Math.ceil(Math.sqrt(pageCount * 2));
+
+    // Вместимость рядов.
+    // Верхний ряд = 1 место.
+    // Нижний ряд = rowsCount мест.
+    const capacities = [];
+
+    for(let row = 1;row <= rowsCount;row++) {
+      capacities.push(row);
+    }
+
+    const totalCapacity =
+      capacities.reduce((a, b) => a + b, 0);
+
+    // Если рядов не хватило — добавляем еще.
+    while(totalCapacity < pageCount) {
+      capacities.push(capacities.length + 1);
+    }
+
+    const positions = [];
+
+    let page = 1;
+
+    const rowHeight =
+      height / capacities.length;
+
+    // Заполняем снизу вверх.
+    for(let rowIndex = capacities.length - 1;
+      rowIndex >= 0;
+      rowIndex--) {
+
+      const slots = capacities[rowIndex];
+
+      const y =
+        height -
+        (capacities.length - rowIndex - 0.5) *
+        rowHeight;
+
+      const rowWidth =
+        width * (slots / capacities.length);
+
+      const startX =
+        (width - rowWidth) / 2;
+
+      const step =
+        rowWidth / Math.max(slots - 1, 1);
+
+      for(let slot = 0;
+        slot < slots && page <= pageCount;
+        slot++) {
+
+        positions.push({
+          page,
+          x:
+            slots === 1
+              ? width / 2
+              : startX + slot * step,
+          y
+        });
+
+        page++;
+      }
+    }
+
+    return positions;
+  }
 
 };

@@ -41,6 +41,8 @@ export const BooksUI = {
     progressBarSegment: '.progress-bar:not(.popup) .segment',
     progressBarPopup: '.progress-bar.popup',
     bookNameCell: '#booksList td:first-child',
+    treeRoot: '#tree-root',
+    switchToBooksButton: '#book [data-screen-switch="books"]',
   },
 
   dom: {
@@ -51,7 +53,8 @@ export const BooksUI = {
       '##': 'hideProgress',
       '@progressBar': 'showProgress',
       '@progressBarSegment': 'showProgress',
-      '@bookNameCell' : 'seeBook',
+      '@bookNameCell': 'seeBook',
+      '@switchToBooksButton': 'switchToBooks',
     }
   },
 
@@ -71,14 +74,14 @@ export const BooksUI = {
       return;
     }
     console.log('RENDER: BooksUI');
-    
+
     const currentBook = State.booksUi.currentBook;
 
     this.dom.listModeContainer.classList.toggle('hidden', currentBook);
     this.dom.bookModeContainer.classList.toggle('hidden', !currentBook);
 
-    if (currentBook) {
-      //
+    if(currentBook) {
+      this.dom.treeRoot.innerHTML = this.getTreeHtml(currentBook);
     } else { //list
       this.dom.booksListContainer.innerHTML = this.getListHtml();
       this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
@@ -115,6 +118,7 @@ export const BooksUI = {
   },
 
   getRangesRowHtml(book, range, showAddButton, showRemoveButton) {
+    const columns = BoardDomain.getBoard(book.board).columns;
     return `<div class="rangesRow">
       <label>from<br>
         <input type="number" name="from" ${range ? `value="${range.f}"` : ' required'}>
@@ -123,8 +127,8 @@ export const BooksUI = {
         <input type="number" name="to" ${range ? `value="${range.t}"` : ' required '}>
       </label>
       <label><br>
-        <select ${range ? '' : 'required'} name="stage">
-          ${Array.from({length: parseInt(book.stages)}).map((_, i) => `<option ${range && range.s == i + 1 ? 'selected' : ''} value="${i + 1}">${i + 1}</option>`).join('')}
+        <select ${range ? '' : 'required'} name="column">
+          ${columns.map((col, i) => `<option ${range && range.c == i ? 'selected' : ''} value="${i}">${col.name} [${i}]</option>`).join('')}
         </select>
       </label>
       <div class="rangesRowButtonsWrap">
@@ -136,6 +140,7 @@ export const BooksUI = {
 
   getCurrentRangesFormHtml(key) {
     const book = BooksDomain.getBook(key);
+    const board = BoardDomain.getBoard(book.board);
     const ranges = BooksDomain.getBookRanges(key);
     if(!ranges || !ranges.length) return this.getRangesRowHtml(book, null, true, false);
     return Utils.sortBy(ranges, 'f', true).map((r, i) => this.getRangesRowHtml(book, r, (i == ranges.length - 1), true)).join('');
@@ -143,7 +148,6 @@ export const BooksUI = {
 
   getListHtml() {
     const books = BooksDomain.getFilteredBooksByOrder('board');
-    //BooksDomain.getBooks().sort((a, b) => a.board.localeCompare(b.board))
     const rows = books.map(b => {
       const board = BoardDomain.getBoard(b.board);
       const cellStyle = b.color ? ` style="background-color:${Colors[b.color]}"` : '';
@@ -384,7 +388,7 @@ export const BooksUI = {
         const ranges = [];
         [...row.querySelectorAll('.rangesRow')].forEach(el => {
           ranges.push({
-            s: el.querySelector('[name="stage"]').value,
+            c: el.querySelector('[name="column"]').value,
             f: el.querySelector('[name="from"]').value,
             t: el.querySelector('[name="to"]').value,
           });
@@ -414,12 +418,13 @@ export const BooksUI = {
     }
   },
 
-  getStageColor(stage, totalStages) {
+  getStageColor(stage, totalCols) {
     // от светлого к тёмному синему
     const lightnessStart = 85;
     const lightnessEnd = 35;
 
-    const ratio = (stage - 1) / (totalStages - 1 || 1);
+    //const ratio = (stage - 1) / (totalStages - 1 || 1);
+    const ratio = stage / (totalCols || 1);
     const lightness = lightnessStart - ratio * (lightnessStart - lightnessEnd);
 
     return `hsl(210, 70%, ${lightness}%)`;
@@ -427,40 +432,65 @@ export const BooksUI = {
 
   renderProgressBar(book) {
     const size = Number(book.size);
-    const stagesCount = Number(book.stages);
+    const board = BoardDomain.getBoard(book.board);
+    const columns = board.columns;
+    const startIndex = Number(book.startIndex);
     const ranges = book.state?.ranges || [];
 
-    // 1. агрегируем страницы по стадиям
-    const stagePages = new Map(); // stage -> pages count
+    // 1. агрегируем страницы по колонкам
+    const colPages = new Map(); // column -> pages count
 
-    for(const {s, f, t} of ranges) {
+    for(const {c, f, t} of ranges) {
       const count = t - f + 1;
-      stagePages.set(s, (stagePages.get(s) || 0) + count);
+      colPages.set(c, (colPages.get(c) || 0) + count);
     }
+
+    const totalStages =
+      BooksDomain.getBookStagesCountFromBoard(
+        book.board,
+        startIndex
+      );
 
     // 2. формируем сегменты
     const segments = [];
 
     let odd = true;
-    for(let stage = 1;stage <= stagesCount;stage++) {
-      const pages = stagePages.get(stage) || 0;
+    for(let col = 0;col <= columns.length - 1;col++) {
+      const pages = colPages.get(col) || 0;
       if(pages === 0) continue;
 
+      const stage =
+        BooksDomain.getStageAtIndex(
+          columns,
+          startIndex,
+          col
+        );
+
       const percent = (pages / size) * 100;
-      const color = this.getStageColor(stage, stagesCount);
+
+      const key = book.key;
+      console.log({
+        key,
+        startIndex,
+        col,
+        stage,
+        totalStages
+      });
+
+      const color = this.getStageColor(stage, totalStages);
 
       segments.push(`
       <div 
         class="segment ${odd ? 'odd' : ''}" 
         style="width:${percent}%; background:${color}"
-        title="Stage ${stage}: ${pages} pages"
+        title="Column ${col} (stage ${stage}): ${pages} pages"
       ><span class="pagesCount">${pages}</span></div>
     `);
       odd = !odd;
     }
 
     // 3. незаполненная часть
-    const totalFilled = [...stagePages.values()].reduce((a, b) => a + b, 0);
+    const totalFilled = [...colPages.values()].reduce((a, b) => a + b, 0);
     const remainingPercent = ((size - totalFilled) / size) * 100;
 
     if(remainingPercent > 0) {
@@ -496,9 +526,37 @@ export const BooksUI = {
     document.querySelector(this.selectors.progressBarPopup)?.remove()
   },
 
+  switchToBooks() {
+    delete State.booksUi.currentBook;
+  },
+
   seeBook(el) {
     State.booksUi.currentBook = el.closest('tr').dataset.bookKey;
     Bus.emit(Bus.events.booksUiChanged);
   },
+
+  getTreeHtml(book) {
+    const positions =
+      BooksDomain.buildTreeLayout(Number(BooksDomain.getBook(book).size), );
+
+    return `
+    <svg
+      width="90%"
+      height="90%"
+      viewBox="0 0 300 300"
+    >
+      ${positions.map(pos => `
+        <circle
+          cx="${pos.x}"
+          cy="${pos.y}"
+          r="5"
+          fill="white"
+          stroke="#666"
+          data-page="${pos.page}"
+        />
+      `).join("")}
+    </svg>
+  `;
+  }
 
 };

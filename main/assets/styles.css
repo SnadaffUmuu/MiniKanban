@@ -127,6 +127,7 @@ header.expanded .top-menu-title {
   margin: 5px;
   border: none;
   outline: none;
+  position:relative;
 }
 
 #boards-button {
@@ -244,6 +245,17 @@ header.expanded .top-menu-title {
 #statsUI,
 #filters {
   position: relative;
+}
+
+#filters {
+  color:#fff;
+}
+
+#filtersWrap {
+  padding-top:10px;
+  display:flex;
+  flex-flow:row wrap;
+  align-items:center;
 }
 
 #rename-board-block h3,
@@ -412,6 +424,10 @@ main {
   font-size: 15px;
   font-weight: bold;
   flex: 1 0 auto;
+}
+
+[data-skip-move] .column-header h3 {
+  opacity:0.5;
 }
 
 .column-body {
@@ -954,9 +970,20 @@ body:has(.dragged) {
   background-size: 25px;
 }
 
-#filters-button {
+.filters-button {
   background: url(images/filter.svg) 50% no-repeat;
   background-size: 20px;
+}
+
+.filters-button.filled::after {
+  content:'';
+  position:absolute;
+  left:7px;
+  top:7px;
+  background: #fff;
+  width:6px;
+  height:6px;
+  border-radius: 4px;
 }
 
 #books {
@@ -1106,11 +1133,20 @@ select:invalid {
 
 .rangesRow label {
   flex: 1 1 auto;
-  width: calc(30% - 10px);
+  /* width: calc(30% - 60px); */
+}
+
+.rangesRow select {
+  width:100%;
+  height:23px;
 }
 
 .rangesRow input {
   width: 50px;
+  height:23px;
+  box-sizing: border-box;
+  display:block;
+  margin:0;
 }
 
 .rangesRowButtonsWrap {
@@ -1118,6 +1154,7 @@ select:invalid {
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-between;
+  margin-left:15px;
 }
 
 .rangesRowButtonsWrap button {
@@ -1218,7 +1255,7 @@ select:invalid {
 }
 
 #progressUi select {
-  width: 50px;
+  width: 100%;
 }
 
 .successMessage,
@@ -1348,6 +1385,10 @@ select:invalid {
   margin-top: 7px;
 }
 
+.eventsEntry[data-skip-move="true"] {
+  color:gray;
+}
+
 .eventsEntry__summary {
   display: flex;
   flex-flow: row wrap;
@@ -1423,6 +1464,7 @@ select:invalid {
 #currentProgress table,
 #newRanges table {
   margin-top: 10px;
+  border-spacing: 3px;
 }
 
 .vocab-count {
@@ -1619,6 +1661,10 @@ select:invalid {
   border-radius: 7px;
   width:10px;
   height:10px;
+}
+
+#Cal-container .Cal-month li .eventDots span.skipMove {
+  opacity:0.5;
 }
 
 .eventDotsHidden .eventDots {

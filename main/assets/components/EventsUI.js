@@ -12,6 +12,12 @@ export const EventsUI = {
 
   name: 'EventsUI',
 
+  views: {
+    list : 'list',
+    calendar : 'calendar',
+    stats : 'stats'
+  },
+
   selectors: {
     container: '#events',
     listContainer: '#eventsListContainer',
@@ -44,6 +50,14 @@ export const EventsUI = {
     Bus.on(Bus.events.filtersChanged, this.render.bind(this));
   },
 
+  getCurrentView() {
+    return App.getStateProp('eventsView');
+  },
+
+  isStatsView() {
+    return this.getCurrentView() == this.views.stats;
+  },
+
   render() {
 
     if(!App.isEvents()) {
@@ -55,7 +69,7 @@ export const EventsUI = {
 
     this.dom.container.classList.toggle('hidden', false);
 
-    const view = App.getStateProp('eventsView') || 'list';
+    const view = this.getCurrentView() || this.views.list;
 
     this.dom.viewContainersss.forEach(el =>
       el.classList.toggle('hidden', el.dataset.eventsView !== view));
@@ -64,19 +78,19 @@ export const EventsUI = {
       el.classList.toggle('hidden', el.dataset.eventsToolbar !== view));
 
     switch(view) {
-      case 'list':
+      case this.views.list:
       default:
         this.dom.listContainer.innerHTML = this.getListHtml();
         this.dom.eventEntriesss = document.querySelectorAll(this.selectors.eventEntriesss);
         this.dom.toggleExpandButton.classList.toggle('expand', !State.eventsUi.listExpanded);
         this.dom.toggleExpandButton.classList.toggle('collapse', State.eventsUi.listExpanded);
         break;
-        case 'calendar':
+        case this.views.calendar:
           this.dom.calenderBody.innerHTML = this.getCalendarHtml();
           this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
           this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
         break;
-        case 'stats':
+        case this.views.stats:
           EventStatsUI.render();
     }
 
@@ -89,22 +103,29 @@ export const EventsUI = {
     return events.map(ev => {
       const book = BooksDomain.getBook(ev.b);
       const board = BoardDomain.getBoard(book.board);
-      const range = ev.r && ev.r.length ? ev.r[0] : null;
-      const targetColIndex = ev.c ? Utils.toInt(ev.c) : range !== null ? Utils.toInt(range.s) : null;
+      const hasRange = ev.fr != null && ev.to != null;
+      const targetColIndex = Utils.toInt(ev.c);
       const targetColName = targetColIndex !== null ? board.columns[targetColIndex].name : null;
       const sourceColumnIndex = targetColIndex !== null ? targetColIndex - 1 : null;
       const sourceColName = sourceColumnIndex !== null ? board.columns[sourceColumnIndex].name : null;
+      const skipMove = ev.sm == true; 
       return `
-      <div ${book.color ? ` style="background-color:${Colors[book.color]}"` : ''} class="eventsEntry board-${board.key}-border" data-type="${ev.t}" data-book="${ev.b}" data-date="${ev.d}">
+      <div 
+        ${book.color ? `style="background-color:${Colors[book.color]}"` : ''} 
+        class="eventsEntry board-${board.key}-border" 
+        ${skipMove ? 'data-skip-move="true"' : ''}
+        data-type="${ev.t}" 
+        data-book="${ev.b}" 
+        data-date="${ev.d}">
         <div class="eventsEntry__summary">
           <span class="eventsEntry__date">${ev.d}</span>
           <span class="eventsEntry__bookname">${BooksDomain.getBook(ev.b)?.name}</span>
-          ${range !== null || targetColName !== null || sourceColName !== null ? `
+          ${targetColName !== null || sourceColName !== null ? `
             <details ${State.eventsUi.listExpanded ? 'open' : ''}>
               <summary></summary>
               <div class="eventsEntry__details">
-                ${range !== null ? `
-                  <span class="tag">${range.f}${range.t !== range.f ? '-' + range.t : ''}</span>
+                ${hasRange ? `
+                  <span class="tag">${ev.fr}${ev.to !== ev.fr ? '-' + ev.to : ''}</span>
                 ` : ''}
                 ${sourceColName ? `
                 <div class="connector"></div>
@@ -124,7 +145,7 @@ export const EventsUI = {
   },
 
   getCalendarHtml() {
-    const events = EventsDomain.getFilteredEventsByOrder(true);
+    let events = EventsDomain.getFilteredEventsByOrder(true);
     const calendar = EventsDomain.generateCalendar(events);
     console.log(calendar);
     let res = [];
@@ -146,8 +167,12 @@ export const EventsUI = {
           day.events.forEach(event => {
             const book = BooksDomain.getBook(event.book);
             const board = BoardDomain.getBoard(book.board);
+            const markAsMoveSkipped = event.sm == true 
+              && (!State.eventsUi.dotsMerged 
+                || day.events.length == 1);
+
             if (!State.eventsUi.dotsMerged || !dayBooks.includes(event.book)) {
-              const html = `<span class="board-${board.key}-border" style="background-color:${Colors[book.color]}"></span>`;
+              const html = `<span class="board-${board.key}-border ${markAsMoveSkipped ? 'skipMove' : ''}" style="background-color:${Colors[book.color]}"></span>`;
               dotsHtml.push(html);
               dayBooks.push(event.book);
             }
@@ -166,8 +191,7 @@ export const EventsUI = {
   },
 
   switchEventsView(el) {
-    State.eventsUi.view = el.dataset.eventsViewSwitch;
-    App.setStateProp('eventsView', State.eventsUi.view);
+    App.setStateProp('eventsView', el.dataset.eventsViewSwitch);
     Bus.emit(Bus.events.eventsUiChanged);
   },
   

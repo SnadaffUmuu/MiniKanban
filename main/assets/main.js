@@ -9,6 +9,7 @@ import {App} from './components/App.js'
 import {Events} from './components/Events.js'
 import {Utils} from './components/Utils.js'
 import { getColorsStyleHtml } from './components/Colors.js'
+import { MigrateStageToCol } from './components/MigrateStageToCol.js'
 
 const AppInit = {
   init() {
@@ -32,6 +33,7 @@ const AppInit = {
       }
     }
     document.head.insertAdjacentHTML('beforeend', getColorsStyleHtml());
+    // window.migrate = MigrateStageToCol;
   }
 };
 

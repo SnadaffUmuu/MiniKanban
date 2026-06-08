@@ -81,7 +81,7 @@ export const BoardUI = {
         tasksHtml = [`<button class="js-add-task add-task-button">Click to add first task</button>`];
       }
       const columnHtml = `
-      <div class="column" data-id="${column.id}">
+      <div class="column" data-id="${column.id}" ${column.skipMove ? 'data-skip-move="true"' : ''}>
         <div class="column-header">
           <h3 class="column-title">${column.name}</h3>
           <span class="task-count">${column.tasks.length}</span>

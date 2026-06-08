@@ -15,7 +15,10 @@ export const FiltersUI = {
     filterBooksContainer: '#js-filter-books-container',
     submit: '#filterSubmit',
     reset: '#filterReset',
-    selectedBooksCheckboxes : '#js-filter-books-container input[name="book"]:checked'},
+    selectedBooksCheckboxes : '#js-filter-books-container input[name="book"]:checked',
+    toggleIncludeSkipMoveCheckbox : '#includeSkipMove',
+    toggleIncludeSkipMoveLabel : '[for="includeSkipMove"]',
+  },
 
   dom: {},
 
@@ -26,6 +29,7 @@ export const FiltersUI = {
     },
     change: {
       '@filterSelectBoards': 'updateBooksOptions',
+      '@toggleIncludeSkipMoveCheckbox' : 'toggleInclSkipMove',
     }
   },
 
@@ -41,9 +45,11 @@ export const FiltersUI = {
     const filters = App.getFilter();
     const allBooks = BooksDomain.getBooks();
     const bookBoards = allBooks.map(book => book.board);
+
     const relevantBoards = BoardDomain.getBoards().filter(board =>
       bookBoards.includes(board.id)
     );
+
     this.dom.filterSelectBoards.innerHTML = `
       <option ${!filters || !filters.board ? 'selected' : ''} value="">select board</value>
       ${relevantBoards.map(board => {
@@ -51,15 +57,19 @@ export const FiltersUI = {
       }
     ).join('')}
     `;
+
     const relevantBooks = filters && filters.board ? allBooks.filter(book => book.board == filters.board) : allBooks;
+    
     this.dom.filterBooksContainer.innerHTML = `
       ${Utils.sortBy(relevantBooks, 'board', true).map(book => {
         return `<label><input data-filter-param="book" type="checkbox" name="book" ${filters && filters.books && filters.books.includes(book.key) ? 'checked' : ''} value="${book.key}">&nbsp;${book.name}</label>`
       }
-    ).join('')}    
+    ).join('')} 
     `;
 
     this.dom.filterBooksToggleBlock.removeAttribute('open');
+
+    this.dom.toggleIncludeSkipMoveLabel.classList.toggle('hidden', !App.isEvents());
   },
 
   updateBooksOptions() {
@@ -84,6 +94,7 @@ export const FiltersUI = {
     if (checkedBooksCheckboxes.length) {
       filter.books = [...checkedBooksCheckboxes].map(el => el.value);
     }
+    filter.includeSkipMove = this.dom.toggleIncludeSkipMoveCheckbox.checked;
     App.setFilter(filter);
     Bus.emit(Bus.events.filtersChanged);
   },
@@ -91,6 +102,10 @@ export const FiltersUI = {
   reset() {
     App.setFilter({});
     Bus.emit(Bus.events.filtersChanged);
-  }
+  },
+
+  toggleInclSkipMove(el) {
+
+  },
 
 };

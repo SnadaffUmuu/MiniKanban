@@ -73,18 +73,18 @@ export const Utils = {
     const all = [...existing, ...incoming];
 
     // группировка по stage
-    const byStage = new Map();
+    const byCol = new Map();
 
     for(const r of all) {
-      if(!byStage.has(r.s)) {
-        byStage.set(r.s, []);
+      if(!byCol.has(r.c)) {
+        byCol.set(r.c, []);
       }
-      byStage.get(r.s).push({...r});
+      byCol.get(r.c).push({...r});
     }
 
     const result = [];
 
-    for(const [stage, ranges] of byStage) {
+    for(const [stage, ranges] of byCol) {
       // сортировка по началу
       ranges.sort((a, b) => a.f - b.f);
 
@@ -141,7 +141,7 @@ export const Utils = {
   formatConflicts(conflicts) {
     return conflicts.map(c => {
       return `
-      Stage ${c.a.s} (${c.a.f}-${c.a.t}) пересекается с stage ${c.b.s} (${c.b.f}-${c.b.t}) на ${c.overlap.from}-${c.overlap.to}
+      Stage ${c.a.c} (${c.a.f}-${c.a.t}) пересекается с stage ${c.b.c} (${c.b.f}-${c.b.t}) на ${c.overlap.from}-${c.overlap.to}
       `;
     });
   },

@@ -190,8 +190,6 @@ export const TaskUI = {
     const task = BoardDomain.getTask(taskEl.dataset.id);
     const times = taskEl.dataset.vocabCount?.split(';') || [];
     times.push((new Date()).toLocaleString('sv-SE').slice(0, 16));
-    //const num = task.vocabCount ? Utils.toInt(task.vocabCount) + 1 : 1;
-    //taskEl.dataset.vocabCount = num;
     taskEl.dataset.vocabCount = times.join(';');
     this.saveTask(el);
   },

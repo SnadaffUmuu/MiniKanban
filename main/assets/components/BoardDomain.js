@@ -28,6 +28,10 @@ export const BoardDomain = {
     return this.getCurrentBoard().columns.find(c => c.id == id);
   },
 
+  getColumnByIndex(index) {
+    return this.getCurrentBoard().columns[index];
+  },
+
   getTask(id) {
     return this.getCurrentBoard().columns
       .map(col => col.tasks.find(t => t.id === id))
@@ -362,21 +366,20 @@ export const BoardDomain = {
       (isGoingForward && sourceCol.skipMove) ||
       (!isGoingForward && targetCol.skipMove);
 
-    if(!skipMove) {
-      State.progressData = {
-        taskId: task.id,
-        boardId: board.id,
-        sourceIndex: sourceIndex,
-        sourceColumnId: sourceCol.id,
-        targetIndex: targetIndex,
-        targetColumnId: targetCol.id,
-        delta: delta,
-        position: position
-      };
-      State.progressPromptShown = true;
+    State.progressData = {
+      taskId: task.id,
+      boardId: board.id,
+      sourceIndex: sourceIndex,
+      sourceColumnId: sourceCol.id,
+      targetIndex: targetIndex,
+      targetColumnId: targetCol.id,
+      delta: delta,
+      position: position,
+      skipMove: skipMove
+    };
+    State.progressPromptShown = true;
 
-      Bus.emit(Bus.events.progress);
-    }
+    Bus.emit(Bus.events.progress);
 
     this.makeMove(board, task, delta, skipMove);
 

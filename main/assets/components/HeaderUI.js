@@ -5,6 +5,7 @@ import {BooksDomain} from './BooksDomain.js'
 import { BoardUI } from './BoardUI.js'
 import {State} from './State.js'
 import {BooksUI} from './BooksUI.js'
+import { MigrateStageToCol } from './MigrateStageToCol.js'
 
 export const HeaderUI = {
 
@@ -23,6 +24,7 @@ export const HeaderUI = {
     reset: '.js-cancel-current',
     screenSwitch: '[data-screen-switch]',
     nightModeToggle: '#toggleNightMode',
+    filterButtonsss: '.filters-button',
   },
 
   events: {
@@ -72,15 +74,14 @@ export const HeaderUI = {
   },
 
   switchScreen(el) {
-    State.currentScreen = el.dataset.screenSwitch;
-    App.setStateProp('screen', State.currentScreen);
+    App.setScreen(el.dataset.screenSwitch);
     Bus.emit(Bus.events.screenChanged);
   },
 
   render() {
     console.log('RENDER: HeaderUI');
 
-    document.body.classList.toggle('night', State.nightModeOn);
+    document.body.classList.toggle('night', App.getLocalProp('nightModeOn'));
 
     const currentScreen = App.getCurrentScreen();
     console.log('currentScreen', currentScreen);
@@ -104,6 +105,8 @@ export const HeaderUI = {
     this.dom.topMenus.forEach(el => 
       el.classList.toggle('hidden', State.openedTopMenu !== el.dataset.toggleMenuTarget));
 
+    this.dom.filterButtonsss.forEach(el => el.classList.toggle('filled', Object.keys(App.getFilter()).length));
+
     if(App.isBoard()) {
       BoardUI.renderHeader();
     } 
@@ -114,8 +117,8 @@ export const HeaderUI = {
   },
 
   toggleNightMode(el) {
-    State.nightModeOn = !State.nightModeOn;
+    App.setLocalProp('nightModeOn', (!App.getLocalProp('nightModeOn')));
     Bus.emit(Bus.events.headerUIChanged);
-  }
+  },
 
 };

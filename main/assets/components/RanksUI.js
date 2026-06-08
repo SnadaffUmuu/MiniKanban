@@ -2,6 +2,8 @@ import {Bus} from './Bus.js'
 import {BoardDomain} from './BoardDomain.js'
 import {State} from './State.js'
 import {Colors} from './Colors.js'
+import { App } from './App.js'
+import { EventsUI } from './EventsUI.js'
 
 export const RanksUI = {
 
@@ -70,7 +72,14 @@ export const RanksUI = {
   render() {
     if(State.headerUiMode !== 'ranks') return;
     console.log('RENDER: RanksUI');
-    const board = BoardDomain.getCurrentBoard();
+
+    //если экран доска, то текущую доску, если экран статистика - выбранную
+    const board = App.isBoard() ? 
+      BoardDomain.getCurrentBoard() 
+        : App.isEvents() && EventsUI.isStatsView() && App.getFilter().board ? 
+          BoardDomain.getBoard(App.getFilter().board) 
+          : null;
+
     if(!board) return;
     const ranks = board.ranks;
     const raw = board.ranksRaw || '';
@@ -87,7 +96,7 @@ export const RanksUI = {
       && !errors.length && (draft && JSON.stringify(draft.ranks) !== JSON.stringify(ranks));
 
     document.querySelector(this.selectors.ranksBlock).innerHTML = `
-      <h3 class="top-menu-title">Manage the board ranks</h3>
+      <h3 class="top-menu-title">The ranks of "${board.name}" board</h3>
       <div id="current-colors-container">
         <div id="current-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getColorsInUseHtml()}</div>
         <div id="free-colors" ${mode !== this.modes.delete ? '' : 'class="hidden"'}>${this.getFreeColorsHtml()}</div>
