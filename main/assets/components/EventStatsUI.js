@@ -163,7 +163,7 @@ export const EventStatsUI = {
   getBoardAttentionBalanceHtml() {
     const selectedBoard = App.getFilter().board;
     if(!selectedBoard) return 'Не выбрана доска';
-    const data = EventsDomain.buildBoardAttentionBalance(EventsDomain.getFilteredEventsByDefaultOrder(), selectedBoard);
+    const data = EventsDomain.buildBoardAttentionBalance(EventsDomain.getEvents(), selectedBoard);
     console.log('getBoardAttentionBalanceHtml', data);
 
     return `

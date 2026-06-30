@@ -21,7 +21,8 @@ export const BoardDomain = {
   },
 
   getCurrentBoard() {
-    return this.getBoard(App.getLocalProp('currentBoard'));
+    const saved = App.getCurrentBoard();
+    return saved ? this.getBoard(saved) : this.getBoards().find(b => b.key == 'paper');
   },
 
   getColumn(id) {
@@ -54,16 +55,16 @@ export const BoardDomain = {
 
   switchBoard(boardId) {
     if(this.getBoard(boardId)) {
-      App.setLocalProp('currentBoard', boardId);
+      App.setCurrentBoard(boardId);
     }
   },
 
   saveBoards(updatedBoards, currentBoardId) {
     App.data.boards = updatedBoards;
     if(currentBoardId === null) {
-      App.setLocalProp('currentBoard', null);
+      App.setCurrentBoard(null);
     } else if (currentBoardId) {
-      App.setLocalProp('currentBoard', currentBoardId);
+      App.setCurrentBoard(currentBoardId);
     }
     App.saveData();
   },

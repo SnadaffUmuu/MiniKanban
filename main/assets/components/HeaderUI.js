@@ -81,7 +81,7 @@ export const HeaderUI = {
   render() {
     console.log('RENDER: HeaderUI');
 
-    document.body.classList.toggle('night', App.getLocalProp('nightModeOn'));
+    document.body.classList.toggle('night', App.getNightMode());
 
     const currentScreen = App.getCurrentScreen();
     console.log('currentScreen', currentScreen);
@@ -117,7 +117,7 @@ export const HeaderUI = {
   },
 
   toggleNightMode(el) {
-    App.setLocalProp('nightModeOn', (!App.getLocalProp('nightModeOn')));
+    App.setNightMode(!App.getNightMode());
     Bus.emit(Bus.events.headerUIChanged);
   },
 

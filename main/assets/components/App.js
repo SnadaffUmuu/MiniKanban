@@ -59,7 +59,7 @@ export const App = {
   },
 
   getCurrentScreen() {
-    return this.getLocalProp('screen')
+    return this.getLocalProp('screen') || this.screens.board;
   },
 
   setScreen(screen) {
@@ -84,6 +84,22 @@ export const App = {
 
   setFilter(filter) {
     this.setLocalProp('filter', filter);
+  },
+
+  getNightMode() {
+    return this.getLocalProp('nightModeOn') || false;
+  },
+
+  setNightMode(value) {
+    this.setLocalProp('nightModeOn', value);
+  },
+
+  setCurrentBoard(id) {
+    this.setLocalProp('currentBoard', id);
+  },
+
+  getCurrentBoard() {
+    return this.getLocalProp('currentBoard');
   },
 
   setStateProp(prop, value) {
