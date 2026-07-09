@@ -243,7 +243,8 @@ header.expanded .top-menu-title {
 #delete-board-block,
 #ranks-block,
 #statsUI,
-#filters {
+#filters,
+#undo-move-block {
   position: relative;
 }
 
@@ -259,6 +260,7 @@ header.expanded .top-menu-title {
 }
 
 #rename-board-block h3,
+#undo-move-block h3,
 #delete-board-block h3 {
   padding-bottom: 10px;
 }
@@ -289,6 +291,7 @@ header.expanded .top-menu-title {
 }
 
 #rename-board-block::after,
+#undo-move-block::after,
 #delete-board-block::after,
 .task-edit::after,
 .add-task::after,

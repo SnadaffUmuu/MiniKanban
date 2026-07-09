@@ -52,6 +52,7 @@
 
     <section data-toggle-menu-target="board" class="menu hidden">
       <div id="menu-content">
+        <button id="undo-move" data-header-mode-trigger="undoMove">Undo last move</button>
         <button id="rename-board" data-header-mode-trigger="renameBoard">Rename board</button>
         <button id="delete-board" data-header-mode-trigger="deleteBoard">Delete board</button>
         <button id="show-stats" data-header-mode-trigger="stats">Show stats</button>
@@ -76,6 +77,12 @@
       <button id="reset-stats" class="board-management-button">Reset</button>
     </div>
 
+    <div id="undo-move-block" data-header-mode="undoMove" class="hidden">
+      <h3 class="top-menu-title">Undo move</h3>
+      <div id="reset-message">Really undo the last move?</div>
+      <button class="js-cancel-current button-close"></button>
+      <button id="confirm-undo" class="board-management-button">Undo</button>
+    </div>
     <div id="rename-board-block" data-header-mode="renameBoard" class="hidden">
       <h3 class="top-menu-title">Rename board</h3>
       <button class="js-cancel-current button-close"></button>

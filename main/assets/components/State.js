@@ -1,5 +1,5 @@
 export const State = {
-  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, renameBoard, booksDefault, filters
+  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, undoMove, renameBoard, booksDefault, filters
   openedTopMenu: null,
   statsUiMode: null,
   boardUi: {
