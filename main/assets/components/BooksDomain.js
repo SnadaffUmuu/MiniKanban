@@ -55,21 +55,21 @@ export const BooksDomain = {
     return BoardDomain.getColorsInUse(board).filter(c => !registeredColors.includes(c));
   },
 
-  getBookStagesCountFromBoard(boardId, startIndex) {
-    const board = BoardDomain.getBoard(boardId);
-    const lastIndex = board.columns.length - 1;
-    return board.columns.filter((col, i) => {
-      return i >= startIndex && i < lastIndex && !col.skipMove;
-    }).length;
-  },
+  // getBookStagesCountFromBoard(boardId, startIndex) {
+  //   const board = BoardDomain.getBoard(boardId);
+  //   const lastIndex = board.columns.length - 1;
+  //   return board.columns.filter((col, i) => {
+  //     return i >= startIndex && i < lastIndex && !col.skipMove;
+  //   }).length;
+  // },
 
-  getStageAtIndex(cols, startIndex, currentIndex) {
-    const skipped = cols.filter((col, i) => {
-      return i >= startIndex && i < currentIndex && col.skipMove;
-    }).length;
+  // getStageAtIndex(cols, startIndex, currentIndex) {
+  //   const skipped = cols.filter((col, i) => {
+  //     return i >= startIndex && i < currentIndex && col.skipMove;
+  //   }).length;
 
-    return (currentIndex - startIndex) - skipped;
-  },
+  //   return (currentIndex - startIndex) - skipped;
+  // },
 
   saveBooks(books) {
     App.books = books;
@@ -77,17 +77,17 @@ export const BooksDomain = {
   },
 
   save(data) {
-    let {name, key, newKey, size, startIndex, board, color} = data;
-    if(startIndex == null || startIndex == '') {
-      startIndex = 0;
-    }
+    let {name, key, newKey, size, board, color} = data;
+    // if(startIndex == null || startIndex == '') {
+    //   startIndex = 0;
+    // }
     const books = this.getBooks();
     const book = books.find(b => b.key == key);
     //const stages = this.getBookStagesCountFromBoard(board, startIndex);
     if(book) {
       book.name = name;
       book.size = size;
-      book.startIndex = startIndex;
+      // book.startIndex = startIndex;
       //book.stages = stages;
       book.board = board;
       book.color = color;
@@ -96,7 +96,7 @@ export const BooksDomain = {
         //TODO: update events if a key changes
       }
     } else {
-      data.startIndex = startIndex;
+      // data.startIndex = startIndex;
       //data.stages = stages;
       books.push(data);
     }
@@ -191,7 +191,11 @@ export const BooksDomain = {
     return this.applyRange(existing, inc);
   },
 
-  addOrUpdateRange(bookKey, newRanges) {
+  addOrUpdateRange(bookKey) {
+
+    const newRanges = State.newRangesDraft;
+
+    if (!newRanges) return;
 
     const book = this.getBook(bookKey);
 

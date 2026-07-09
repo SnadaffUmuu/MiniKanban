@@ -115,7 +115,7 @@ export const Events = {
     'input': {
       [RenameUI.selectors.renameInput]: 'RenameUI.updateButtonState',
       [ColumnHeaderUI.selectors.renameColumnInput]: 'ColumnHeaderUI.updateButtonState',
-      [ColumnHeaderUI.selectors.skipMoveCheckbox]: 'ColumnHeaderUI.setSkipMove',
+      [ColumnHeaderUI.selectors.defaultConsumeMoveCheckbox]: 'ColumnHeaderUI.setDefaultConsumeMove',
       [TaskUI.selectors.taskEditInput]: 'TaskUI.taskDescrInputHandler',
       [RanksUI.selectors.textarea]: 'RanksUI.ranksInputHandler',
     },

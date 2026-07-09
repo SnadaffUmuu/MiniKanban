@@ -11,11 +11,6 @@ export const EventsDomain = {
     return ts.toISOString().slice(0, 10);
   },
 
-  eventTypes: {
-    progress: 'p',
-    rollback: 'r'
-  },
-
   getEvents() {
     return App.events !== null ? App.events : App.loadEvents();
   },
@@ -74,40 +69,25 @@ export const EventsDomain = {
     App.saveEvents();
   },
 
-  log({type, book, date, col, skipMove, from, to}) {
-    const response = {};
+  log({book, consumeMove, from, to}) {
     const ts = new Date();
-    if(!date) {
-      date = this.format(ts);
-    }
+    const date = this.format(ts);
     const events = this.getEvents();
+    const col = State.progressData.targetIndex;
     try {
-      if(type == this.eventTypes.rollback) {
-        //TODO: log UI when doing rollback
-        this.saveEvents(App.events.filter(ev => 
-          ev.b == book 
-          && d == date 
-          && ev.c == col 
-          && ev.fr == from 
-          && ev.to == to
-          && ev.sm == skipMove
-        ));
-      } else {
-        const res = {
-          ts: ts.getTime(),
-          d: date,
-          b: book,
-          t: type,
-          c: col,
-          sm: skipMove
-        };
-        if(type == this.eventTypes.progress) {
-          res.fr = from;
-          res.to = to
-        }
-        events.push(res);
-        this.saveEvents(events);
-      }
+      const res = {
+        ts: ts.getTime(),
+        d: date,
+        b: book,
+        c: col,
+        cm: consumeMove,
+        fr: from,
+        to: to
+      };
+      events.push(res);
+      this.saveEvents(events);
+      
+      const response = {};
       response.result = true;
       return response;
     } catch(e) {
@@ -145,8 +125,8 @@ export const EventsDomain = {
       if(event.r) {
         obj.r = event.r;
       }
-      if(event.sm) {
-        obj.sm = event.sm;
+      if(event.cm != null) {
+        obj.cm = event.cm;
       }
       eventsMap[event.d].push(obj);
 
@@ -568,7 +548,7 @@ export const EventsDomain = {
 
   checkSkipMoved(events, filter = App.getFilter()) {
     if (filter?.includeSkipMove != true) {
-      return events.filter(ev => !ev.sm);
+      return events.filter(ev => ev.cm === true);
     }
     return events;
   }

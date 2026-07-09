@@ -170,8 +170,13 @@ export const BoardDomain = {
     this.saveBoards(App.data.boards);
   },
 
-  setColumnSkipMove(colId, value) {
-    this.getColumn(colId)['skipMove'] = value;
+  // setColumnSkipMove(colId, value) {
+  //   this.getColumn(colId)['skipMove'] = value;
+  //   this.saveBoards(App.data.boards);
+  // },
+
+  setColumnDefaultConsumeMove(colId, value) {
+    this.getColumn(colId)['defaultConsumeMove'] = value;
     this.saveBoards(App.data.boards);
   },
 
@@ -252,14 +257,15 @@ export const BoardDomain = {
     if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
     targetColumn.tasks.splice(insertIndex, 0, task);
 
-    this.checkForProgress({
+    this.saveBoards(App.data.boards);
+
+    this.prepareMoveCommit({
       task: task,
       sourceColumn: sourceColumn,
       targetColumn: targetColumn,
       position: position
     });
 
-    this.saveBoards(App.data.boards);
   },
 
   cloneTask(currentTaskId) {
@@ -346,9 +352,9 @@ export const BoardDomain = {
     this.saveBoards(App.data.boards);
   },
 
-  checkForProgress({task, sourceColumn, targetColumn, position}) {
+  prepareMoveCommit({task, sourceColumn, targetColumn, position}) {
 
-    console.log('BoardDomain checkForProgress ');
+    console.log('BoardDomain prepareMoveCommit ');
 
     if(!sourceColumn || !targetColumn) return;
     if(sourceColumn.id === targetColumn.id) return;
@@ -363,11 +369,12 @@ export const BoardDomain = {
     const sourceCol = board.columns[sourceIndex];
     const targetCol = board.columns[targetIndex];
 
-    const skipMove =
-      (isGoingForward && sourceCol.skipMove) ||
-      (!isGoingForward && targetCol.skipMove);
+    const defaultConsumeMove =
+      (isGoingForward && sourceCol.defaultConsumeMove) ||
+      (!isGoingForward && targetCol.defaultConsumeMove);
 
     State.progressData = {
+      task: task,
       taskId: task.id,
       boardId: board.id,
       sourceIndex: sourceIndex,
@@ -376,17 +383,22 @@ export const BoardDomain = {
       targetColumnId: targetCol.id,
       delta: delta,
       position: position,
-      skipMove: skipMove
+      // skipMove: skipMove
+      defaultConsumeMove: defaultConsumeMove
     };
+
     State.progressPromptShown = true;
 
     Bus.emit(Bus.events.progress);
 
-    this.makeMove(board, task, delta, skipMove);
+    //this.makeMove(board, task, delta, consumeMove);
 
   },
 
-  makeMove(board, task, delta, skipMove) {
+  commitBalance(consumeMove) {
+
+    const board = this.getCurrentBoard();
+    const task = State.progressData.task;
 
     const ranks = board.ranks;
     if(!ranks || !task) return;
@@ -402,15 +414,17 @@ export const BoardDomain = {
     const upperCount = level > 1 ? Utils.toInt(board.rankCounters[level - 1]) : 0;
 
     
-    // --- 3. Если skipMove — логику рангов не трогаем
-    if(skipMove) {
+    // --- 3. Если не ход — логику рангов не трогаем
+    if(!consumeMove) {
       return;
     }
 
-    // --- 1. Абсолютный счётчик — меняется с учетом skipMove
+    const delta = State.progressData.delta;
+
+    // --- 1. Абсолютный счётчик
     board.rankCountersAbs[level] = absCount + delta;
 
-    // --- 2. Глобальный счётчик доски — меняется с учетом skipMove
+    // --- 2. Глобальный счётчик доски
     const boardsCounters = this.getBoardsCounters();
     const boardTotal = Utils.toInt(boardsCounters[board.id]);
     boardsCounters[board.id] = boardTotal + delta;
@@ -440,6 +454,8 @@ export const BoardDomain = {
     const quotaUpper = Utils.toInt(ranks[level - 1].q);
     board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
 
+    this.saveBoards(App.data.boards);
+    
   },
 
   getIdealMap() {

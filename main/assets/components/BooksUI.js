@@ -20,7 +20,7 @@ export const BooksUI = {
     bookNameInput: '#bookName',
     bookKeyInput: '#bookKey',
     bookSizeInput: '#size',
-    startIndex: '#startIndex',
+    // startIndex: '#startIndex',
     bookBoardSelect: '.js-book-board',
     bookBoardColorSelect: '.js-book-board-color',
     addBookConfirmButton: '.js-add-book-confirm',
@@ -192,7 +192,6 @@ export const BooksUI = {
                 <input type="text" name="bookName" placeholder="book name" value="${b.name}" required><br>
                 <input type="text" name="bookKey" paceholder="book key" value="${b.key}" required><br>
                 <input type="number" name="size" placeholder="size" value="${b.size}" required><br>
-                <input type="number" name="startIndex" placeholder="start column index" value="${b.startIndex != null ? b.startIndex : 0}"><br>
                 <select class="js-book-board" name="bookBoard" required>
                   <option value="">choose a board</option>
                   ${App.data.boards.map(board => `<option ${board.id == b.board ? 'selected' : ''} value="${board.id}">${board.name}</option>`).join('')}
@@ -293,7 +292,7 @@ export const BooksUI = {
       name: this.dom.bookNameInput.value,
       key: this.dom.bookKeyInput.value,
       size: this.dom.bookSizeInput.value,
-      startIndex: this.dom.startIndex.value,
+      // startIndex: this.dom.startIndex.value,
       board: this.dom.bookBoardSelect.value,
       color: this.dom.bookBoardColorSelect.value
     });
@@ -358,7 +357,7 @@ export const BooksUI = {
       name: form.bookName.value,
       key: el.dataset.key,
       size: form.size.value,
-      startIndex: form.startIndex.value,
+      // startIndex: form.startIndex.value,
       board: form.bookBoard.value,
       color: form.bookBoardColor.value
     };
@@ -418,14 +417,108 @@ export const BooksUI = {
     }
   },
 
-  getStageColor(stage, totalCols) {
-    // от светлого к тёмному синему
+  // getStageColor(stage, totalCols) {
+  //   // от светлого к тёмному синему
+  //   const lightnessStart = 85;
+  //   const lightnessEnd = 35;
+
+  //   //const ratio = (stage - 1) / (totalStages - 1 || 1);
+  //   const ratio = stage / (totalCols || 1);
+  //   const lightness = lightnessStart - ratio * (lightnessStart - lightnessEnd);
+
+  //   return `hsl(210, 70%, ${lightness}%)`;
+  // },
+
+  // renderProgressBar(book) {
+  //   const size = Number(book.size);
+  //   const board = BoardDomain.getBoard(book.board);
+  //   const columns = board.columns;
+  //   const startIndex = Number(book.startIndex);
+  //   const ranges = book.state?.ranges || [];
+
+  //   // 1. агрегируем страницы по колонкам
+  //   const colPages = new Map(); // column -> pages count
+
+  //   for(const {c, f, t} of ranges) {
+  //     const count = t - f + 1;
+  //     colPages.set(c, (colPages.get(c) || 0) + count);
+  //   }
+
+  //   const totalStages =
+  //     BooksDomain.getBookStagesCountFromBoard(
+  //       book.board,
+  //       startIndex
+  //     );
+
+  //   // 2. формируем сегменты
+  //   const segments = [];
+
+  //   let odd = true;
+  //   for(let col = 0;col <= columns.length - 1;col++) {
+  //     const pages = colPages.get(col) || 0;
+  //     if(pages === 0) continue;
+
+  //     const stage =
+  //       BooksDomain.getStageAtIndex(
+  //         columns,
+  //         startIndex,
+  //         col
+  //       );
+
+  //     const percent = (pages / size) * 100;
+
+  //     const key = book.key;
+  //     console.log({
+  //       key,
+  //       startIndex,
+  //       col,
+  //       stage,
+  //       totalStages
+  //     });
+
+  //     const color = this.getStageColor(stage, totalStages);
+
+  //     segments.push(`
+  //     <div 
+  //       class="segment ${odd ? 'odd' : ''}" 
+  //       style="width:${percent}%; background:${color}"
+  //       title="Column ${col} (stage ${stage}): ${pages} pages"
+  //     ><span class="pagesCount">${pages}</span></div>
+  //   `);
+  //     odd = !odd;
+  //   }
+
+  //   // 3. незаполненная часть
+  //   const totalFilled = [...colPages.values()].reduce((a, b) => a + b, 0);
+  //   const remainingPercent = ((size - totalFilled) / size) * 100;
+
+  //   if(remainingPercent > 0) {
+  //     segments.push(`
+  //     <div 
+  //       class="segment empty" 
+  //       style="width:${remainingPercent}%"
+  //     ></div>
+  //   `);
+  //   }
+
+  //   // 4. итоговый HTML
+  //   return `
+  //   <div class="progress-bar">
+  //     ${segments.join("")}
+  //   </div>
+  // `;
+  // },
+
+  getColumnColor(columnIndex, columnsCount) {
     const lightnessStart = 85;
     const lightnessEnd = 35;
 
-    //const ratio = (stage - 1) / (totalStages - 1 || 1);
-    const ratio = stage / (totalCols || 1);
-    const lightness = lightnessStart - ratio * (lightnessStart - lightnessEnd);
+    const maxIndex = Math.max(columnsCount - 1, 1);
+    const ratio = columnIndex / maxIndex;
+
+    const lightness =
+      lightnessStart -
+      ratio * (lightnessStart - lightnessEnd);
 
     return `hsl(210, 70%, ${lightness}%)`;
   },
@@ -434,75 +527,60 @@ export const BooksUI = {
     const size = Number(book.size);
     const board = BoardDomain.getBoard(book.board);
     const columns = board.columns;
-    const startIndex = Number(book.startIndex);
     const ranges = book.state?.ranges || [];
 
-    // 1. агрегируем страницы по колонкам
-    const colPages = new Map(); // column -> pages count
+    // страницы по колонкам
+    const colPages = new Map();
 
     for(const {c, f, t} of ranges) {
       const count = t - f + 1;
       colPages.set(c, (colPages.get(c) || 0) + count);
     }
 
-    const totalStages =
-      BooksDomain.getBookStagesCountFromBoard(
-        book.board,
-        startIndex
-      );
+    // абсолютное количество стадий (переходов)
+    const totalStages = Math.max(columns.length - 1, 1);
 
-    // 2. формируем сегменты
     const segments = [];
-
     let odd = true;
-    for(let col = 0;col <= columns.length - 1;col++) {
+
+    for(let col = 0;col < columns.length;col++) {
+
       const pages = colPages.get(col) || 0;
       if(pages === 0) continue;
 
-      const stage =
-        BooksDomain.getStageAtIndex(
-          columns,
-          startIndex,
-          col
-        );
-
       const percent = (pages / size) * 100;
 
-      const key = book.key;
-      console.log({
-        key,
-        startIndex,
-        col,
-        stage,
-        totalStages
-      });
+      // абсолютная стадия
+      const stage = col;
 
-      const color = this.getStageColor(stage, totalStages);
+      const color = this.getColumnColor(col, columns.length);
 
       segments.push(`
-      <div 
-        class="segment ${odd ? 'odd' : ''}" 
+      <div
+        class="segment ${odd ? 'odd' : ''}"
         style="width:${percent}%; background:${color}"
-        title="Column ${col} (stage ${stage}): ${pages} pages"
+        title="${columns[col].title}: ${pages} pages"
       ><span class="pagesCount">${pages}</span></div>
     `);
+
       odd = !odd;
     }
 
-    // 3. незаполненная часть
-    const totalFilled = [...colPages.values()].reduce((a, b) => a + b, 0);
-    const remainingPercent = ((size - totalFilled) / size) * 100;
+    const totalFilled =
+      [...colPages.values()].reduce((a, b) => a + b, 0);
+
+    const remainingPercent =
+      ((size - totalFilled) / size) * 100;
 
     if(remainingPercent > 0) {
       segments.push(`
-      <div 
-        class="segment empty" 
+      <div
+        class="segment empty"
         style="width:${remainingPercent}%"
       ></div>
     `);
     }
 
-    // 4. итоговый HTML
     return `
     <div class="progress-bar">
       ${segments.join("")}
@@ -537,7 +615,7 @@ export const BooksUI = {
 
   getTreeHtml(book) {
     const positions =
-      BooksDomain.buildTreeLayout(Number(BooksDomain.getBook(book).size), );
+      BooksDomain.buildTreeLayout(Number(BooksDomain.getBook(book).size),);
 
     return `
     <svg

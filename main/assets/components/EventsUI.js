@@ -108,12 +108,11 @@ export const EventsUI = {
       const targetColName = targetColIndex !== null ? board.columns[targetColIndex].name : null;
       const sourceColumnIndex = targetColIndex !== null ? targetColIndex - 1 : null;
       const sourceColName = sourceColumnIndex !== null ? board.columns[sourceColumnIndex].name : null;
-      const skipMove = ev.sm == true; 
+      const consumeMove = ev.cm == true; 
       return `
       <div 
         ${book.color ? `style="background-color:${Colors[book.color]}"` : ''} 
-        class="eventsEntry board-${board.key}-border" 
-        ${skipMove ? 'data-skip-move="true"' : ''}
+        class="eventsEntry board-${board.key}-border" data-skip-move="${consumeMove ? 'false' : 'true'}"
         data-type="${ev.t}" 
         data-book="${ev.b}" 
         data-date="${ev.d}">

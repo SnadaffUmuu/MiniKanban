@@ -17,7 +17,8 @@ export const ColumnHeaderUI = {
     renameColumn: '.column .save-rename-column',
     moveColumnRightButton: '.column [data-move-direction="right"]',
     moveColumnLeftButton: '.column [data-move-direction="left"]',
-    skipMoveCheckbox: '.column-menu input[name="skipMove"]',
+    // skipMoveCheckbox: '.column-menu input[name="skipMove"]',
+    defaultConsumeMoveCheckbox: '.column-menu input[name="defaultConsumeMove"]',
   },
 
   init() {
@@ -112,11 +113,14 @@ export const ColumnHeaderUI = {
     Bus.emit(Bus.events.boardsChanged);
   },
 
-  setSkipMove(el, e) {
-    BoardDomain.setColumnSkipMove(Utils.getColumnEl(el).dataset.id, el.checked);
+  // setSkipMove(el, e) {
+  //   BoardDomain.setColumnSkipMove(Utils.getColumnEl(el).dataset.id, el.checked);
+  //   Bus.emit(Bus.events.boardsChanged);
+  // },
+
+  setDefaultConsumeMove (el, e) {
+    BoardDomain.setColumnDefaultConsumeMove(Utils.getColumnEl(el).dataset.id, el.checked);
     Bus.emit(Bus.events.boardsChanged);
   },
 
 };
-
-//@DiscoursVpnBot,

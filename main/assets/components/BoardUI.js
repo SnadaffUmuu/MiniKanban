@@ -81,7 +81,7 @@ export const BoardUI = {
         tasksHtml = [`<button class="js-add-task add-task-button">Click to add first task</button>`];
       }
       const columnHtml = `
-      <div class="column" data-id="${column.id}" ${column.skipMove ? 'data-skip-move="true"' : ''}>
+      <div class="column" data-id="${column.id}" ${column.defaultConsumeMove ? 'data-default-consume-move="true"' : ''}>
         <div class="column-header">
           <h3 class="column-title">${column.name}</h3>
           <span class="task-count">${column.tasks.length}</span>
@@ -92,7 +92,7 @@ export const BoardUI = {
           <button class="rename-column" data-header-mode-trigger="rename">Rename column</button>
           <button class="move-column" data-header-mode-trigger="move">Move column</button>
           <button class="delete-column" data-header-mode-trigger="delete">Delete column</button>
-          <label for="skipMove"><input type="checkbox"${column.skipMove ? 'checked' : ''} name="skipMove">Skip move</label>
+          <label for="defaultConsumeMove"><input type="checkbox"${column.defaultConsumeMove ? 'checked' : ''} name="defaultConsumeMove">Consume move</label>
         </div>
         <div class="rename-column-block hidden" data-header-mode="rename">
           Rename column<br>

@@ -31,7 +31,7 @@ export const ProgressUI = {
       '##': 'hideUi',
       '@promptButton': 'showUi',
       '@logProgressPreviewButton': 'preview',
-      '@logProgressConfirmButton': 'log',
+      '@logProgressConfirmButton': 'commitMove',
     },
     input: {
       '@inputField': 'formChangeHandler',
@@ -139,9 +139,7 @@ export const ProgressUI = {
         </td>
         <td>${BoardDomain.getColumn(data.targetColumnId).name}</td>
       </tr>
-      <tr><td>startColIndex</td><td>${book.startIndex || 0}</td></tr>
       <tr><td>progress?</td><td>${data.delta > 0 ? 'progress' : 'rollback'}</td></tr>
-      ${data.skipMove ? '<tr><td>skipMove?</td><td>yes</td></tr>' : ''}
     </table>
     <form ${hideForm ? 'class="hidden"' : ''} name="progressForm" action="javascript:void(0)" data-book-key="${book.key}">
       <table style="width:100%;">
@@ -174,6 +172,10 @@ export const ProgressUI = {
             </select>  
           </td>
         </tr>
+        <tr>
+          <td><label for="consumeMove">Consume move?</label></td>
+          <td><input type="checkbox" name="consumeMove" id="consumeMove" ${formDraft && formDraft.consumeMove && formDraft.consumeMove === true ? 'checked' : data.defaultConsumeMove && data.defaultConsumeMove === true ? ' checked' : ''}></td>
+        </tr>        
       </table>
       <div class="formErrors ${logError ? '' : 'hidden'}">
         ${logError ? `<br>${logError.message}<br>${logError.details}` : ''}
@@ -210,19 +212,24 @@ export const ProgressUI = {
   },
 
   formChangeHandler(el, e) {
-    if (!this.dom.fromInputField.value && !this.dom.toInputField.value) {
-      //диапазон очищен - карточка без диапазона?
-      this.dom.previewButton.classList.add('hidden');
-      this.dom.submitButton.classList.remove('hidden');
-    } else {
-      this.dom.previewButton.classList.remove('hidden');
-      this.dom.submitButton.classList.add('hidden');
-    }
-    this.dom.draftContainer.innerHTML = '';
     if(!State.progressFormDraft) {
       State.progressFormDraft = {};
     }
-    State.progressFormDraft[el.name] = el.value;
+    if (el.id == 'consumeMove') {
+      State.progressFormDraft[el.name] = el.checked;
+    } else {
+      if (!this.dom.fromInputField.value && !this.dom.toInputField.value) {
+        //диапазон очищен - карточка без диапазона?
+        this.dom.previewButton.classList.add('hidden');
+        this.dom.submitButton.classList.remove('hidden');
+      } else {
+        this.dom.previewButton.classList.remove('hidden');
+        this.dom.submitButton.classList.add('hidden');
+      }
+      this.dom.draftContainer.innerHTML = '';
+  
+      State.progressFormDraft[el.name] = el.value;
+    }
   },
 
   preview() {
@@ -244,20 +251,16 @@ export const ProgressUI = {
 
   },
 
-  log() {
+  commitMove() {
     const form = this.dom.form;
 
-    if (State.newRangesDraft) {
-      BooksDomain.addOrUpdateRange(form.dataset.bookKey, State.newRangesDraft);
-    }
+    BoardDomain.commitBalance(form.consumeMove.checked);
 
-    const type = State.progressData.delta > 0 ? EventsDomain.eventTypes.progress : EventsDomain.eventTypes.rollback;
+    BooksDomain.addOrUpdateRange(form.dataset.bookKey);
+
     const eventData = {
-      type: type,
       book: form.dataset.bookKey,
-      date: null,
-      col: State.progressData.targetIndex,
-      skipMove: State.progressData.skipMove,
+      consumeMove: form.consumeMove.checked
     };
 
     if(form.from.value !== '' && form.to.value !== '') {
