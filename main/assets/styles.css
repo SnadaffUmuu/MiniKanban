@@ -427,10 +427,12 @@ main {
   font-size: 15px;
   font-weight: bold;
   flex: 1 0 auto;
+  opacity:0.5;
 }
 
-[data-skip-move] .column-header h3 {
-  opacity:0.5;
+[data-default-consume-move] .column-header h3,
+.column:last-child .column-header h3 {
+  opacity:1;
 }
 
 .column-body {
@@ -939,7 +941,7 @@ body:has(.dragged) {
   padding: 10px 10px 10px 0;
 }
 
-#statsUI {
+#statsUI, #undo-move-block {
   color: white;
 }
 

@@ -63,7 +63,7 @@ export const BoardDomain = {
     App.data.boards = updatedBoards;
     if(currentBoardId === null) {
       App.setCurrentBoard(null);
-    } else if (currentBoardId) {
+    } else if(currentBoardId) {
       App.setCurrentBoard(currentBoardId);
     }
     App.saveData();
@@ -170,13 +170,10 @@ export const BoardDomain = {
     this.saveBoards(App.data.boards);
   },
 
-  // setColumnSkipMove(colId, value) {
-  //   this.getColumn(colId)['skipMove'] = value;
-  //   this.saveBoards(App.data.boards);
-  // },
-
   setColumnDefaultConsumeMove(colId, value) {
-    this.getColumn(colId)['defaultConsumeMove'] = value;
+    const column = this.getColumn(colId);
+    column['defaultConsumeMove'] = value;
+    delete column.skipMove; //удалить эту сроку спустя время
     this.saveBoards(App.data.boards);
   },
 
@@ -241,6 +238,7 @@ export const BoardDomain = {
   },
 
   moveTask(targetColumnId, taskId, insertIndex, position) {
+    this.takeBoardSnapshot();
     const board = this.getCurrentBoard();
     const targetColumn = board.columns.find(col => col.id === targetColumnId);
     if(!targetColumn.tasks) targetColumn.tasks = [];
@@ -257,7 +255,11 @@ export const BoardDomain = {
     if(insertIndex === -1) insertIndex = targetColumn.tasks.length;
     targetColumn.tasks.splice(insertIndex, 0, task);
 
-    this.saveBoards(App.data.boards);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        this.saveBoards(App.data.boards);
+      }, 0);
+    });
 
     this.prepareMoveCommit({
       task: task,
@@ -364,7 +366,6 @@ export const BoardDomain = {
     const sourceIndex = board.columns.findIndex(c => c.id === sourceColumn.id);
     const targetIndex = board.columns.findIndex(c => c.id === targetColumn.id);
     const isGoingForward = targetIndex > sourceIndex;
-    const delta = isGoingForward ? 1 : -1;
 
     const sourceCol = board.columns[sourceIndex];
     const targetCol = board.columns[targetIndex];
@@ -381,17 +382,13 @@ export const BoardDomain = {
       sourceColumnId: sourceCol.id,
       targetIndex: targetIndex,
       targetColumnId: targetCol.id,
-      delta: delta,
       position: position,
-      // skipMove: skipMove
       defaultConsumeMove: defaultConsumeMove
     };
 
     State.progressPromptShown = true;
 
     Bus.emit(Bus.events.progress);
-
-    //this.makeMove(board, task, delta, consumeMove);
 
   },
 
@@ -413,13 +410,16 @@ export const BoardDomain = {
     const absCount = Utils.toInt(board.rankCountersAbs[level]);
     const upperCount = level > 1 ? Utils.toInt(board.rankCounters[level - 1]) : 0;
 
-    
+
     // --- 3. Если не ход — логику рангов не трогаем
     if(!consumeMove) {
       return;
     }
 
-    const delta = State.progressData.delta;
+    this.takeBoardRankCountersSnapshot(board);
+    this.takeBoardsCountersSnapshot();
+
+    const delta = 1;
 
     // --- 1. Абсолютный счётчик
     board.rankCountersAbs[level] = absCount + delta;
@@ -455,7 +455,7 @@ export const BoardDomain = {
     board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
 
     this.saveBoards(App.data.boards);
-    
+
   },
 
   getIdealMap() {
@@ -471,6 +471,49 @@ export const BoardDomain = {
       res[board] = Utils.roundUp1((idealMap[board] / idealTotal) * 100);
       return res;
     }, {});
-  }
+  },
+
+  takeBoardSnapshot() {
+    State.undoSnapshot.boardSnapshot = JSON.parse(JSON.stringify(this.getCurrentBoard()));
+    console.log('Board snapshot taken', State.undoSnapshot);
+  },
+
+  takeBoardsCountersSnapshot() {
+    State.undoSnapshot.boardsCountersSnapshot = JSON.parse(JSON.stringify(App.data.boardsCounters));
+  },
+
+  takeBoardRankCountersSnapshot(board) {
+    State.undoSnapshot.boardRanksCountersSnapshot = {
+      counters: JSON.parse(JSON.stringify(board.rankCounters)),
+      absCounters: JSON.parse(JSON.stringify(board.rankCountersAbs))
+    };
+  },
+
+  undoFromSnapshot() {
+    if(!State.undoSnapshot.boardSnapshot) return;
+    const boardSnapshot = State.undoSnapshot.boardSnapshot;
+    const boards = this.getBoards();
+
+    const index = boards.findIndex(board => board.id === boardSnapshot.id);
+    if(index !== -1) {
+      boards[index] = boardSnapshot;
+
+      const ranksCountersSnapshot = State.undoSnapshot.boardRanksCountersSnapshot;
+      if(ranksCountersSnapshot) {
+        boards[index].rankCounters = ranksCountersSnapshot.counters;
+        boards[index].rankCountersAbs = ranksCountersSnapshot.absCounters;
+      }
+    }
+
+    this.saveBoards(boards);
+    State.undoSnapshot.boardSnapshot = null;
+    State.boardRanksCountersSnapshot = null;
+
+    const boardsCountersSnapshot = State.undoSnapshot.boardsCountersSnapshot || null;
+    if(boardsCountersSnapshot) {
+      this.saveCounters(boardsCountersSnapshot);
+      State.undoSnapshot.boardsCountersSnapshot = null;
+    }
+  },
 
 };

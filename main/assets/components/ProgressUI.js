@@ -139,7 +139,6 @@ export const ProgressUI = {
         </td>
         <td>${BoardDomain.getColumn(data.targetColumnId).name}</td>
       </tr>
-      <tr><td>progress?</td><td>${data.delta > 0 ? 'progress' : 'rollback'}</td></tr>
     </table>
     <form ${hideForm ? 'class="hidden"' : ''} name="progressForm" action="javascript:void(0)" data-book-key="${book.key}">
       <table style="width:100%;">
@@ -162,19 +161,24 @@ export const ProgressUI = {
           <td>
             <select id="colField" name="column">
             ${Array.from({length: board.columns.length}).map((_, i) => {
-              const hasDraftCol = formDraft && formDraft.c != null;
-              return `
+            const hasDraftCol = formDraft && formDraft.c != null;
+            return `
               <option ${(
-                (hasDraftCol && i == formDraft.c) ||
-                (!hasDraftCol && i == colIndex))
-                  ? 'selected': ''} value="${i}">${BoardDomain.getColumnByIndex(i).name} [${i}]</option>
+          (hasDraftCol && i == formDraft.c) ||
+          (!hasDraftCol && i == colIndex))
+          ? 'selected' : ''} value="${i}">${BoardDomain.getColumnByIndex(i).name} [${i}]</option>
               `}).join('')}
             </select>  
           </td>
         </tr>
         <tr>
           <td><label for="consumeMove">Consume move?</label></td>
-          <td><input type="checkbox" name="consumeMove" id="consumeMove" ${formDraft && formDraft.consumeMove && formDraft.consumeMove === true ? 'checked' : data.defaultConsumeMove && data.defaultConsumeMove === true ? ' checked' : ''}></td>
+          <td><input type="checkbox" name="consumeMove" id="consumeMove" ${formDraft?.consumeMove != null
+          ? (formDraft.consumeMove ? ' checked' : '')
+          : data.defaultConsumeMove != null
+            ? (data.defaultConsumeMove ? ' checked' : '')
+            : ''}>
+          </td>
         </tr>        
       </table>
       <div class="formErrors ${logError ? '' : 'hidden'}">
@@ -215,10 +219,10 @@ export const ProgressUI = {
     if(!State.progressFormDraft) {
       State.progressFormDraft = {};
     }
-    if (el.id == 'consumeMove') {
+    if(el.id == 'consumeMove') {
       State.progressFormDraft[el.name] = el.checked;
     } else {
-      if (!this.dom.fromInputField.value && !this.dom.toInputField.value) {
+      if(!this.dom.fromInputField.value && !this.dom.toInputField.value) {
         //диапазон очищен - карточка без диапазона?
         this.dom.previewButton.classList.add('hidden');
         this.dom.submitButton.classList.remove('hidden');
@@ -227,7 +231,7 @@ export const ProgressUI = {
         this.dom.submitButton.classList.add('hidden');
       }
       this.dom.draftContainer.innerHTML = '';
-  
+
       State.progressFormDraft[el.name] = el.value;
     }
   },
@@ -252,6 +256,7 @@ export const ProgressUI = {
   },
 
   commitMove() {
+
     const form = this.dom.form;
 
     BoardDomain.commitBalance(form.consumeMove.checked);
@@ -266,7 +271,7 @@ export const ProgressUI = {
     if(form.from.value !== '' && form.to.value !== '') {
       eventData.from = form.from.value;
       eventData.to = form.to.value;
-    } 
+    }
 
     const logRes = EventsDomain.log(eventData);
 
@@ -276,7 +281,10 @@ export const ProgressUI = {
     if(!State.logUpdateError) {
       State.progressUpdateSuccess = true;
     }
+    Bus.emit(Bus.events.boardsChanged);
     Bus.emit(Bus.events.progressUiChanged);
+    Bus.emit(Bus.events.headerUIChanged);
+    Bus.emit(Bus.events.booksChanged);
   },
 
 };

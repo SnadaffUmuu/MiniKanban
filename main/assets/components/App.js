@@ -126,6 +126,6 @@ export const App = {
 
   getLocalProp(prop) {
     return this.local[prop];
-  }
+  },
 
 };

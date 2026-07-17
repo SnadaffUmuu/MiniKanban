@@ -55,22 +55,6 @@ export const BooksDomain = {
     return BoardDomain.getColorsInUse(board).filter(c => !registeredColors.includes(c));
   },
 
-  // getBookStagesCountFromBoard(boardId, startIndex) {
-  //   const board = BoardDomain.getBoard(boardId);
-  //   const lastIndex = board.columns.length - 1;
-  //   return board.columns.filter((col, i) => {
-  //     return i >= startIndex && i < lastIndex && !col.skipMove;
-  //   }).length;
-  // },
-
-  // getStageAtIndex(cols, startIndex, currentIndex) {
-  //   const skipped = cols.filter((col, i) => {
-  //     return i >= startIndex && i < currentIndex && col.skipMove;
-  //   }).length;
-
-  //   return (currentIndex - startIndex) - skipped;
-  // },
-
   saveBooks(books) {
     App.books = books;
     App.saveBooks(App.books);
@@ -78,17 +62,11 @@ export const BooksDomain = {
 
   save(data) {
     let {name, key, newKey, size, board, color} = data;
-    // if(startIndex == null || startIndex == '') {
-    //   startIndex = 0;
-    // }
     const books = this.getBooks();
     const book = books.find(b => b.key == key);
-    //const stages = this.getBookStagesCountFromBoard(board, startIndex);
     if(book) {
       book.name = name;
       book.size = size;
-      // book.startIndex = startIndex;
-      //book.stages = stages;
       book.board = board;
       book.color = color;
       if(newKey) {
@@ -96,8 +74,6 @@ export const BooksDomain = {
         //TODO: update events if a key changes
       }
     } else {
-      // data.startIndex = startIndex;
-      //data.stages = stages;
       books.push(data);
     }
 
@@ -193,9 +169,11 @@ export const BooksDomain = {
 
   addOrUpdateRange(bookKey) {
 
+    this.takeBookSnapshot(bookKey);
+
     const newRanges = State.newRangesDraft;
 
-    if (!newRanges) return;
+    if(!newRanges) return;
 
     const book = this.getBook(bookKey);
 
@@ -316,6 +294,22 @@ export const BooksDomain = {
     }
 
     return positions;
-  }
+  },
+
+  takeBookSnapshot(bookKey) {
+    State.undoSnapshot.bookSnapshot = JSON.parse(JSON.stringify(this.getBook(bookKey)));
+  },
+
+  undoFromSnapshot() {
+    if (!State.undoSnapshot.bookSnapshot) return;
+    const books = this.getBooks();
+    const snapshot = State.undoSnapshot.bookSnapshot;
+    const index = books.findIndex(book => book.key === snapshot.key);
+    if(index !== -1) {
+      books[index] = snapshot;
+    }
+    this.saveBooks(books);
+    State.undoSnapshot.bookSnapshot = null;
+  },
 
 };

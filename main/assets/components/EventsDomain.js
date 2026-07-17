@@ -73,20 +73,25 @@ export const EventsDomain = {
     const ts = new Date();
     const date = this.format(ts);
     const events = this.getEvents();
-    const col = State.progressData.targetIndex;
     try {
       const res = {
         ts: ts.getTime(),
         d: date,
         b: book,
-        c: col,
-        cm: consumeMove,
-        fr: from,
-        to: to
+        c1: State.progressData.sourceIndex,
+        c2: State.progressData.targetIndex,
+        f: from,
+        t: to
       };
+      if(consumeMove === true) {
+        res.cm = true;
+      }
       events.push(res);
-      this.saveEvents(events);
+
+      State.undoSnapshot.logged = true;
       
+      this.saveEvents(events);
+
       const response = {};
       response.result = true;
       return response;
@@ -125,7 +130,7 @@ export const EventsDomain = {
       if(event.r) {
         obj.r = event.r;
       }
-      if(event.cm != null) {
+      if(event.cm) {
         obj.cm = event.cm;
       }
       eventsMap[event.d].push(obj);
@@ -236,8 +241,8 @@ export const EventsDomain = {
 
   addBoardsDataToEvents(events) {
     return events.map(ev => ({
-      ...ev, 
-      board : BooksDomain.getBook(ev.b).board
+      ...ev,
+      board: BooksDomain.getBook(ev.b).board
     }));
   },
 
@@ -344,10 +349,12 @@ export const EventsDomain = {
     // --- группировка только видимых событий ---
     events.forEach(event => {
 
-      grouped[event.b] ??= {
-        board: event.board,
-        totalEvents: 0
-      };
+      if(grouped[event.b] == null) {
+        grouped[event.b] = {
+          board: event.board,
+          totalEvents: 0
+        };
+      }
 
       grouped[event.b].totalEvents++;
 
@@ -389,7 +396,9 @@ export const EventsDomain = {
     let total = 0;
 
     events.forEach(e => {
-      counts[e.board] ??= 0;
+      if(counts[e.board] == null) {
+        counts[e.board] = 0;
+      }
       counts[e.board]++;
       total++;
     });
@@ -547,10 +556,15 @@ export const EventsDomain = {
   },
 
   checkSkipMoved(events, filter = App.getFilter()) {
-    if (filter?.includeSkipMove != true) {
+    if(filter?.includeSkipMove != true) {
       return events.filter(ev => ev.cm === true);
     }
     return events;
-  }
+  },
+
+  undoLast() {
+    console.log('the last event to be undone', this.getEvents().pop());
+    this.saveEvents(this.getEvents());
+  },
 
 };

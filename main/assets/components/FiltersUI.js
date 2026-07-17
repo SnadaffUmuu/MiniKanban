@@ -69,6 +69,8 @@ export const FiltersUI = {
 
     this.dom.filterBooksToggleBlock.removeAttribute('open');
 
+    this.dom.toggleIncludeSkipMoveCheckbox.checked = App.getFilter()?.includeSkipMove == true;
+
     this.dom.toggleIncludeSkipMoveLabel.classList.toggle('hidden', !App.isEvents());
   },
 
@@ -94,7 +96,9 @@ export const FiltersUI = {
     if (checkedBooksCheckboxes.length) {
       filter.books = [...checkedBooksCheckboxes].map(el => el.value);
     }
-    filter.includeSkipMove = this.dom.toggleIncludeSkipMoveCheckbox.checked;
+    if (this.dom.toggleIncludeSkipMoveCheckbox.checked) {
+      filter.includeSkipMove = true;
+    }
     App.setFilter(filter);
     Bus.emit(Bus.events.filtersChanged);
   },

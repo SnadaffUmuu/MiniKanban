@@ -103,17 +103,16 @@ export const EventsUI = {
     return events.map(ev => {
       const book = BooksDomain.getBook(ev.b);
       const board = BoardDomain.getBoard(book.board);
-      const hasRange = ev.fr != null && ev.to != null;
-      const targetColIndex = Utils.toInt(ev.c);
+      const hasRange = ev.f != null && ev.t != null;
+      const targetColIndex = Utils.toInt(ev.c2);
       const targetColName = targetColIndex !== null ? board.columns[targetColIndex].name : null;
-      const sourceColumnIndex = targetColIndex !== null ? targetColIndex - 1 : null;
+      const sourceColumnIndex = ev.c1 ? Utils.toInt(ev.c1) : targetColIndex !== null ? targetColIndex - 1 : null;
       const sourceColName = sourceColumnIndex !== null ? board.columns[sourceColumnIndex].name : null;
       const consumeMove = ev.cm == true; 
       return `
       <div 
         ${book.color ? `style="background-color:${Colors[book.color]}"` : ''} 
         class="eventsEntry board-${board.key}-border" data-skip-move="${consumeMove ? 'false' : 'true'}"
-        data-type="${ev.t}" 
         data-book="${ev.b}" 
         data-date="${ev.d}">
         <div class="eventsEntry__summary">
@@ -124,7 +123,7 @@ export const EventsUI = {
               <summary></summary>
               <div class="eventsEntry__details">
                 ${hasRange ? `
-                  <span class="tag">${ev.fr}${ev.to !== ev.fr ? '-' + ev.to : ''}</span>
+                  <span class="tag">${ev.f}${ev.t !== ev.f ? '-' + ev.t : ''}</span>
                 ` : ''}
                 ${sourceColName ? `
                 <div class="connector"></div>

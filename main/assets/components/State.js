@@ -23,6 +23,13 @@ export const State = {
     dotsMerged : true,
     statTypes : [], //monthAcitvity, boardsDistr, monthlyRate
   },
+  undoSnapshot: {
+    boardSnapshot: null,
+    boardRanksCountersSnapshot: null,
+    boardsCountersSnapshot: null,
+    bookSnapshot: null,
+    logged: null,
+  },
 
   afterRender: [],
 

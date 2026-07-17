@@ -10,6 +10,8 @@ import {Events} from './components/Events.js'
 import {Utils} from './components/Utils.js'
 import { getColorsStyleHtml } from './components/Colors.js'
 import { MigrateStageToCol } from './components/MigrateStageToCol.js'
+import { MigrateEventsToConsumeMove } from './components/MigrateEventsToConsumeMove.js'
+import { MigrateBooks } from './components/MigrateBooks.js'
 
 const AppInit = {
   init() {
@@ -33,7 +35,8 @@ const AppInit = {
       }
     }
     document.head.insertAdjacentHTML('beforeend', getColorsStyleHtml());
-    // window.migrate = MigrateStageToCol;
+    window.migrateEvents = MigrateEventsToConsumeMove;
+    window.migrateBooks = MigrateBooks;
   }
 };
 
