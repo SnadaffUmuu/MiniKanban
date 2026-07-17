@@ -1,15 +1,15 @@
 export const State = {
-  headerUiMode: 'default', //boardsList, ranks, deleteBoard, stats, undoMove, renameBoard, booksDefault, filters
+  headerUiMode: 'default', // boardsList, ranks, deleteBoard, stats, undoMove, renameBoard, booksDefault, filters
   openedTopMenu: null,
   statsUiMode: null,
   boardUi: {
-    columnUi: {}, //default, menu, rename, move, delete
+    columnUi: {}, // default, menu, rename, move, delete
     taskUi: {},
   },
   ranksUi: null,
   booksUi : {
     addUiShown : false,
-    rowUi: {}, //delete, edit, state
+    rowUi: {}, // delete, edit, state
     currentBook : null,
   },
   progressData : {},
@@ -21,7 +21,7 @@ export const State = {
   eventsUi : {
     listExpanded : false,
     dotsMerged : true,
-    statTypes : [], //monthAcitvity, boardsDistr, monthlyRate
+    statTypes : [], // monthAcitvity, boardsDistr, monthlyRate
   },
   undoSnapshot: {
     boardSnapshot: null,
