@@ -130,8 +130,8 @@ export const EventsDomain = {
       if(event.r) {
         obj.r = event.r;
       }
-      if(event.cm) {
-        obj.cm = event.cm;
+      if(!event.cm) {
+        obj.sm = true;
       }
       eventsMap[event.d].push(obj);
 
@@ -176,9 +176,9 @@ export const EventsDomain = {
         ? 7 : jsWeekday;
 
       const dateString = year + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
-      console.log(current)
-      console.log(dateString)
-      console.log(day)
+      // console.log(current)
+      // console.log(dateString)
+      // console.log(day)
 
       // new month
       if(

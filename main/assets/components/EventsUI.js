@@ -30,6 +30,7 @@ export const EventsUI = {
     eventEntriesss: '.eventsEntry',
     toggleEventDots: '.js-toggle-eventdots',
     toggleMergeDots : '#toggleMergeDots',
+    calendarScrollable : '#Cal-bodyWrap',
   },
 
   dom: {},
@@ -89,9 +90,13 @@ export const EventsUI = {
           this.dom.calenderBody.innerHTML = this.getCalendarHtml();
           this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
           this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
+          this.dom.calendarScrollable.scrollTo({
+            top: this.dom.calendarScrollable.scrollHeight,
+            behavior: "smooth"
+          });
         break;
-        case this.views.stats:
-          EventStatsUI.render();
+      case this.views.stats:
+        EventStatsUI.render();
     }
 
   },
