@@ -6,16 +6,16 @@ import {Utils} from "./Utils.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {Colors} from "./Colors.js";
 import {State} from "./State.js";
-import { EventStatsUI } from "./EventStatsUI.js";
+import {EventStatsUI} from "./EventStatsUI.js";
 
 export const EventsUI = {
 
   name: 'EventsUI',
 
   views: {
-    list : 'list',
-    calendar : 'calendar',
-    stats : 'stats'
+    list: 'list',
+    calendar: 'calendar',
+    stats: 'stats'
   },
 
   selectors: {
@@ -29,8 +29,8 @@ export const EventsUI = {
     toggleExpandButton: '#toggleEventsExpand',
     eventEntriesss: '.eventsEntry',
     toggleEventDots: '.js-toggle-eventdots',
-    toggleMergeDots : '#toggleMergeDots',
-    calendarScrollable : '#Cal-bodyWrap',
+    toggleMergeDots: '#toggleMergeDots',
+    calendarScrollable: '#Cal-bodyWrap',
   },
 
   dom: {},
@@ -39,13 +39,15 @@ export const EventsUI = {
     click: {
       '@viewSwitchesss': 'switchEventsView',
       '@toggleExpandButton': 'toggleExpand',
-      '@toggleEventDots' : 'toggleEventDots',
-      '@toggleMergeDots' : 'toggleMergeDots',
+      '@toggleEventDots': 'toggleEventDots',
+      '@toggleMergeDots': 'toggleMergeDots',
     },
   },
 
   init() {
-    Bus.on(Bus.events.screenChanged, this.render.bind(this));
+    Bus.on(Bus.events.screenChanged, () => {
+      this.render(true);
+    });
     Bus.on(Bus.events.progress, this.render.bind(this));
     Bus.on(Bus.events.eventsUiChanged, this.render.bind(this));
     Bus.on(Bus.events.filtersChanged, this.render.bind(this));
@@ -59,7 +61,7 @@ export const EventsUI = {
     return this.getCurrentView() == this.views.stats;
   },
 
-  render() {
+  render(initialRun) {
 
     if(!App.isEvents()) {
       this.dom.container.classList.toggle('hidden', true);
@@ -86,14 +88,16 @@ export const EventsUI = {
         this.dom.toggleExpandButton.classList.toggle('expand', !State.eventsUi.listExpanded);
         this.dom.toggleExpandButton.classList.toggle('collapse', State.eventsUi.listExpanded);
         break;
-        case this.views.calendar:
-          this.dom.calenderBody.innerHTML = this.getCalendarHtml();
-          this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
-          this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
+      case this.views.calendar:
+        this.dom.calenderBody.innerHTML = this.getCalendarHtml();
+        this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
+        this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
+        if (initialRun) {
           this.dom.calendarScrollable.scrollTo({
             top: this.dom.calendarScrollable.scrollHeight,
             behavior: "smooth"
           });
+        }
         break;
       case this.views.stats:
         EventStatsUI.render();
@@ -113,7 +117,7 @@ export const EventsUI = {
       const targetColName = targetColIndex !== null ? board.columns[targetColIndex].name : null;
       const sourceColumnIndex = ev.c1 ? Utils.toInt(ev.c1) : targetColIndex !== null ? targetColIndex - 1 : null;
       const sourceColName = sourceColumnIndex !== null ? board.columns[sourceColumnIndex].name : null;
-      const consumeMove = ev.cm == true; 
+      const consumeMove = ev.cm == true;
       return `
       <div 
         ${book.color ? `style="background-color:${Colors[book.color]}"` : ''} 
@@ -159,9 +163,9 @@ export const EventsUI = {
         let daysHtml = [];
         days.forEach((day, iii) => {
           let dayString = day.day;
-          if (index == 0 && iii == 0) {
+          if(index == 0 && iii == 0) {
             dayString += '.' + month;
-            if (!currYear || year !== currYear) {
+            if(!currYear || year !== currYear) {
               dayString += '<br>' + year;
             }
           }
@@ -170,11 +174,14 @@ export const EventsUI = {
           day.events.forEach(event => {
             const book = BooksDomain.getBook(event.book);
             const board = BoardDomain.getBoard(book.board);
-            const markAsMoveSkipped = event.sm == true 
-              && (!State.eventsUi.dotsMerged 
-                || day.events.length == 1);
+            const bookEvents = day.events.filter(ev => ev.book == event.book);
+            const markAsMoveSkipped = event.sm == true
+              && (
+                !State.eventsUi.dotsMerged
+                || bookEvents.every(ev => ev.sm == true)
+              );
 
-            if (!State.eventsUi.dotsMerged || !dayBooks.includes(event.book)) {
+            if(!State.eventsUi.dotsMerged || !dayBooks.includes(event.book)) {
               const html = `<span class="board-${board.key}-border ${markAsMoveSkipped ? 'skipMove' : ''}" style="background-color:${Colors[book.color]}"></span>`;
               dotsHtml.push(html);
               dayBooks.push(event.book);
@@ -197,12 +204,12 @@ export const EventsUI = {
     App.setStateProp('eventsView', el.dataset.eventsViewSwitch);
     Bus.emit(Bus.events.eventsUiChanged);
   },
-  
+
   toggleExpand(el) {
     State.eventsUi.listExpanded = !State.eventsUi.listExpanded;
     Bus.emit(Bus.events.eventsUiChanged);
   },
-  
+
   toggleEventDots(el) {
     el.classList.toggle('active');
     this.dom.calendarContainer.classList.toggle('eventDotsHidden');

@@ -29,7 +29,7 @@ const AppInit = {
     } else {
       App.loadEvents();
       if (App.isEvents()) {
-        EventsUI.render();
+        EventsUI.render(true);
       } else {
         BooksUI.render();
       }
