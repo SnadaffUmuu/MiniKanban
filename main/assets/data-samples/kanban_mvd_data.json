@@ -1,0 +1,575 @@
+{
+  "boards": [
+    {
+      "id": "_eya4w92kj",
+      "name": "Satori R",
+      "key": "satori",
+      "ideal": "6",
+      "columns": [
+        {
+          "id": "_2vaqzairj",
+          "name": "Слушать",
+          "tasks": [
+            {
+              "id": "_7tc4a4vrk",
+              "color": "yellow",
+              "description": "Yuyu 17"
+            },
+            {
+              "id": "_5pmr67n5g",
+              "color": "white",
+              "description": "Winter 07"
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_uedeszi28",
+          "name": "Разбор",
+          "tasks": [
+            {
+              "id": "_y1buvg1z9",
+              "color": "plum",
+              "description": "John In Tokyo 09 Conversation Over Lunch, Part1"
+            },
+            {
+              "id": "_43t16k5cv",
+              "color": "blue",
+              "description": "Nutshell 15"
+            },
+            {
+              "id": "_ij4kphmvq",
+              "color": "peach",
+              "description": "HJ 23\nread \ncomments\nextra credit\nch.rev + voc. quiz "
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_spbofu41w",
+          "name": "Комменты",
+          "tasks": [],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_cy8r6drp3",
+          "name": "Лексика",
+          "tasks": [
+            {
+              "id": "_768klcv1f",
+              "color": "purple",
+              "description": "Secret 23 Mountain Roads",
+              "vocabCount": [
+                "2026-09-09 10:35",
+                "2026-09-04 00:03",
+                "2026-09-02 19:12"
+              ]
+            },
+            {
+              "id": "_m6sym9s2u",
+              "color": "pink",
+              "description": "幸せの木 004",
+              "vocabCount": [
+                "2026-09-02 19:06",
+                "2026-09-04 00:17",
+                "2026-09-09 10:38"
+              ]
+            },
+            {
+              "id": "_omxqm5m86",
+              "color": "teal",
+              "description": "変わらないもの 08 Baka-Dekai",
+              "vocabCount": [
+                "2026-09-09 10:41",
+                "2026-09-04 00:23",
+                "2026-09-02 19:03",
+                "2026-09-01 19:10",
+                "2026-08-31 16:34",
+                "2026-08-29 12:54"
+              ]
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_rv9w6kocf",
+          "name": "Ревью",
+          "tasks": [
+            {
+              "id": "_jx5dcec71",
+              "color": "yellow",
+              "description": "Yuyu 16 Embarrassing Story, Part 10",
+              "vocabCount": [
+                "2026-08-17 10:22",
+                "2026-08-16 10:05",
+                "2026-08-15 10:42",
+                "2026-08-14 09:42",
+                "2026-08-10 10:41",
+                "2026-08-01 00:49"
+              ]
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_36qxu9mia",
+          "name": "Готово",
+          "tasks": [
+            {
+              "id": "_pv6i5xio1",
+              "color": "plum",
+              "description": "John In Tokyo 08 Ordering At A Restaurant, Part 2",
+              "vocabCount": [
+                "2026-06-28 11:57",
+                "2026-06-27 07:00",
+                "2026-06-26 22:12",
+                "2026-06-26 11:35",
+                "2026-06-25 11:03",
+                "2026-06-22 10:09"
+              ]
+            }
+          ]
+        }
+      ],
+      "ranksRaw": "2 purple,peach\n1 white,teal\n2 yellow,green\n1 pink\n1 beige,plum\n1 blue",
+      "ranks": {
+        "1": {
+          "q": 2,
+          "c": [
+            "purple",
+            "peach"
+          ]
+        },
+        "2": {
+          "q": 1,
+          "c": [
+            "white",
+            "teal"
+          ]
+        },
+        "3": {
+          "q": 2,
+          "c": [
+            "yellow",
+            "green"
+          ]
+        },
+        "4": {
+          "q": 1,
+          "c": [
+            "pink"
+          ]
+        },
+        "5": {
+          "q": 1,
+          "c": [
+            "beige",
+            "plum"
+          ]
+        },
+        "6": {
+          "q": 1,
+          "c": [
+            "blue"
+          ]
+        }
+      },
+      "rankCounters": {
+        "1": 2,
+        "2": 1,
+        "3": 0,
+        "4": 1,
+        "5": 1,
+        "6": 0
+      },
+      "rankCountersAbs": {
+        "1": 12,
+        "2": 5,
+        "3": 3,
+        "4": 3,
+        "5": 1,
+        "6": 0
+      }
+    },
+    {
+      "id": "_15ma569uj",
+      "name": "Paper",
+      "key": "paper",
+      "ideal": "4",
+      "columns": [
+        {
+          "id": "_98n4c2fw4",
+          "name": "Сфотать/Todo",
+          "tasks": [
+            {
+              "id": "_oi88cun3j",
+              "color": "blue",
+              "description": "ゴーショーグン1 192-207"
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_prontm1bv",
+          "name": "Отсканить в текст",
+          "tasks": [
+            {
+              "id": "_6dnc1jjas",
+              "description": "仮名 62-67",
+              "color": "pink"
+            },
+            {
+              "id": "_vtm6925pt",
+              "description": "チェルノブイリ 24-28",
+              "color": "purple"
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_emdbx9l3y",
+          "name": "Вычитать",
+          "tasks": [
+            {
+              "id": "_dcjt064wg",
+              "color": "blue",
+              "description": "ゴーショーグン1 181-191"
+            },
+            {
+              "id": "_jifexxwrw",
+              "color": "white",
+              "description": "しろばんば 74-89"
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_zaqb3ib9i",
+          "name": "Чтение, разбор",
+          "tasks": [
+            {
+              "id": "_ef49yh0ta",
+              "color": "olive",
+              "description": "HP1 36-37"
+            },
+            {
+              "id": "_by6d306xi",
+              "color": "beige",
+              "description": "村上 風 71-81"
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_wd0qftfvl",
+          "name": "Лексика",
+          "tasks": [
+            {
+              "id": "_2fa3vufc8",
+              "color": "blue",
+              "description": "ゴーショーグン1 179-180"
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_xtw0lxgn1",
+          "name": "Review",
+          "tasks": [
+            {
+              "id": "_v2bkvh4ma",
+              "description": "ゴーショーグン0 25-26",
+              "color": "teal",
+              "vocabCount": [
+                "2026-08-24 14:19",
+                "2026-08-22 22:45",
+                "2026-08-17 10:22",
+                "2026-08-16 10:15",
+                "2026-08-15 10:32",
+                "2026-08-14 10:03",
+                "2026-08-11 11:21",
+                "2026-08-01 00:30",
+                "2026-08-01 00:30"
+              ]
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_807yrxu62",
+          "name": "Done",
+          "tasks": [
+            {
+              "id": "_00nyn6z3w",
+              "description": "仮名 60-61",
+              "color": "pink",
+              "vocabCount": [
+                "2026-07-24 13:41",
+                "2026-07-19 10:38",
+                "2026-07-18 20:07",
+                "2026-07-18 11:25",
+                "2026-07-17 11:43",
+                "2026-07-16 09:51",
+                "2026-07-13 10:22"
+              ]
+            }
+          ],
+          "defaultConsumeMove": false
+        }
+      ],
+      "ranksRaw": "3 blue\n2 white\n1 beige\n1 purple\n1 pink\n2 teal\n1 green\n1 olive\n1 yellow",
+      "ranks": {
+        "1": {
+          "q": 3,
+          "c": [
+            "blue"
+          ]
+        },
+        "2": {
+          "q": 2,
+          "c": [
+            "white"
+          ]
+        },
+        "3": {
+          "q": 1,
+          "c": [
+            "beige"
+          ]
+        },
+        "4": {
+          "q": 1,
+          "c": [
+            "purple"
+          ]
+        },
+        "5": {
+          "q": 1,
+          "c": [
+            "pink"
+          ]
+        },
+        "6": {
+          "q": 2,
+          "c": [
+            "teal"
+          ]
+        },
+        "7": {
+          "q": 1,
+          "c": [
+            "green"
+          ]
+        },
+        "8": {
+          "q": 1,
+          "c": [
+            "olive"
+          ]
+        },
+        "9": {
+          "q": 1,
+          "c": [
+            "yellow"
+          ]
+        }
+      },
+      "rankCounters": {
+        "1": 2,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 1,
+        "6": 1,
+        "7": 0,
+        "8": 2,
+        "9": 0
+      },
+      "rankCountersAbs": {
+        "1": 12,
+        "2": 4,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 1,
+        "7": 2,
+        "8": 2,
+        "9": 0
+      }
+    },
+    {
+      "id": "_82cijdew3",
+      "name": "おさらい",
+      "key": "osarai",
+      "ideal": "3",
+      "columns": [
+        {
+          "id": "_549lmy55m",
+          "name": "Сфотать",
+          "tasks": [
+            {
+              "id": "_yt9n1fi3z",
+              "description": "日本史 26-34",
+              "color": "blue"
+            },
+            {
+              "id": "_3ybduc8xi",
+              "color": "pink",
+              "description": "性教育 30-40"
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_jxqwvz5ph",
+          "name": "Отсканить в текст",
+          "tasks": [
+            {
+              "id": "_2u08hb2wy",
+              "color": "white",
+              "description": "世界の名作 index 7-12"
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_jzsu4qfgn",
+          "name": "Вычитать",
+          "tasks": [
+            {
+              "id": "_er9xvvvoo",
+              "color": "beige",
+              "description": "公民 13-17"
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_k6xzuaa3k",
+          "name": "Чтение, разбор",
+          "tasks": [
+            {
+              "id": "_os6ldyp9o",
+              "color": "purple",
+              "description": "家庭科 11-16"
+            },
+            {
+              "id": "_bp0eakp5w",
+              "color": "white",
+              "description": "世界の名作 preface 6"
+            }
+          ],
+          "defaultConsumeMove": true
+        },
+        {
+          "id": "_c6vzsw0os",
+          "name": "Лексика",
+          "tasks": [
+            {
+              "id": "_k64nfhtz1",
+              "color": "green",
+              "description": "国語 109"
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_k6vjrhlnr",
+          "name": "Ревью",
+          "tasks": [
+            {
+              "id": "_a38xsb94b",
+              "color": "plum",
+              "description": "敬語 11-12"
+            }
+          ],
+          "defaultConsumeMove": false
+        },
+        {
+          "id": "_grq4uqgi7",
+          "name": "Всё",
+          "tasks": [
+            {
+              "id": "_m8tq0fb75",
+              "color": "green",
+              "description": "国語 107-108",
+              "vocabCount": [
+                "2026-08-30 13:06",
+                "2026-08-29 12:31",
+                "2026-08-27 08:34",
+                "2026-08-25 16:27",
+                "2026-08-24 14:28",
+                "2026-08-22 22:41"
+              ]
+            }
+          ],
+          "defaultConsumeMove": false
+        }
+      ],
+      "ranksRaw": "2 green\n1 blue,pink\n1 plum,purple\n1 beige,yellow,teal\n1 white,peach,olive",
+      "ranks": {
+        "1": {
+          "q": 2,
+          "c": [
+            "green"
+          ]
+        },
+        "2": {
+          "q": 1,
+          "c": [
+            "blue",
+            "pink"
+          ]
+        },
+        "3": {
+          "q": 1,
+          "c": [
+            "plum",
+            "purple"
+          ]
+        },
+        "4": {
+          "q": 1,
+          "c": [
+            "beige",
+            "yellow",
+            "teal"
+          ]
+        },
+        "5": {
+          "q": 1,
+          "c": [
+            "white",
+            "peach",
+            "olive"
+          ]
+        }
+      },
+      "rankCounters": {
+        "1": 1,
+        "2": 0,
+        "3": 4,
+        "4": 0,
+        "5": 1,
+        "6": 0
+      },
+      "rankCountersAbs": {
+        "1": 10,
+        "2": 4,
+        "3": 4,
+        "4": 0,
+        "5": 1,
+        "6": 0
+      }
+    }
+  ],
+  "currentBoardId": "_15ma569uj",
+  "boardsCounters": {
+    "_82cijdew3": 16,
+    "_eya4w92kj": 28,
+    "_15ma569uj": 20
+  },
+  "screen": "board",
+  "booksUiMode": "events",
+  "eventsView": "calendar"
+}

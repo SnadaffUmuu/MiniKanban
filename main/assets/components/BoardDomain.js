@@ -325,21 +325,37 @@ export const BoardDomain = {
 
   setRanksData({ranks, ranksRaw}) {
     const board = this.getCurrentBoard();
+    const oldRanks = board.ranks || {};
+    const oldCounters = board.rankCounters || {};
+    
+    const oldLevelCount = Object.keys(oldRanks).length;
+    const newLevelCount = Object.keys(ranks).length;
+    
+    // Build new counters based on level positions (hierarchy slots)
+    // If levels increase: append new levels with 0
+    // If levels decrease: truncate to new level count (drop extra)
+    const newCounters = {};
+    var maxLevelToKeep = Math.min(oldLevelCount, newLevelCount);
+    
+    for (var level = 1; level <= maxLevelToKeep; level++) {
+      newCounters[level] = oldCounters[level] !== undefined ? oldCounters[level] : 0;
+    }
+    
+    if (newLevelCount > oldLevelCount) {
+      for (var level = oldLevelCount + 1; level <= newLevelCount; level++) {
+        newCounters[level] = 0;
+      }
+    }
+    // If decreasing, extra levels are automatically dropped
+    
     board.ranksRaw = ranksRaw;
     board.ranks = ranks;
-
-    /* normalizing */
-    const counters = board.rankCounters || {};
-    const absCounters = board.rankCountersAbs || {};
-    Object.keys(ranks).forEach(level => {
-      if(!counters[level]) counters[level] = 0;
-      if(!absCounters[level]) absCounters[level] = 0;
-    });
-    board.rankCounters = counters;
-    board.rankCountersAbs = absCounters;
+    board.rankCounters = newCounters;
+    // absCounters untouched per design
 
     console.log('ranks', board.ranks);
     console.log('ranksRaw', board.ranksRaw);
+    console.log('rankCounters', board.rankCounters);
 
     this.saveBoards(App.data.boards);
   },
