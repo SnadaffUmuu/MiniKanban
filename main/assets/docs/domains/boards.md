@@ -1,6 +1,6 @@
 # Boards Domain
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`books.md`](books.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
+**Related documentation**: [`books.md`](books.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
 
 ---
 
@@ -50,7 +50,7 @@
 Only boards with `key` property get advanced features:
 - **Satori R** (`key: 'satori'`) — Color: `--satori` (#d77400)
 - **Paper** (`key: 'paper'`) — Color: `--paper` (#7c46ff)
-- **Osarai** (`key: 'おさらい'`) — Color: `--osarai` (#52bb4b)
+- **Osarai** (`key: 'osarai'`) — Color: `--osarai` (#52bb4b)
 
 Features exclusive to reading boards:
 - **Ranks** — Hierarchical color-based progression system
@@ -157,7 +157,7 @@ const idealMap = { satori: 40, paper: 35, osarai: 25 };  // Sum = 100
 
 ## Boards Counters (`boardsCounters`)
 
-Tracked in `App.data.boardsCounters` (persisted in `kanbanAppData`):
+Tracked in `App.data.boardsCounters` and persisted with board data:
 - Key: board.id
 - Value: total consumed moves (all levels)
 - Used for: HeaderStats (real vs ideal %), EventStatsUI board distribution
@@ -168,7 +168,7 @@ Reset via HeaderStats UI → `BoardDomain.resetBoardsCounters()`.
 
 ## UI Components
 
-See [`../ui/components.md`](../ui/components.md) — BoardUI, ColumnHeaderUI, TaskUI, RanksUI, HeaderStats, BoardsList, DragDrop
+See the canonical [`UI component registry`](../ui/components.md#component-registry).
 
 ---
 

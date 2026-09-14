@@ -1,6 +1,6 @@
 # Events Domain
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`boards.md`](boards.md) | [`books.md`](books.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
+**Related documentation**: [`boards.md`](boards.md) | [`books.md`](books.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
 
 ---
 
@@ -38,7 +38,7 @@ EventsDomain.log({ book, consumeMove, from, to });  // Creates event
 **EventsDomain.log()** (`EventsDomain.js`):
 - Adds `ts`, `d` (date), `c1`/`c2` from `State.progressData`
 - Sets `cm: true` if `consumeMove === true`
-- Pushes to `App.events`, saves via `Storage.saveEvents()`
+- Pushes to `App.events` and requests persistence through the boundary defined in [`persistence.md`](../persistence.md)
 - Marks `State.undoSnapshot.logged = true` for undo support
 
 ---
@@ -105,7 +105,7 @@ All stats operate on `EventsDomain.getFilteredEvents()` (respects board/books fi
 
 ## UI Components
 
-See [`../ui/components.md`](../ui/components.md) — EventsUI, EventStatsUI, FiltersUI
+See the canonical [`UI component registry`](../ui/components.md#component-registry).
 
 ---
 

@@ -1,10 +1,10 @@
-# UI Components Pattern
+# UI Components
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`../architecture.md`](../architecture.md) | [`events-system.md`](events-system.md) | [`dragdrop.md`](dragdrop.md)
+**Related documentation**: [`../architecture.md`](../architecture.md) | [`events-system.md`](events-system.md) | [`dragdrop.md`](dragdrop.md)
 
 ---
 
-## Component Structure
+## Component Pattern
 
 Every UI component in `components/` follows this pattern:
 
@@ -19,7 +19,7 @@ export const ComponentName = {
 
   dom: {},                            // Populated by Utils.cacheComponentDom()
 
-  events: {                           // Declarative event bindings (optional) or directly after render is called
+  events: {                           // Optional declarative DOM event bindings
     click: {
       '##': 'handlerMethod',          // Global catch-all (document level)
       '@selectorAlias': 'handlerMethod',  // Resolved via component.selectors[key]
@@ -36,7 +36,7 @@ export const ComponentName = {
   },
 
   render() {
-    // Pure function: reads State + App.data → writes DOM
+    // Reads State + App.data, then updates cached DOM nodes
     // Guard: if (!App.isRelevantScreen()) { hide; return; }
     // Use this.dom.cachedElement (never querySelector in render)
   },
@@ -47,69 +47,12 @@ export const ComponentName = {
 
 ---
 
-## Selector Caching
+## Component Implementation Conventions
 
-`Utils.cacheComponentDom(component)` called in `main.js` init:
-
-```javascript
-cacheComponentDom(component) {
-  if (!component.dom) return;
-  Object.keys(component.selectors).forEach(selector => {
-    const isList = selector.endsWith('sss');
-    const res = isList
-      ? document.querySelectorAll(component.selectors[selector])
-      : document.querySelector(component.selectors[selector]);
-    if (res) component.dom[selector] = res;
-  });
-}
-```
-
-**Convention**: Suffix `sss` for lists (e.g., `viewContainersss`, `eventEntriesss`)
-
----
-
-## Batched Rendering
-
-```javascript
-// In init():
-Bus.batchedMethod(this, 'render');
-
-// Internally (Bus.js):
-batchedMethod(obj, methodName) {
-  obj[methodName] = this.createBatched(obj[methodName].bind(obj));
-}
-
-createBatched(fn) {
-  let scheduled = false;
-  return function batched(...args) {
-    if (scheduled) return;
-    scheduled = true;
-    scheduleMicrotask(() => { scheduled = false; fn.apply(this, args); });
-  };
-}
-```
-
-**Effect**: Multiple `Bus.emit('boardsChanged')` in same tick → single `render()` call.
-
----
-
-## After-Render Queue
-
-For DOM measurements (scroll, focus, dimensions) that need rendered DOM:
-
-```javascript
-// In handler:
-State.afterRender.push(() => {
-  const el = document.querySelector('.new-element');
-  if (el) el.scrollIntoView();
-});
-
-// Flushed in BoardUI.render() (and others):
-while (State.afterRender.length) {
-  const effect = State.afterRender.shift();
-  effect();
-}
-```
+- **DOM cache** — Declare selectors in `selectors`; startup calls `Utils.cacheComponentDom(component)`. A selector property ending in `sss` is cached with `querySelectorAll`; other properties use `querySelector`.
+- **Batched render** — A rendering component calls `Bus.batchedMethod(this, 'render')` in `init()` before subscribing the renderer to Bus events.
+- **Post-render DOM work** — Queue it with `State.afterRender.push(callback)`. Timing and queue ownership are defined by the [architecture lifecycle](../architecture.md#update-and-rendering-lifecycle).
+- **Normal updates** — Publish the relevant Bus event rather than invoking a renderer directly. Explicit startup renders are documented in [Application Startup](../architecture.md#application-startup).
 
 ---
 
@@ -130,20 +73,13 @@ setState(patch) { Object.assign(this, patch); }
 
 ---
 
-## Component Lifecycle
+## Component Registry
 
-1. **Definition** — Export from `components/index.js`
-2. **Registration** — Added to `Components` array in `Components.js`
-3. **Init** (`main.js`) —
-   - `Utils.cacheComponentDom()` — caches selectors
-   - `component.init()` — subscribes to Bus events
-4. **First render** — Triggered by `HeaderUI.render()` → screen-specific render
-5. **Updates** — Bus events → batched `render()` → DOM mutations
-6. **Cleanup** — None (SPA, no unmount)
+This is the canonical registry of UI components documented by the project. Domain documents link here rather than maintaining separate component lists.
 
----
+### Screen Components
 
-## Screen Components (Mutually Exclusive)
+The three screen components are mutually exclusive:
 
 | Component | Screen | Guard |
 |-----------|--------|-------|
@@ -151,41 +87,43 @@ setState(patch) { Object.assign(this, patch); }
 | `BooksUI` | `books` | `if (App.isBoard() || App.isEvents()) { hide; return; }` |
 | `EventsUI` | `events` | `if (!App.isEvents()) { hide; return; }` |
 
-HeaderUI shows/hides screen-specific toolbars via `data-screen-tools="board|books|events"`.
+`HeaderUI` shows or hides screen-specific toolbars via `data-screen-tools="board|books|events"`.
 
 ---
 
-## Shared Components (Cross-Screen)
+### Shared and Supporting Components
 
-| Component | Purpose | Key Events |
-|-----------|---------|------------|
-| `HeaderUI` | Top bar, screen switch, night mode, menus | `headerUIChanged`, `screenChanged` |
-| `DragDrop` | Touch+mouse drag-drop | `boardsChanged`, `columnMoved` |
-| `TaskUI` | Task rendering + modes | `taskUiChanged`, `boardsChanged` |
-| `RanksUI` | Ranks editor | `ranksUiChanged`, `boardsChanged`, `headerUIChanged` |
-| `FiltersUI` | Filter panel | `filtersChanged`, `headerUIChanged` |
-| `ProgressUI` | Progress logging dialog | `progress`, `progressUiChanged` |
-| `ColumnHeaderUI` | Column menus | `columnHeaderUIChanged`, `boardsChanged`, `columnMoved` |
+| Component | Purpose |
+|-----------|---------|
+| `HeaderUI` | Top bar, screen switching, night mode, menus, and screen-specific tools |
+| `DragDrop` | Unified touch/mouse task and board drag-and-drop |
+| `TaskUI` | Task rendering and task display/edit modes |
+| `RanksUI` | Rank configuration editor; also used as a header mode |
+| `FiltersUI` | Book/event filter panel; also used as a header mode |
+| `ProgressUI` | Progress logging dialog |
+| `ColumnHeaderUI` | Column header controls and menus |
+| `EventStatsUI` | Event statistics and attention-balance views |
 
 ---
 
-## Modal Components (Header Modes)
+### Header-Mode Components
 
 Activated via `State.headerUiMode` (rendered in header, not screen):
 
-| Mode | Component | Trigger |
-|------|-----------|---------|
-| `boardsList` | `BoardsList` | Boards button |
-| `ranks` | `RanksUI` | Ranks button |
-| `filters` | `FiltersUI` | Filters button |
-| `stats` | `HeaderStats` | Menu → Show stats |
-| `renameBoard` | `RenameUI` | Menu → Rename board |
-| `deleteBoard` | `DeleteUI` | Menu → Delete board |
-| `undoMove` | `UndoMoveUI` | Menu → Undo last move |
+| Mode | Component | Responsibility |
+|------|-----------|----------------|
+| `boardsList` | `BoardsList` | Board selection and ordering |
+| `ranks` | `RanksUI` | Rank configuration |
+| `filters` | `FiltersUI` | Book/event filtering |
+| `stats` | `HeaderStats` | Board counter and attention statistics |
+| `renameBoard` | `RenameUI` | Board rename confirmation |
+| `deleteBoard` | `DeleteUI` | Board deletion confirmation |
+| `undoMove` | `UndoMoveUI` | Last-move undo confirmation |
 
 ---
 
-## Key Invariants
+## UI Component Rules
 
-1. **Never querySelector in render()** — use `this.dom.cachedSelector`
-2. **Never call render() directly** — emit Bus event
+1. **Cached selectors in render** — Use `this.dom` instead of querying the document from a render method.
+2. **Layer and coordination rules** — Follow the canonical [architectural rules](../architecture.md#architectural-rules).
+3. **DOM handlers** — Declare ordinary component DOM handlers through the system in [`events-system.md`](events-system.md).

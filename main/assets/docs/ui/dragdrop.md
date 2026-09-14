@@ -1,6 +1,6 @@
 # Drag & Drop System
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`../architecture.md`](../architecture.md) | [`components.md`](components.md) | [`domains/boards.md`](../domains/boards.md)
+**Related documentation**: [`../architecture.md`](../architecture.md) | [`components.md`](components.md) | [`events-system.md`](events-system.md) | [`../domains/boards.md`](../domains/boards.md)
 
 ---
 

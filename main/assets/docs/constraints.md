@@ -1,6 +1,6 @@
 # Constraints & ES7 Compliance
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`../architecture.md`](../architecture.md)
+**Related documentation**: [`architecture.md`](architecture.md)
 
 ---
 
@@ -12,9 +12,9 @@
 
 ---
 
-## ❌ Forbidden Syntax (ES2017+)
+## ❌ Forbidden Language Features and APIs
 
-| Feature | Example | ES7 Alternative |
+| Feature | Example | Supported alternative |
 |---------|---------|-----------------|
 | Optional chaining | `obj?.prop` | `obj && obj.prop` |
 | Nullish coalescing | `a ?? b` | `a != null ? a : b` |
@@ -26,21 +26,21 @@
 | Trailing commas in params | `fn(a, b,)` | `fn(a, b)` |
 | Async/await | `await fn()` | `fn().then(...)` |
 | `String.padStart/End` | `s.padStart(2,'0')` | Manual padding |
-| `**` exponentiation | `2 ** 3` | `Math.pow(2,3)` |
-| `Array.includes` | `arr.includes(x)` | `arr.indexOf(x) !== -1` |
+| Object rest/spread | `{...obj}`, `{a, ...rest}` | `Object.assign({}, obj)`, explicit property selection |
 
 ---
 
-## ✅ Allowed (ES7 / ES2016)
+## ✅ Allowed by the Project Baseline
 
 - `let` / `const`
 - Arrow functions: `() => {}`
 - Template literals: `` `text ${var}` ``
 - Destructuring: `const {a, b} = obj`
-- Spread operator: `[...arr]`, `{...obj}` (arrays/objects only)
+- Array spread: `[...arr]`
 - Default parameters: `fn(a = 1) {}`
 - Rest parameters: `fn(...args) {}`
 - `Array.find` / `findIndex`
+- `Array.includes`
 - `Array.from`
 - `Object.assign`
 - `Promise` (native in API 21+)
@@ -48,6 +48,7 @@
 - `Symbol`
 - `class` syntax
 - `for...of` loops
+- Exponentiation: `2 ** 3`
 
 ---
 

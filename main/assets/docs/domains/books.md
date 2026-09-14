@@ -1,6 +1,6 @@
 # Books Domain
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`boards.md`](boards.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
+**Related documentation**: [`boards.md`](boards.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
 
 ---
 
@@ -36,7 +36,7 @@ Books track reading progress as **ranges mapped to column indexes**:
 
 ## Range Validation & Merging (`BooksDomain.js`)
 
-**Flow**: User inputs ranges in ProgressUI or in BooksUI → `BooksDomain.getNewRangesForRanges()` → validation → merge → `addOrUpdateRange()` 
+**Flow**: User inputs ranges in ProgressUI or in BooksUI → `BooksDomain.getNewRangesForRanges()` → validation → merge → `addOrUpdateRange()`
 
 ```javascript
 getNewRangesForRanges(rangesFromForm) {
@@ -72,7 +72,7 @@ getNewRangesForRanges(rangesFromForm) {
 
 ## Book-Board-Color Binding
 
-Color codes a book in a board. It's not just for UI, it allows to resolve which book to update when a card in a board is moved. 
+Color codes a book in a board. It's not just for UI, it allows to resolve which book to update when a card in a board is moved.
 
 ```javascript
 // Book assigned to reading board + rank color
@@ -108,7 +108,7 @@ This binding enables:
 
 ## UI Components
 
-See [`../ui/components.md`](../ui/components.md) — BooksUI, ProgressUI, FiltersUI
+See the canonical [`UI component registry`](../ui/components.md#component-registry).
 
 ---
 

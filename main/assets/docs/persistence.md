@@ -1,22 +1,40 @@
 # Persistence & Storage
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`../architecture.md`](./architecture.md) 
+**Related documentation**: [`architecture.md`](architecture.md)
 
 ---
 
-## Storage Abstraction (`Storage.js`)
+## Persistence Layers
 
-The app uses two storage mechanisms:
+`App.js` coordinates data loading and saving. `Storage.js` is the only boundary that directly accesses an Android native interface or `localStorage`; components and domain modules do not access either storage mechanism directly.
 
-1. **Android native** – when the `Android` object is available (i.e., the WebView runs on Android), the `loadData`, `loadBooks`, `loadEvents`, `saveData`, `saveBooks`, `saveEvents` methods call the corresponding native Java methods. These methods read/write files that are synchronized externally (e.g., via Syncthing). When no Android interface is present (e.g. running on desktop when developing) the same storage keys are read from `localStorage`. Data used in testing environment is never as long as that on production environment so localStorage limits don't apply.
+For domain data, `Storage.js` uses the Android interface when it is available. Native methods read and write device files that may be synchronized externally. In a non-Android development environment, the same logical data sets fall back to `localStorage`.
 
-2. **localStorage** – used for UI‑specific preferences (`kanbanLocal`) (both in no-Android environments and in WebView of Android)
+UI preferences always use `localStorage`, including inside the Android WebView.
 
-Persistence is delegated in App.js
+---
 
-3. **Runtime** - UI states such as opened menus, dialogs, undo snapshots, are persisted via State object in memory
+## Canonical Storage Registry
 
-## Key Invariants
+| Storage key | Contents | Backing mechanism |
+|-------------|----------|-------------------|
+| `kanbanAppData` | Boards and board counters | Android file, or `localStorage` fallback |
+| `kanbanBooks` | Books and progress ranges | Android file, or `localStorage` fallback |
+| `kanbanEvents` | Reading-move event log | Android file, or `localStorage` fallback |
+| `kanbanLocal` | Screen, filters, night mode, and other UI preferences | `localStorage` |
 
-1. **Storage.js is the only persistence layer** — Components never call localStorage/Android directly
-2. **App.js mediates all saves** — Domain methods call `App.saveData()` etc.
+These key names and ownership assignments are defined only here. Other documents should refer to the relevant data set rather than repeat a key.
+
+---
+
+## Save Boundary
+
+Domain operations request persistence through the corresponding `App.js` save method. `App.js` delegates the storage operation to `Storage.js`.
+
+Calls across the Android/storage boundary require `try/catch`, as specified in [`constraints.md`](constraints.md#code-style-rules).
+
+---
+
+## Non-Persistent Runtime State
+
+Open menus, dialog modes, drafts, queued after-render work, and undo snapshots live in the in-memory `State` object. They are not part of the storage registry above.

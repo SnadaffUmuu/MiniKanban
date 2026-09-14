@@ -1,22 +1,21 @@
-# Declarative Event System
+# Declarative DOM Event System
 
-**See also**: [`../AGENTS.md`](../AGENTS.md) | [`../architecture.md`](../architecture.md) | [`components.md`](components.md)
+**Related documentation**: [`../architecture.md`](../architecture.md) | [`components.md`](components.md) | [`dragdrop.md`](dragdrop.md)
 
 ---
 
 ## Overview
 
-All DOM events are declared in **two places**:
-1. **Central map** — `Events.js` (global, cross-component)
-2. **Component-local** — `component.events` object (auto-merged at init)
-Component-local system is a later development. Central map is a bit legacy. 
-New components always store events map locally.
+Ordinary UI DOM events use delegated declarations from two sources:
 
-No manual `addEventListener` anywhere in components.
+1. **Component-local maps** — A component's `events` object. This is the required location for new component handlers.
+2. **Legacy central map** — `Events.js` retains global and older cross-component declarations.
+
+`Events.init()` merges both declaration sources into one runtime map and attaches a document listener for each delegated event type. Drag-and-drop is the documented exception: `DragDrop.js` installs temporary raw touch/mouse listeners required by an active gesture; see [`dragdrop.md`](dragdrop.md).
 
 ---
 
-## Events.js Central Map (`Events.js`)
+## Legacy Central Map (`Events.js`)
 
 ```javascript
 export const Events = {
@@ -123,7 +122,7 @@ Components.forEach(component => {
 
 ---
 
-## Event Flow Diagram
+## Dispatch Flow
 
 ```
 User clicks element
@@ -146,13 +145,9 @@ handler.call(ComponentName, targetEl, event, params)
        │
        ▼
 Component mutates State / App.data
-       │
-       ▼
-Bus.emit('xxxChanged')
-       │
-       ▼
-Batched render → DOM updated
 ```
+
+Subsequent save, Bus publication, and rendering behavior is owned by the [architecture lifecycle](../architecture.md#update-and-rendering-lifecycle).
 
 ---
 
@@ -175,24 +170,20 @@ moveColumn(el, e, [doMoveRight]) {
 ## Global Catch-All (`##`)
 
 - Runs on **every click** (and other event types if defined)
-- Order: Runs before specific selectors (but order not guaranteed)
+- No relative execution order between catch-all and selector-specific handlers is part of the event-system contract. Handlers must not depend on it.
 
 ---
 
-## Supported Event Types
+## Event Types
 
-Defined by `Events.js` map keys + component `events`:
-- `click` — Primary interaction
-- `input` — Text input changes (ProgressUI form)
-- `change` — Select/checkbox changes (FiltersUI)
-- `touchstart` / `touchmove` / `touchend` — DragDrop (raw listeners in DragDrop.js)
+The delegated system installs listeners for event types present in the merged map. Common declarations are `click`, `input`, and `change`. Raw gesture event handling belongs exclusively to the drag-and-drop exception documented in [`dragdrop.md`](dragdrop.md).
 
 ---
 
-## Key Invariants
+## DOM Event Rules
 
-1. **Single source of truth** — All handlers in `Events.js.map` + `component.events`
-2. **No manual listeners** — Components never call `addEventListener`
-3. **Namespace prefix** — Component-local handlers auto-prefixed (e.g., `'showProgress'` → `'BooksUI.showProgress'`)
-4. **Params array** — Use `[handler, [param1, param2]]` for arguments
-5. **Alias `@` only in component.events** — Central map uses raw selectors or `[Component.selectors.key]`
+1. **New declarations are local** — Add a new component's ordinary DOM handlers to `component.events`, not the legacy central map.
+2. **Raw-listener exception** — Only the drag-and-drop gesture lifecycle bypasses delegated declarations.
+3. **Namespace prefix** — Component-local handlers are automatically prefixed (for example, `'showProgress'` becomes `'BooksUI.showProgress'`).
+4. **Parameter format** — Use `[handler, [param1, param2]]` when a declaration passes arguments.
+5. **Alias scope** — `@selectorKey` is valid only in `component.events`; the central map uses a raw selector or a computed component selector.
