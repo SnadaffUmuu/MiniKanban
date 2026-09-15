@@ -1,6 +1,6 @@
 # Boards Domain
 
-**Related documentation**: [`books.md`](books.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
+**Related documentation**: [`books.md`](books.md) | [`colors.md`](colors.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
 
 ---
 
@@ -72,6 +72,10 @@ Features exclusive to reading boards:
 ```
 - `c` — Array of color keys (from `Colors.js`)
 - `q` — Quota: how many level-N moves needed to produce 1 level-(N+1) move
+
+Ranks sit on top of the [book-board-color binding](colors.md): each rank level lists book
+colors, and unmentioned colors are auto-appended to the lowest level by
+`checkAndUpdateRanks()`. The palette itself is documented in [`colors.md`](colors.md).
 
 ### Counters
 | Counter | Purpose | Updated By |

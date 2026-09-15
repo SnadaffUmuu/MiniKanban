@@ -1,6 +1,4 @@
 import {App} from './App.js'
-import {Storage} from './Storage.js'
-import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js';
 import {Utils} from './Utils.js'
 import {State} from './State.js';

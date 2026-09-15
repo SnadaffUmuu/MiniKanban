@@ -1,6 +1,6 @@
 # Books Domain
 
-**Related documentation**: [`boards.md`](boards.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
+**Related documentation**: [`boards.md`](boards.md) | [`colors.md`](colors.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
 
 ---
 
@@ -72,20 +72,13 @@ getNewRangesForRanges(rangesFromForm) {
 
 ## Book-Board-Color Binding
 
-Color codes a book in a board. It's not just for UI, it allows to resolve which book to update when a card in a board is moved.
+A book is bound to one color on one reading board via `book.board` + `book.color`. The
+full concept — palette, the color = book-on-board mental model, technical binding methods,
+and the rank overlay — is documented canonically in [`colors.md`](colors.md). The Book
+domain owns two binding lookups:
 
-```javascript
-// Book assigned to reading board + rank color
-// BoardDomain.getColorsInUse(board) returns colors from board.ranks
-// BooksDomain.getUnregisteredColorsForBoard(board) → available colors
-// Book.color must match one of board's rank colors
-// Only one book per each board's color
-```
-
-This binding enables:
-- Progress bars colored by rank level
-- Events UI showing board-colored dots per book in calendar view and board-colored bars per book in list view
-- EventStatsUI attention balance per rank color
+- `betBookByBoard(boardId, color)` — resolves which book a task/event belongs to
+- `getUnregisteredColorsForBoard(board)` — colors used in tasks but not yet claimed by a book
 
 ---
 
