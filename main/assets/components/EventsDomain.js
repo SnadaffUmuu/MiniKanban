@@ -33,9 +33,10 @@ export const EventsDomain = {
   getFilteredEvents(filter) {
     let events = this.checkSkipMoved(this.getEvents());
 
-    // By default events of archived books are hidden; the "incl. archived?"
-    // filter opts back into them.
-    if(filter?.includeArchived != true) {
+    // Events of archived books are shown by default; they are only hidden when
+    // the filter explicitly sets includeArchived to false (the "incl. archived?"
+    // filter, which is checked by default).
+    if(filter?.includeArchived === false) {
       events = events.filter(ev => {
         const book = BooksDomain.getBook(ev.b);
         return !book || !BooksDomain.isArchived(book);

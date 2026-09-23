@@ -58,6 +58,12 @@ Features exclusive to reading boards:
 - **Events** — Reading sessions logged per book
 - **Counters** — `rankCounters`, `rankCountersAbs`, `boardsCounters`
 
+Colors on a board originate from its **cards**, not from books: `BoardDomain.getColorsInUse(board)`
+is the source of truth for "colors present on this board", and the Books domain derives the
+book-assignable color set from it. A board is agnostic of books — see
+["Why a book can only claim card colors"](colors.md#why-a-book-can-only-claim-card-colors) for
+the rationale and the resulting invariant.
+
 ---
 
 ## Ranks System

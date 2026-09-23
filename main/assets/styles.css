@@ -1047,11 +1047,11 @@ body:has(.dragged) {
   border: 2px solid var(--paper) !important;
 }
 
-/* Archived books: dashed, muted cue instead of a solid rank border. */
+/* Archived books are already distinguished by their separate table, so their
+ * cells reuse the same board-colored border as the main table. */
 tr.archived,
 tr.archived td {
-  border: 2px dashed var(--borders) !important;
-  opacity: 0.75;
+  border-radius: 3px;
 }
 
 .bookslist-archived-title {
@@ -1110,10 +1110,17 @@ select:invalid {
   box-shadow: 1px 1px 1px #47474775;
 }
 
-.editBookUi .book-action {
+.editBookUi .editBookActions {
   position: absolute;
   right: 0;
   bottom: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: flex-end;
+}
+
+.editBookUi .editBookActions .book-action {
+  position: static;
   width: 30px;
   height: 30px;
   border-radius: 15px;
@@ -1419,6 +1426,10 @@ select:invalid {
   border-radius: 5px;
 }
 
+.eventsEntry.archived {
+  border-style: dotted !important;
+}
+
 .eventsEntry:not(first-child) {
   margin-top: 7px;
 }
@@ -1699,6 +1710,10 @@ select:invalid {
   border-radius: 7px;
   width:10px;
   height:10px;
+}
+
+#Cal-container .Cal-month li .eventDots span.archived {
+  border-style: dotted !important;
 }
 
 #Cal-container .Cal-month li .eventDots span.skipMove {

@@ -73,7 +73,7 @@ export const FiltersUI = {
     this.dom.filterBooksToggleBlock.removeAttribute('open');
 
     this.dom.toggleIncludeSkipMoveCheckbox.checked = App.getFilter()?.includeSkipMove == true;
-    this.dom.toggleIncludeArchivedCheckbox.checked = App.getFilter()?.includeArchived == true;
+    this.dom.toggleIncludeArchivedCheckbox.checked = App.getFilter()?.includeArchived !== false;
 
     const isEvents = App.isEvents();
     this.dom.toggleIncludeSkipMoveLabel.classList.toggle('hidden', !isEvents);
@@ -105,8 +105,8 @@ export const FiltersUI = {
     if (this.dom.toggleIncludeSkipMoveCheckbox.checked) {
       filter.includeSkipMove = true;
     }
-    if (this.dom.toggleIncludeArchivedCheckbox.checked) {
-      filter.includeArchived = true;
+    if (!this.dom.toggleIncludeArchivedCheckbox.checked) {
+      filter.includeArchived = false;
     }
     App.setFilter(filter);
     Bus.emit(Bus.events.filtersChanged);

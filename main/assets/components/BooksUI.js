@@ -119,7 +119,7 @@ export const BooksUI = {
   },
 
   getRangesRowHtml(book, range, showAddButton, showRemoveButton) {
-    const columns = BoardDomain.getBoard(book.board).columns;
+    const columns = this.getBoard(book).columns;
     return `<div class="rangesRow">
       <label>from<br>
         <input type="number" name="from" ${range ? `value="${range.f}"` : ' required'}>
@@ -141,7 +141,6 @@ export const BooksUI = {
 
   getCurrentRangesFormHtml(key) {
     const book = BooksDomain.getBook(key);
-    const board = BoardDomain.getBoard(book.board);
     const ranges = BooksDomain.getBookRanges(key);
     if(!ranges || !ranges.length) return this.getRangesRowHtml(book, null, true, false);
     return Utils.sortBy(ranges, 'f', true).map((r, i) => this.getRangesRowHtml(book, r, (i == ranges.length - 1), true)).join('');
@@ -183,11 +182,26 @@ export const BooksUI = {
   },
 
   getBookRowHtml(b, isArchived) {
-    const board = BoardDomain.getBoard(b.board);
-    // Archived books keep no live color; the cue is a dashed border instead.
+    // Archived books carry no live board/color; use the last archive snapshot
+    // so they render with the binding they had when they were archived.
+    let color = b.color;
+    let boardId = b.board;
+    if(isArchived) {
+      const last = BooksDomain.getLatestArchivedPeriod(b);
+      if(last) {
+        color = last.color;
+        boardId = last.board;
+      } else {
+        color = null;
+        boardId = null;
+      }
+    }
+    const board = BoardDomain.getBoard(boardId);
     const cellStyle = !isArchived && b.color
-      ? ` style="background-color:${Colors[b.color]}"` : '';
-    let rowStyle = b.board && board
+      ? ` style="background-color:${Colors[b.color]}"`
+      : isArchived && color
+        ? ` style="background-color:${Colors[color]}"` : '';
+    let rowStyle = boardId && board
       ? `class="board-${board.key}-border${isArchived ? ' archived' : ''}"` : '';
     const extra = State.booksUi.rowUi[b.key]?.extra;
     const error = State.booksUi.rowUi[b.key]?.error;
@@ -224,7 +238,7 @@ export const BooksUI = {
           <div class="editBookUi">
             <form data-key="${b.key}" name="edit-book-${b.key}" class="js-edit-book-form" action="javascript:void(0);">
               <input type="text" name="bookName" placeholder="book name" value="${b.name}" required><br>
-              <input type="text" name="bookKey" paceholder="book key" value="${b.key}" required><br>
+              ${isArchived ? '' : `<input type="text" name="bookKey" paceholder="book key" value="${b.key}" required><br>`}
               <input type="number" name="size" placeholder="size" value="${b.size}" required><br>
               ${isArchived ? '' : `
               <select class="js-book-board" name="bookBoard" required>
@@ -238,7 +252,12 @@ export const BooksUI = {
               .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
               .join('')}
               </select><br>`}
-              <button class="book-action delete js-delete-book"></button>
+              <div class="editBookActions">
+                ${isArchived
+                  ? '<button class="book-action restore js-restore-book"></button>'
+                  : '<button class="book-action archive js-archive-book"></button>'}
+                <button class="book-action delete js-delete-book"></button>
+              </div>
               <button class="confirm">Save</button>
               <button class="cancel">Cancel</button>
             </form>
@@ -282,11 +301,8 @@ export const BooksUI = {
       <td ${cellStyle}>${this.renderProgressBar(b)}</td>
       <td ${cellStyle}>
         <div class="book-action-container">
-          ${isArchived
-            ? `<button class="book-action restore js-restore-book"></button>`
-            : `<button class="book-action state js-edit-state"></button>
-            <button class="book-action edit js-edit-book"></button>
-            <button class="book-action archive js-archive-book"></button>`}
+          <button class="book-action state js-edit-state"></button>
+          <button class="book-action edit js-edit-book"></button>
         </div>
       </td>
     </tr>
@@ -425,7 +441,7 @@ export const BooksUI = {
       color: form.bookBoardColor ? form.bookBoardColor.value : undefined
     };
 
-    if(form.bookKey.value !== el.dataset.key) {
+    if(form.bookKey && form.bookKey.value !== el.dataset.key) {
       data.newKey = form.bookKey.value;
     }
 
@@ -442,6 +458,7 @@ export const BooksUI = {
       case 'delete':
 
         BooksDomain.deleteBook(row.dataset.extraBookKey);
+        delete State.booksUi.rowUi[key];
         Bus.emit(Bus.events.booksChanged);
         break;
 
@@ -485,6 +502,7 @@ export const BooksUI = {
           Bus.emit(Bus.events.booksUiChanged);
           return;
         }
+        delete State.booksUi.rowUi[key];
         Bus.emit(Bus.events.booksChanged);
         break;
 
@@ -500,6 +518,7 @@ export const BooksUI = {
           Bus.emit(Bus.events.booksUiChanged);
           return;
         }
+        delete State.booksUi.rowUi[key];
         Bus.emit(Bus.events.booksChanged);
         break;
     }
@@ -519,9 +538,20 @@ export const BooksUI = {
     return `hsl(210, 70%, ${lightness}%)`;
   },
 
+  // Resolve the board a book should render against: live binding for active
+  // books, the last archive snapshot for archived ones.
+  getBoard(book) {
+    let boardId = book.board;
+    if(BooksDomain.isArchived(book)) {
+      const last = BooksDomain.getLatestArchivedPeriod(book);
+      boardId = last ? last.board : null;
+    }
+    return BoardDomain.getBoard(boardId);
+  },
+
   renderProgressBar(book) {
     const size = Number(book.size);
-    const board = BoardDomain.getBoard(book.board);
+    const board = this.getBoard(book);
     if(!board) return '';
     const columns = board.columns;
     const ranges = book.state?.ranges || [];

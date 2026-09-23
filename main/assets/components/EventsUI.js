@@ -120,10 +120,11 @@ export const EventsUI = {
       const sourceColumnIndex = ev.c1 ? Utils.toInt(ev.c1) : targetColIndex !== null ? targetColIndex - 1 : null;
       const sourceColName = sourceColumnIndex !== null ? (board ? board.columns[sourceColumnIndex].name : null) : null;
       const consumeMove = ev.cm == true;
+      const isArchived = BooksDomain.isArchived(book);
       return `
       <div 
         ${color ? `style="background-color:${Colors[color]}"` : ''} 
-        class="eventsEntry ${board ? 'board-' + board.key + '-border' : ''}" data-skip-move="${consumeMove ? 'false' : 'true'}"
+        class="eventsEntry ${board ? 'board-' + board.key + '-border' : ''}${isArchived ? ' archived' : ''}" data-skip-move="${consumeMove ? 'false' : 'true'}"
         data-book="${ev.b}" 
         data-date="${ev.d}">
         <div class="eventsEntry__summary">
@@ -186,7 +187,8 @@ export const EventsUI = {
               );
 
             if(!State.eventsUi.dotsMerged || !dayBooks.includes(event.book)) {
-              const html = `<span class="${board ? 'board-' + board.key + '-border' : ''} ${markAsMoveSkipped ? 'skipMove' : ''}" style="background-color:${Colors[color]}"></span>`;
+              const isArchived = BooksDomain.isArchived(book);
+              const html = `<span class="${board ? 'board-' + board.key + '-border' : ''} ${isArchived ? 'archived' : ''} ${markAsMoveSkipped ? 'skipMove' : ''}" style="background-color:${Colors[color]}"></span>`;
               dotsHtml.push(html);
               dayBooks.push(event.book);
             }

@@ -79,8 +79,12 @@ A book can be **archived** to remove it from the active list without losing its 
 - `archiveBook(key, ts)` — records the current `board`/`color` into `book.archived` (an
   array of `{ts, board, color}` snapshots), deletes the live `board`/`color`, and sets
   `book.archivedNow = true`. Returns a `{result, message, details}` envelope.
-- `restoreBook(key, {board, color})` — validates the target board/color (must be available
-  on that board) and re-binds the book, clearing `archivedNow`. History is preserved: the
+- `restoreBook(key, {board, color})` — validates the target board/color and re-binds the book,
+  clearing `archivedNow`. The color must be *available* on that board, which means it is both
+  (a) present as at least one card on that board and (b) not already claimed by another active
+  book. A palette color with no card on the board (e.g. "green" with no green cards) is
+  intentionally rejected — the board's cards, not the palette, define the assignable set (see
+  [`colors.md`](colors.md#why-a-book-can-only-claim-card-colors)). History is preserved: the
   `archived` array keeps every snapshot, so a restored book still has `archived.length > 0`.
 - `isArchived(book)` — true iff `book.archivedNow === true` (the array length is irrelevant
   on its own).
@@ -91,12 +95,13 @@ A book can be **archived** to remove it from the active list without losing its 
   smallest `ts >= event ts` owns the event; events newer than every snapshot resolve to the
   current root binding (absent while archived). Supports multiple archive/restore cycles.
 
-`getFilteredEvents(filter)` in the Events domain hides events belonging to currently
-archived books by default; they are only returned when the filter sets
-`includeArchived == true` (wired to the "incl. archived?" filter checkbox).
+`getFilteredEvents(filter)` in the Events domain shows events belonging to currently
+archived books by default; they are hidden only when the filter sets
+`includeArchived == false` (the "incl. archived?" filter checkbox, which defaults to checked).
 
-In the books list the archived subset renders in a separate "Archived books" table with a
-dashed (muted) border cue instead of a live rank color. Archiving a book keeps its board and
+In the books list the archived subset renders in a separate "Archived books" table. Archived
+rows are colored by the **last archive snapshot** (its board border and cell color), so they
+match the main table's look while keeping their own table. Archiving a book keeps its board and
 color for history so past events/stats stay correct after a restore.
 
 ## Book-Board-Color Binding
@@ -107,7 +112,10 @@ and the rank overlay — is documented canonically in [`colors.md`](colors.md). 
 domain owns two binding lookups:
 
 - `betBookByBoard(boardId, color)` — resolves which book a task/event belongs to
-- `getUnregisteredColorsForBoard(board)` — colors used in tasks but not yet claimed by a book
+- `getUnregisteredColorsForBoard(board)` — the only colors a book may claim on `board`:
+  `BoardDomain.getColorsInUse(board)` (colors present as cards on that board) minus the colors
+  already claimed by an *active* book. This is **not** the palette, and **not**
+  `BoardDomain.getFreeColors()`; see ["Why a book can only claim card colors"](colors.md#why-a-book-can-only-claim-card-colors).
 
 ---
 
@@ -124,6 +132,8 @@ domain owns two binding lookups:
 | `restoreBook(key, {board, color})` | Re-binds an archived book to a board/color |
 | `isArchived(book)` | True while explicitly archived (`archivedNow`) |
 | `getActiveBooks()` / `getArchivedBooks()` | Split books by archive state |
+| `getArchivedPeriods(book)` | Returns the `archived` snapshot array |
+| `getLatestArchivedPeriod(book)` | The most recent snapshot, chosen by `ts` (not array order) |
 | `getBindingAt(book, ts)` | Board/color a book held at a timestamp |
 | `getNewRangesForRanges(input)` | Validate + merge ranges |
 | `addOrUpdateRange(bookKey)` | Applies `State.newRangesDraft` to book |

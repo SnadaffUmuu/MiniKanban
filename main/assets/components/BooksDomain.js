@@ -35,6 +35,15 @@ export const BooksDomain = {
     return (book && book.archived) || [];
   },
 
+  // The most recent archive snapshot, chosen by timestamp rather than array
+  // order (the array is append-only but should not be relied on for ordering).
+  getLatestArchivedPeriod(book) {
+    const periods = this.getArchivedPeriods(book);
+    if(!periods.length) return null;
+    return periods.reduce((latest, period) =>
+      period.ts > latest.ts ? period : latest);
+  },
+
   // Resolves the board/color a book had at a given timestamp.
   // Each entry of `archived` stores the board/color at the moment that
   // binding stopped being live, so the entry with the smallest ts >= event ts
