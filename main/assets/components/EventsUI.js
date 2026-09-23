@@ -111,17 +111,19 @@ export const EventsUI = {
 
     return events.map(ev => {
       const book = BooksDomain.getBook(ev.b);
-      const board = BoardDomain.getBoard(book.board);
+      const boardId = EventsDomain.resolveEventBoard(ev);
+      const color = EventsDomain.resolveEventColor(ev);
+      const board = BoardDomain.getBoard(boardId);
       const hasRange = ev.f != null && ev.t != null;
       const targetColIndex = Utils.toInt(ev.c2);
-      const targetColName = targetColIndex !== null ? board.columns[targetColIndex].name : null;
+      const targetColName = targetColIndex !== null ? (board ? board.columns[targetColIndex].name : null) : null;
       const sourceColumnIndex = ev.c1 ? Utils.toInt(ev.c1) : targetColIndex !== null ? targetColIndex - 1 : null;
-      const sourceColName = sourceColumnIndex !== null ? board.columns[sourceColumnIndex].name : null;
+      const sourceColName = sourceColumnIndex !== null ? (board ? board.columns[sourceColumnIndex].name : null) : null;
       const consumeMove = ev.cm == true;
       return `
       <div 
-        ${book.color ? `style="background-color:${Colors[book.color]}"` : ''} 
-        class="eventsEntry board-${board.key}-border" data-skip-move="${consumeMove ? 'false' : 'true'}"
+        ${color ? `style="background-color:${Colors[color]}"` : ''} 
+        class="eventsEntry ${board ? 'board-' + board.key + '-border' : ''}" data-skip-move="${consumeMove ? 'false' : 'true'}"
         data-book="${ev.b}" 
         data-date="${ev.d}">
         <div class="eventsEntry__summary">
@@ -173,7 +175,9 @@ export const EventsUI = {
           let dotsHtml = [];
           day.events.forEach(event => {
             const book = BooksDomain.getBook(event.book);
-            const board = BoardDomain.getBoard(book.board);
+            const boardId = event.board;
+            const color = EventsDomain.resolveEventColor(event);
+            const board = BoardDomain.getBoard(boardId);
             const bookEvents = day.events.filter(ev => ev.book == event.book);
             const markAsMoveSkipped = event.sm == true
               && (
@@ -182,7 +186,7 @@ export const EventsUI = {
               );
 
             if(!State.eventsUi.dotsMerged || !dayBooks.includes(event.book)) {
-              const html = `<span class="board-${board.key}-border ${markAsMoveSkipped ? 'skipMove' : ''}" style="background-color:${Colors[book.color]}"></span>`;
+              const html = `<span class="${board ? 'board-' + board.key + '-border' : ''} ${markAsMoveSkipped ? 'skipMove' : ''}" style="background-color:${Colors[color]}"></span>`;
               dotsHtml.push(html);
               dayBooks.push(event.book);
             }

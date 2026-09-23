@@ -30,6 +30,8 @@ export const BooksUI = {
     deleteBookButton: '.js-delete-book',
     editBookButton: '.js-edit-book',
     editStateButton: '.js-edit-state',
+    archiveBookButton: '.js-archive-book',
+    restoreBookButton: '.js-restore-book',
     extraUiRow: '.extraUi',
     extraUiConfirmButton: '.extraUi .confirm',
     extraUiCancelButton: '.extraUi .cancel',
@@ -146,99 +148,27 @@ export const BooksUI = {
   },
 
   getListHtml() {
-    const books = BooksDomain.getFilteredBooksByOrder('board');
-    const rows = books.map(b => {
-      const board = BoardDomain.getBoard(b.board);
-      const cellStyle = b.color ? ` style="background-color:${Colors[b.color]}"` : '';
-      let rowStyle = b.board ? `class="board-${board.key}-border"` : '';
-      const extra = State.booksUi.rowUi[b.key]?.extra;
-      const error = State.booksUi.rowUi[b.key]?.error;
-      let extraUi = '';
-      if(extra) {
-        rowStyle += ' style="opacity:0.5"';
-        switch(extra) {
+    const active = BooksDomain.getFilteredBooksByOrder('board')
+      .filter(b => !BooksDomain.isArchived(b));
+    const archived = Utils.sortBy(
+      BooksDomain.getArchivedBooks(), 'name', true);
 
-          case 'delete':
+    const activeTable = active.length
+      ? this.getTableHtml('booksList', 'Active books', active.map(b => this.getBookRowHtml(b, false)).join(''))
+      : '';
 
-            extraUi = `
-              <h6>Delete book "${b.key}"?</h6>
-              <label>Keep history? <input type="checkbox" id="keepHistory"></label><br>
-              <button class="confirm">Yes</button>
-              <button class="cancel">Cancel</button>
-            `;
-            break;
+    const archivedTitle = archived.length
+      ? '<h5 class="bookslist-archived-title">Archived books</h5>' : '';
 
-          case 'state':
+    const archivedTable = archived.length
+      ? this.getTableHtml('booksListArchived', 'Archived books', archived.map(b => this.getBookRowHtml(b, true)).join(''))
+      : '';
 
-            extraUi = `
-              <h6>Set state</h6>
-              <form name="stateForm" action="javascript:void(0);">
-                <fieldset>
-                  <legend>ranges</legend>
-                  ${this.getCurrentRangesFormHtml(b.key)}
-                </fieldset>
-                <button class="confirm">Save</button>
-                <button class="cancel">Cancel</button>
-              </form>
-            `;
-            break;
+    return activeTable + archivedTitle + archivedTable;
+  },
 
-          case 'edit':
-
-            extraUi = `
-            <div class="editBookUi">
-              <form data-key="${b.key}" name="edit-book-${b.key}" class="js-edit-book-form" action="javascript:void(0);">
-                <input type="text" name="bookName" placeholder="book name" value="${b.name}" required><br>
-                <input type="text" name="bookKey" paceholder="book key" value="${b.key}" required><br>
-                <input type="number" name="size" placeholder="size" value="${b.size}" required><br>
-                <select class="js-book-board" name="bookBoard" required>
-                  <option value="">choose a board</option>
-                  ${App.data.boards.map(board => `<option ${board.id == b.board ? 'selected' : ''} value="${board.id}">${board.name}</option>`).join('')}
-                </select><br>
-                <select required name="bookBoardColor" class="js-book-board-color" style="background-color:${Colors[b.color]}">
-                  <option value="">choose a color</option>
-                  <option selected value="${b.color}" style="background-color:${Colors[b.color]}">${b.color}</option>
-                  ${BooksDomain.getUnregisteredColorsForBoard(b.board)
-                .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
-                .join('')}
-                </select><br>
-                <button class="book-action delete js-delete-book"></button>
-                <button class="confirm">Save</button>
-                <button class="cancel">Cancel</button>
-              </form>
-            </div>            
-            `;
-            break;
-        }
-      }
-      const lastUpdated = EventsDomain.getEventsForBook(b.key, false);
-      return `
-      <tr ${rowStyle} data-book-key="${b.key}">
-        <td ${cellStyle}>${b.name}</td>
-        <td ${cellStyle}>${b.size}</td>
-        <td ${cellStyle}><span class="nowrap">${lastUpdated.length ? lastUpdated[0].d : ''}</span></td>
-        <td ${cellStyle}>${this.renderProgressBar(b)}</td>
-        <td ${cellStyle}>
-          <div class="book-action-container">
-            <button class="book-action state js-edit-state"></button>
-            <button class="book-action edit js-edit-book"></button>
-          </div>
-        </td>
-      </tr>
-      ${extra ? `
-      <tr class="extraUi" data-extra-book-key="${b.key}" data-extra="${extra}">
-        <td colspan="5">
-          <div style="position:relative;">
-            <button class="js-cancel-current button-close button-close__extra"></button>
-            ${extraUi}
-            ${error ? `<span style="color:red">${error}</span><br>` : ''}
-          </div>
-        </td>
-      </tr>
-      ` : ''}
-    `
-    }).join('');
-    return `<table id="booksList">
+  getTableHtml(id, caption, rows) {
+    return `<table id="${id}">
       <thead>
         <th>name</th>
         <th>size</th>
@@ -250,6 +180,128 @@ export const BooksUI = {
         ${rows}
       </tbody>
     </table>`;
+  },
+
+  getBookRowHtml(b, isArchived) {
+    const board = BoardDomain.getBoard(b.board);
+    // Archived books keep no live color; the cue is a dashed border instead.
+    const cellStyle = !isArchived && b.color
+      ? ` style="background-color:${Colors[b.color]}"` : '';
+    let rowStyle = b.board && board
+      ? `class="board-${board.key}-border${isArchived ? ' archived' : ''}"` : '';
+    const extra = State.booksUi.rowUi[b.key]?.extra;
+    const error = State.booksUi.rowUi[b.key]?.error;
+    let extraUi = '';
+    if(extra) {
+      rowStyle += ' style="opacity:0.5"';
+      switch(extra) {
+
+        case 'delete':
+          extraUi = `
+            <h6>Delete book "${b.key}"?</h6>
+            <label>Keep history? <input type="checkbox" id="keepHistory"></label><br>
+            <button class="confirm">Yes</button>
+            <button class="cancel">Cancel</button>
+          `;
+          break;
+
+        case 'state':
+          extraUi = `
+            <h6>Set state</h6>
+            <form name="stateForm" action="javascript:void(0);">
+              <fieldset>
+                <legend>ranges</legend>
+                ${this.getCurrentRangesFormHtml(b.key)}
+              </fieldset>
+              <button class="confirm">Save</button>
+              <button class="cancel">Cancel</button>
+            </form>
+          `;
+          break;
+
+        case 'edit':
+          extraUi = `
+          <div class="editBookUi">
+            <form data-key="${b.key}" name="edit-book-${b.key}" class="js-edit-book-form" action="javascript:void(0);">
+              <input type="text" name="bookName" placeholder="book name" value="${b.name}" required><br>
+              <input type="text" name="bookKey" paceholder="book key" value="${b.key}" required><br>
+              <input type="number" name="size" placeholder="size" value="${b.size}" required><br>
+              ${isArchived ? '' : `
+              <select class="js-book-board" name="bookBoard" required>
+                <option value="">choose a board</option>
+                ${App.data.boards.map(board => `<option ${board.id == b.board ? 'selected' : ''} value="${board.id}">${board.name}</option>`).join('')}
+              </select><br>
+              <select required name="bookBoardColor" class="js-book-board-color" style="background-color:${Colors[b.color]}">
+                <option value="">choose a color</option>
+                <option selected value="${b.color}" style="background-color:${Colors[b.color]}">${b.color}</option>
+                ${BooksDomain.getUnregisteredColorsForBoard(b.board)
+              .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
+              .join('')}
+              </select><br>`}
+              <button class="book-action delete js-delete-book"></button>
+              <button class="confirm">Save</button>
+              <button class="cancel">Cancel</button>
+            </form>
+          </div>
+          `;
+          break;
+
+        case 'archive':
+          extraUi = `
+            <h6>Archive book "${b.key}"?</h6>
+            <label>It moves to the archived table; board and color are kept for history.</label><br>
+            <button class="confirm">Yes</button>
+            <button class="cancel">Cancel</button>
+          `;
+          break;
+
+        case 'restore':
+          extraUi = `
+            <h6>Restore book "${b.key}"</h6>
+            <form name="restoreForm" action="javascript:void(0);">
+              <select class="js-book-board" name="bookBoard" required>
+                <option value="">choose a board</option>
+                ${App.data.boards.map(board => `<option value="${board.id}">${board.name}</option>`).join('')}
+              </select><br>
+              <select required name="bookBoardColor" class="js-book-board-color">
+                <option value="">choose a color</option>
+              </select><br>
+              <button class="confirm">Restore</button>
+              <button class="cancel">Cancel</button>
+            </form>
+          `;
+          break;
+      }
+    }
+    const lastUpdated = EventsDomain.getEventsForBook(b.key, false);
+    return `
+    <tr ${rowStyle} data-book-key="${b.key}">
+      <td ${cellStyle}>${b.name}</td>
+      <td ${cellStyle}>${b.size}</td>
+      <td ${cellStyle}><span class="nowrap">${lastUpdated.length ? lastUpdated[0].d : ''}</span></td>
+      <td ${cellStyle}>${this.renderProgressBar(b)}</td>
+      <td ${cellStyle}>
+        <div class="book-action-container">
+          ${isArchived
+            ? `<button class="book-action restore js-restore-book"></button>`
+            : `<button class="book-action state js-edit-state"></button>
+            <button class="book-action edit js-edit-book"></button>
+            <button class="book-action archive js-archive-book"></button>`}
+        </div>
+      </td>
+    </tr>
+    ${extra ? `
+    <tr class="extraUi" data-extra-book-key="${b.key}" data-extra="${extra}">
+      <td colspan="5">
+        <div style="position:relative;">
+          <button class="js-cancel-current button-close button-close__extra"></button>
+          ${extraUi}
+          ${error ? `<span style="color:red">${error}</span><br>` : ''}
+        </div>
+      </td>
+    </tr>
+    ` : ''}
+  `
   },
 
   toggleAddUi(el, e, [toShow]) {
@@ -343,6 +395,20 @@ export const BooksUI = {
     }));
   },
 
+  showArchiveBookUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'archive'
+    }));
+  },
+
+  showRestoreBookUi(el) {
+    this.setRowUi(el, (prev, key) => ({
+      ...prev,
+      extra: 'restore'
+    }));
+  },
+
   cancelExtra(el, e) {
     e.preventDefault();
     this.setRowUi(el, () => null)
@@ -355,8 +421,8 @@ export const BooksUI = {
       name: form.bookName.value,
       key: el.dataset.key,
       size: form.size.value,
-      board: form.bookBoard.value,
-      color: form.bookBoardColor.value
+      board: form.bookBoard ? form.bookBoard.value : undefined,
+      color: form.bookBoardColor ? form.bookBoardColor.value : undefined
     };
 
     if(form.bookKey.value !== el.dataset.key) {
@@ -410,6 +476,32 @@ export const BooksUI = {
 
         el.closest('form').submit();
         break;
+
+      case 'archive':
+
+        const archiveRes = BooksDomain.archiveBook(key);
+        if(archiveRes.result !== true) {
+          State.booksUi.rowUi[key].error = archiveRes.message;
+          Bus.emit(Bus.events.booksUiChanged);
+          return;
+        }
+        Bus.emit(Bus.events.booksChanged);
+        break;
+
+      case 'restore':
+
+        const form = row.querySelector('form[name="restoreForm"]');
+        const restoreRes = BooksDomain.restoreBook(key, {
+          board: form.querySelector('[name="bookBoard"]').value,
+          color: form.querySelector('[name="bookBoardColor"]').value
+        });
+        if(restoreRes.result !== true) {
+          State.booksUi.rowUi[key].error = restoreRes.message;
+          Bus.emit(Bus.events.booksUiChanged);
+          return;
+        }
+        Bus.emit(Bus.events.booksChanged);
+        break;
     }
   },
 
@@ -430,6 +522,7 @@ export const BooksUI = {
   renderProgressBar(book) {
     const size = Number(book.size);
     const board = BoardDomain.getBoard(book.board);
+    if(!board) return '';
     const columns = board.columns;
     const ranges = book.state?.ranges || [];
 

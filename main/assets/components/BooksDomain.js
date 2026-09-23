@@ -2,6 +2,7 @@ import {App} from './App.js'
 import {BoardDomain} from './BoardDomain.js';
 import {Utils} from './Utils.js'
 import {State} from './State.js';
+import {Colors} from './Colors.js';
 
 export const BooksDomain = {
 
@@ -13,13 +14,222 @@ export const BooksDomain = {
     return App.books.find(b => b.key == key);
   },
 
+  // --- Archive ---
+
+  // A book is archived iff the explicit marker is set. The length of the
+  // `archived` array means nothing on its own: a restored book keeps every
+  // entry of its history, so it stays > 0 while the book is active.
+  isArchived(book) {
+    return !!book && book.archivedNow === true;
+  },
+
+  getActiveBooks() {
+    return this.getBooks().filter(b => !this.isArchived(b));
+  },
+
+  getArchivedBooks() {
+    return this.getBooks().filter(b => this.isArchived(b));
+  },
+
+  getArchivedPeriods(book) {
+    return (book && book.archived) || [];
+  },
+
+  // Resolves the board/color a book had at a given timestamp.
+  // Each entry of `archived` stores the board/color at the moment that
+  // binding stopped being live, so the entry with the smallest ts >= event ts
+  // owns the event. Events newer than every entry belong to the root binding
+  // (which is absent while the book is archived).
+  getBindingAt(book, ts) {
+    if(!book) return null;
+
+    const periods = this.getArchivedPeriods(book);
+    let next = null;
+
+    periods.forEach(period => {
+      if(period.ts >= ts && (next === null || period.ts < next.ts)) {
+        next = period;
+      }
+    });
+
+    if(next) {
+      return {
+        board: next.board,
+        color: next.color
+      };
+    }
+
+    if(book.board == null) return null;
+
+    return {
+      board: book.board,
+      color: book.color
+    };
+  },
+
+  getBoardAt(bookKey, ts) {
+    const binding = this.getBindingAt(this.getBook(bookKey), ts);
+    return binding ? binding.board : null;
+  },
+
+  getColorAt(bookKey, ts) {
+    const binding = this.getBindingAt(this.getBook(bookKey), ts);
+    return binding ? binding.color : null;
+  },
+
+  // Every board this book touched during the given month ('YYYY-MM').
+  // Used by the "average per month" stat, which spans the whole history of a
+  // book and therefore may need more than one board for a single row (a board
+  // change inside a month is rare but possible after restore).
+  getBoardNamesOfBookForMonth(bookKey, month) {
+    const book = this.getBook(bookKey);
+    if(!book) return [];
+
+    const [year, monthNumber] = month.split('-').map(v => Number(v));
+    const monthStart = new Date(year, monthNumber - 1, 1).getTime();
+    const monthEnd = new Date(year, monthNumber, 1).getTime();
+
+    const used = [];
+    const addBoard = (boardId) => {
+      if(boardId == null) return;
+      const board = BoardDomain.getBoard(boardId);
+      if(board && !used.includes(board.name)) {
+        used.push(board.name);
+      }
+    };
+
+    // Sample the binding at the start, middle and end of the month; collect
+    // every distinct board (board changes inside a month are rare but possible
+    // right after a restore).
+    const bindingStart = this.getBindingAt(book, monthStart);
+    const bindingMid = this.getBindingAt(book, Math.floor((monthStart + monthEnd) / 2));
+    const bindingEnd = this.getBindingAt(book, monthEnd);
+
+    [bindingStart, bindingMid, bindingEnd].forEach(binding => {
+      if(binding) {
+        addBoard(binding.board);
+      }
+    });
+
+    return used;
+  },
+
+
+  archiveBook(key, ts) {
+    const book = this.getBook(key);
+
+    if(!book) {
+      return {
+        result: false,
+        message: `Book "${key}" not found`,
+        details: null
+      };
+    }
+
+    if(this.isArchived(book)) {
+      return {
+        result: false,
+        message: `Book "${key}" is already archived`,
+        details: null
+      };
+    }
+
+    if(book.board == null || book.color == null) {
+      return {
+        result: false,
+        message: `Book "${key}" has no board/color to archive`,
+        details: null
+      };
+    }
+
+    if(!book.archived) {
+      book.archived = [];
+    }
+
+    book.archived.push({
+      ts: ts != null ? ts : Date.now(),
+      board: book.board,
+      color: book.color
+    });
+
+    delete book.board;
+    delete book.color;
+    book.archivedNow = true;
+
+    this.saveBooks(App.books);
+
+    return {
+      result: true,
+      message: null,
+      details: null
+    };
+  },
+
+  restoreBook(key, {board, color}) {
+    const book = this.getBook(key);
+
+    if(!book) {
+      return {
+        result: false,
+        message: `Book "${key}" not found`,
+        details: null
+      };
+    }
+
+    if(!this.isArchived(book)) {
+      return {
+        result: false,
+        message: `Book "${key}" is not archived`,
+        details: null
+      };
+    }
+
+    const theBoard = BoardDomain.getBoard(board);
+
+    if(!theBoard) {
+      return {
+        result: false,
+        message: 'Choose a board',
+        details: null
+      };
+    }
+
+    if(!color || !Colors[color]) {
+      return {
+        result: false,
+        message: 'Choose a color',
+        details: null
+      };
+    }
+
+    if(!this.getUnregisteredColorsForBoard(theBoard).includes(color)) {
+      return {
+        result: false,
+        message: `Color "${color}" is already registered on this board`,
+        details: null
+      };
+    }
+
+    book.board = board;
+    book.color = color;
+    book.archivedNow = false;
+
+    this.saveBooks(App.books);
+
+    return {
+      result: true,
+      message: null,
+      details: null
+    };
+  },
+
   getFilteredBooksByOrder(orderProp) {
     return Utils.sortBy(this.getFilteredBooks(App.getFilter()), orderProp, true);
   },
 
   getFilteredBooks(filter) {
     let books = this.getBooks();
-    const params = Object.keys(filter);
+    const params = Object.keys(filter || {});
     if(params.length) {
       books = books.filter(book => {
         let predicates = [];
@@ -45,11 +255,14 @@ export const BooksDomain = {
   },
 
   betBookByBoard(boardId, color) {
-    return App.books.find(b => b.board == boardId && b.color == color);
+    const candidates = this.getBooks().filter(b => b.board == boardId && b.color == color);
+    //Archived books have no root board/color, but stay defensive: an active
+    //book owns the binding whenever both exist.
+    return candidates.find(b => !this.isArchived(b)) || candidates[0];
   },
 
   getUnregisteredColorsForBoard(board) {
-    const registeredColors = this.getBooks().filter(b => b.board == board.id).map(b => b.color);
+    const registeredColors = this.getActiveBooks().filter(b => b.board == board.id).map(b => b.color);
     return BoardDomain.getColorsInUse(board).filter(c => !registeredColors.includes(c));
   },
 
@@ -65,8 +278,12 @@ export const BooksDomain = {
     if(book) {
       book.name = name;
       book.size = size;
-      book.board = board;
-      book.color = color;
+      //An archived book owns no board/color: keep whatever binding it has
+      //instead of resurrecting one from a read-only form.
+      if(!this.isArchived(book)) {
+        book.board = board;
+        book.color = color;
+      }
       if(newKey) {
         book.key = newKey;
         //TODO: update events if a key changes

@@ -18,6 +18,8 @@ export const FiltersUI = {
     selectedBooksCheckboxes : '#js-filter-books-container input[name="book"]:checked',
     toggleIncludeSkipMoveCheckbox : '#includeSkipMove',
     toggleIncludeSkipMoveLabel : '[for="includeSkipMove"]',
+    toggleIncludeArchivedCheckbox : '#includeArchived',
+    toggleIncludeArchivedLabel : '[for="includeArchived"]',
   },
 
   dom: {},
@@ -30,6 +32,7 @@ export const FiltersUI = {
     change: {
       '@filterSelectBoards': 'updateBooksOptions',
       '@toggleIncludeSkipMoveCheckbox' : 'toggleInclSkipMove',
+      '@toggleIncludeArchivedCheckbox' : 'toggleInclArchived',
     }
   },
 
@@ -70,8 +73,11 @@ export const FiltersUI = {
     this.dom.filterBooksToggleBlock.removeAttribute('open');
 
     this.dom.toggleIncludeSkipMoveCheckbox.checked = App.getFilter()?.includeSkipMove == true;
+    this.dom.toggleIncludeArchivedCheckbox.checked = App.getFilter()?.includeArchived == true;
 
-    this.dom.toggleIncludeSkipMoveLabel.classList.toggle('hidden', !App.isEvents());
+    const isEvents = App.isEvents();
+    this.dom.toggleIncludeSkipMoveLabel.classList.toggle('hidden', !isEvents);
+    this.dom.toggleIncludeArchivedLabel.classList.toggle('hidden', !isEvents);
   },
 
   updateBooksOptions() {
@@ -99,6 +105,9 @@ export const FiltersUI = {
     if (this.dom.toggleIncludeSkipMoveCheckbox.checked) {
       filter.includeSkipMove = true;
     }
+    if (this.dom.toggleIncludeArchivedCheckbox.checked) {
+      filter.includeArchived = true;
+    }
     App.setFilter(filter);
     Bus.emit(Bus.events.filtersChanged);
   },
@@ -109,6 +118,10 @@ export const FiltersUI = {
   },
 
   toggleInclSkipMove(el) {
+
+  },
+
+  toggleInclArchived(el) {
 
   },
 

@@ -15,7 +15,9 @@
   color: 'peach',        // Color key from Colors.js (maps to board rank color)
   state: {
     ranges: [Range]      // Progress ranges (see below)
-  }
+  },
+  archived: [Snapshot],  // Archive history: [{ts, board, color}]
+  archivedNow: boolean   // True while the book is archived
 }
 ```
 
@@ -70,6 +72,33 @@ getNewRangesForRanges(rangesFromForm) {
 
 ---
 
+## Archiving
+
+A book can be **archived** to remove it from the active list without losing its history:
+
+- `archiveBook(key, ts)` — records the current `board`/`color` into `book.archived` (an
+  array of `{ts, board, color}` snapshots), deletes the live `board`/`color`, and sets
+  `book.archivedNow = true`. Returns a `{result, message, details}` envelope.
+- `restoreBook(key, {board, color})` — validates the target board/color (must be available
+  on that board) and re-binds the book, clearing `archivedNow`. History is preserved: the
+  `archived` array keeps every snapshot, so a restored book still has `archived.length > 0`.
+- `isArchived(book)` — true iff `book.archivedNow === true` (the array length is irrelevant
+  on its own).
+- `getActiveBooks()` / `getArchivedBooks()` — partition by `isArchived`.
+- `getArchivedPeriods(book)` — returns the `archived` snapshot array.
+- `getBindingAt(book, ts)` — resolves the board/color a book had at a timestamp. Each
+  archive snapshot records the binding live until that time, so the snapshot with the
+  smallest `ts >= event ts` owns the event; events newer than every snapshot resolve to the
+  current root binding (absent while archived). Supports multiple archive/restore cycles.
+
+`getFilteredEvents(filter)` in the Events domain hides events belonging to currently
+archived books by default; they are only returned when the filter sets
+`includeArchived == true` (wired to the "incl. archived?" filter checkbox).
+
+In the books list the archived subset renders in a separate "Archived books" table with a
+dashed (muted) border cue instead of a live rank color. Archiving a book keeps its board and
+color for history so past events/stats stay correct after a restore.
+
 ## Book-Board-Color Binding
 
 A book is bound to one color on one reading board via `book.board` + `book.color`. The
@@ -91,6 +120,11 @@ domain owns two binding lookups:
 | `getBookRanges(key)` | Returns `book.state.ranges` |
 | `save(data)` | Create/update book (name, key, size, board, color) |
 | `deleteBook(key, deleteHistory)` | Removes book (TODO: clean events) |
+| `archiveBook(key, ts)` | Archives a book, snapshotting board/color into history |
+| `restoreBook(key, {board, color})` | Re-binds an archived book to a board/color |
+| `isArchived(book)` | True while explicitly archived (`archivedNow`) |
+| `getActiveBooks()` / `getArchivedBooks()` | Split books by archive state |
+| `getBindingAt(book, ts)` | Board/color a book held at a timestamp |
 | `getNewRangesForRanges(input)` | Validate + merge ranges |
 | `addOrUpdateRange(bookKey)` | Applies `State.newRangesDraft` to book |
 | `applyRange(existing, incoming)` | Core range insertion logic |

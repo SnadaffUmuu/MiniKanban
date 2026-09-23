@@ -1005,25 +1005,30 @@ body:has(.dragged) {
   align-items: stretch;
 }
 
-#booksList {
+#booksList,
+#booksListArchived {
   width: 100%;
   border-collapse: separate;
   background: var(--lighter-bg);
 }
 
 #booksList td,
-#booksList th {
+#booksList th,
+#booksListArchived td,
+#booksListArchived th {
   border: 1px solid var(--semi-border);
   padding: 3px;
   font-size: 13px;
   border-radius: 3px;
 }
 
-.night #booksList th {
+.night #booksList th,
+.night #booksListArchived th {
   color:var(--text-default);
 }
 
-#booksList td:first-child {
+#booksList td:first-child,
+#booksListArchived td:first-child {
   color:#02029d;
 }
 
@@ -1040,6 +1045,19 @@ body:has(.dragged) {
 .board-paper-border,
 .board-paper-border td {
   border: 2px solid var(--paper) !important;
+}
+
+/* Archived books: dashed, muted cue instead of a solid rank border. */
+tr.archived,
+tr.archived td {
+  border: 2px dashed var(--borders) !important;
+  opacity: 0.75;
+}
+
+.bookslist-archived-title {
+  margin: 16px 0 6px;
+  color: var(--text-default);
+  opacity: 0.7;
 }
 
 #addBookUi {
@@ -1129,6 +1147,18 @@ select:invalid {
   background-size: 18px;
 }
 
+.book-action.archive::before {
+  content: '';
+  background: url(images/time.svg) 50% no-repeat;
+  background-size: 18px;
+}
+
+.book-action.restore::before {
+  content: '';
+  background: url(images/arrow-down.svg) 50% no-repeat;
+  background-size: 18px;
+}
+
 .rangesRow {
   display: flex;
   flex-flow: row nowrap;
@@ -1167,17 +1197,20 @@ select:invalid {
   height: 23px;
 }
 
-#booksList .extraUi h6 {
+#booksList .extraUi h6,
+#booksListArchived .extraUi h6 {
   font-size: 15px;
   margin: 0 0 10px;
 }
 
-#booksList .extraUi fieldset {
+#booksList .extraUi fieldset,
+#booksListArchived .extraUi fieldset {
   margin-bottom: 10px;
   border-radius: 5px;
 }
 
-#booksList .extraUi td {
+#booksList .extraUi td,
+#booksListArchived .extraUi td {
   padding: 10px;
 }
 

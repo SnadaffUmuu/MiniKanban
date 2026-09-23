@@ -103,6 +103,8 @@ export const Events = {
       [BooksUI.selectors.deleteBookButton]: 'BooksUI.showDeleteBookUi',
       [BooksUI.selectors.editBookButton]: 'BooksUI.showEditBookUi',
       [BooksUI.selectors.editStateButton]: 'BooksUI.showEditStateUi',
+      [BooksUI.selectors.archiveBookButton]: 'BooksUI.showArchiveBookUi',
+      [BooksUI.selectors.restoreBookButton]: 'BooksUI.showRestoreBookUi',
       [BooksUI.selectors.extraUiCancelButton]: 'BooksUI.cancelExtra',
       [BooksUI.selectors.closeExtraUi]: 'BooksUI.cancelExtra',
       [BooksUI.selectors.extraUiConfirmButton]: 'BooksUI.confirmExtra',

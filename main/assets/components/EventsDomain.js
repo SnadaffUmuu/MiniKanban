@@ -33,6 +33,15 @@ export const EventsDomain = {
   getFilteredEvents(filter) {
     let events = this.checkSkipMoved(this.getEvents());
 
+    // By default events of archived books are hidden; the "incl. archived?"
+    // filter opts back into them.
+    if(filter?.includeArchived != true) {
+      events = events.filter(ev => {
+        const book = BooksDomain.getBook(ev.b);
+        return !book || !BooksDomain.isArchived(book);
+      });
+    }
+
     const params = Object.keys(filter);
     if(params.length) {
       events = events.filter(ev => {
@@ -40,10 +49,13 @@ export const EventsDomain = {
         params.forEach(param => {
           switch(param) {
             case 'board':
-              predicates.push(BooksDomain.getBook(ev.b).board == filter[param]);
+              predicates.push(this.resolveEventBoard(ev) == filter[param]);
               break;
             case 'books':
               predicates.push(filter[param].includes(ev.b));
+              break;
+            case 'includeArchived':
+              // handled above; no per-event predicate needed
               break;
           }
         });
@@ -125,7 +137,7 @@ export const EventsDomain = {
       }
       const obj = {
         book: event.b,
-        board: BoardDomain.getBoard(BooksDomain.getBook(event.b).board).key,
+        board: this.resolveEventBoard(event),
       }
       if(event.r) {
         obj.r = event.r;
@@ -242,8 +254,21 @@ export const EventsDomain = {
   addBoardsDataToEvents(events) {
     return events.map(ev => ({
       ...ev,
-      board: BooksDomain.getBook(ev.b).board
+      board: this.resolveEventBoard(ev),
+      color: this.resolveEventColor(ev)
     }));
+  },
+
+  // Resolves which board/color a book event belonged to at the time it was
+  // logged. The event's own timestamp drives the lookup, so historical events
+  // keep their true board/color even after the book was archived and restored
+  // elsewhere.
+  resolveEventBoard(ev) {
+    return BooksDomain.getBoardAt(ev.b, ev.ts);
+  },
+
+  resolveEventColor(ev) {
+    return BooksDomain.getColorAt(ev.b, ev.ts);
   },
 
   groupByMonth(events) {
@@ -351,12 +376,16 @@ export const EventsDomain = {
 
       if(grouped[event.b] == null) {
         grouped[event.b] = {
-          board: event.board,
+          boards: new Set(),
           totalEvents: 0
         };
       }
 
       grouped[event.b].totalEvents++;
+
+      if(event.board != null) {
+        grouped[event.b].boards.add(event.board);
+      }
 
     });
 
@@ -371,10 +400,13 @@ export const EventsDomain = {
           globalDays *
           30;
 
+        const boardNames = [...data.boards]
+          .map(id => BoardDomain.getBoard(id).name)
+          .join(', ');
+
         result.push({
           book,
-          board: BoardDomain
-            .getBoard(BooksDomain.getBook(book).board).name,
+          board: boardNames,
           totalEvents: data.totalEvents,
           avgPerMonth: monthlyRate.toFixed(1)
         });
@@ -441,13 +473,15 @@ export const EventsDomain = {
 
     const totalMoves = filtered.length;
 
-    /* Real moves per book */
-
-    const movesByBook = {};
+    // Real moves per book + resolved color. Events are grouped by the color
+    // the book actually had at event time (bookKey + color), so archived
+    // books keep contributing their historical moves instead of vanishing.
+    const movesByBookColor = {};
 
     filtered.forEach(e => {
-      movesByBook[e.b] ??= 0;
-      movesByBook[e.b]++;
+      const key = e.b + ':' + e.color;
+      movesByBookColor[key] ??= {book: e.b, color: e.color, moves: 0};
+      movesByBookColor[key].moves++;
     });
 
     /* Expected shares */
@@ -478,16 +512,28 @@ export const EventsDomain = {
 
       const books = data.c.map(color => {
 
-        const book =
-          BooksDomain
-            .getBooks()
-            .find(b =>
-              b.board === boardId &&
-              b.color === color
-            );
+        // Aggregate all historical moves whose resolved color matches this
+        // cell, regardless of the book's current (possibly archived) binding.
+        let moves = 0;
+        let bookKey = null;
 
-        const moves =
-          movesByBook[book?.key] ?? 0;
+        Object.values(movesByBookColor).forEach(entry => {
+          if(entry.color === color) {
+            moves += entry.moves;
+            if(bookKey == null && entry.book != null) {
+              bookKey = entry.book;
+            }
+          }
+        });
+
+        const book = bookKey != null
+          ? BooksDomain.getBook(bookKey)
+          : BooksDomain
+              .getBooks()
+              .find(b =>
+                b.board === boardId &&
+                b.color === color
+              );
 
         const actualPercent =
           totalMoves === 0

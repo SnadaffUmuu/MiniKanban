@@ -50,7 +50,7 @@ EventsDomain.log({ book, consumeMove, from, to });  // Creates event
 | `getEvents()` | All events (loads from Storage if needed) |
 | `getEventsForBook(key, isAsc)` | Events for specific book |
 | `getEventsForDate(date, isAsc)` | Events on specific date |
-| `getFilteredEvents(filter)` | Filter by `board` or `books` (array) |
+| `getFilteredEvents(filter)` | Filter by `board`/`books`; hides events of archived books unless `includeArchived` |
 | `getFilteredEventsByDefaultOrder()` | Filtered + sorted by `ts` desc |
 | `getFilteredEventsByOrder(isAsc)` | Filtered + sorted by `ts` asc/desc |
 | `checkSkipMoved(events, filter)` | Excludes `cm !== true` unless `filter.includeSkipMove` |
