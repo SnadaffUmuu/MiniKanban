@@ -139,6 +139,7 @@ export const EventsDomain = {
       const obj = {
         book: event.b,
         board: this.resolveEventBoard(event),
+        color: this.resolveEventColor(event),
       }
       if(event.r) {
         obj.r = event.r;

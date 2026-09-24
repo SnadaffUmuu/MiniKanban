@@ -56,3 +56,9 @@ unmarked one creates it.
 
 **When you change behavior, update the doc in the same change.** At minimum, check whether the
 affected invariants, shapes, or pointers still hold.
+
+---
+
+## Tests 
+
+When a task is completed to not do any tests. 

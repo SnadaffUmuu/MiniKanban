@@ -177,7 +177,7 @@ export const EventsUI = {
           day.events.forEach(event => {
             const book = BooksDomain.getBook(event.book);
             const boardId = event.board;
-            const color = EventsDomain.resolveEventColor(event);
+            const color = event.color;
             const board = BoardDomain.getBoard(boardId);
             const bookEvents = day.events.filter(ev => ev.book == event.book);
             const markAsMoveSkipped = event.sm == true

@@ -42,6 +42,7 @@ export const BooksUI = {
     progressBarSegment: '.progress-bar:not(.popup) .segment',
     progressBarPopup: '.progress-bar.popup',
     bookNameCell: '#booksList td:first-child',
+    booksListArchivedTd: '#booksListArchived td:first-child',
     treeRoot: '#tree-root',
     switchToBooksButton: '#book [data-screen-switch="books"]',
   },
@@ -55,6 +56,7 @@ export const BooksUI = {
       '@progressBar': 'showProgress',
       '@progressBarSegment': 'showProgress',
       '@bookNameCell': 'seeBook',
+      '@booksListArchivedTd': 'seeBook',
       '@switchToBooksButton': 'switchToBooks',
     }
   },
