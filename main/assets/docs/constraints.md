@@ -16,7 +16,7 @@
 
 | Feature | Example | Supported alternative |
 |---------|---------|-----------------|
-| Optional chaining | `obj?.prop` | `obj && obj.prop` |
+| Optional chaining | `obj?.prop` | `obj && obj.prop` — see note below |
 | Nullish coalescing | `a ?? b` | `a != null ? a : b` |
 | `Array.flat()` | `arr.flat()` | `[].concat.apply([], arr)` |
 | `Array.flatMap()` | `arr.flatMap(f)` | `arr.map(f).reduce((a,b)=>a.concat(b),[])` |
@@ -27,6 +27,14 @@
 | Async/await | `await fn()` | `fn().then(...)` |
 | `String.padStart/End` | `s.padStart(2,'0')` | Manual padding |
 | Object rest/spread | `{...obj}`, `{a, ...rest}` | `Object.assign({}, obj)`, explicit property selection |
+
+> **Note on optional chaining (known inconsistency).** The existing codebase *does* use
+> optional chaining (`?.`) in a number of files (`BooksDomain.js`, `BooksUI.js`, `BoardDomain.js`,
+> `EventsDomain.js`, and others). So this row is aspirational rather than a description of the
+> current code: the baseline forbids it for maximum WebView compatibility, but the tree has not
+> been fully migrated. For **new or edited** code, prefer `obj && obj.prop`. If you are touching a
+> line that already uses `?.`, either keep the file's existing convention or convert it as part of
+> the change — do not introduce *new* optional chaining into files that don't use it.
 
 ---
 
@@ -79,7 +87,8 @@
 1. **No trailing commas** in function params/arrays/objects
 2. **Semicolons required** — ASI unreliable in old WebView
 3. **`var` avoided** — Use `let`/`const`
-4. **No optional chaining** — Ever
+4. **Avoid optional chaining in new code** — Prefer `obj && obj.prop` (see the note on the
+   forbidden-features table: the existing tree still uses `?.` in places)
 5. **Error handling** — Always `try/catch` around Storage/Android calls
 6. **No dynamic imports** — All scripts loaded via `<script type="module">` in index.html
 

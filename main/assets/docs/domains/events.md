@@ -6,21 +6,23 @@
 
 ## Event Data Structure
 
-```javascript
-{
-  ts: 1699999999999,    // Timestamp (ms)
-  d: '2024-01-15',      // Date (YYYY-MM-DD)
-  b: 'book-key',        // Book key
-  c1: 0,                // Source column
-  c2: 1,                // Target columm
-  f: 10,                // From page (optional)
-  t: 20,                // To page (optional)
-  cm: true,             // Consume move (true = counted in ranks)
-  sm: false             // Legacy skipMove (migration artifact)
-}
-```
+The event record shape (a persistence/wire contract — field names are abbreviated, so this
+table is the canonical key reference):
 
-**Note**: Pages `f`/`t` optional (move without page range).
+| Field | Meaning |
+|-------|---------|
+| `ts` | Timestamp (ms) |
+| `d` | Date (`YYYY-MM-DD`) |
+| `b` | Book key |
+| `c1` | Source column |
+| `c2` | Target column |
+| `f` | From page (optional) |
+| `t` | To page (optional) |
+| `cm` | Consume move (`true` = counted in ranks) |
+| `sm` | Legacy `skipMove` (migration artifact) |
+
+**Note**: Pages `f`/`t` optional (move without page range). See `EventsDomain.js` for the live
+shape.
 
 ---
 
@@ -28,12 +30,11 @@
 
 **Trigger**: User commits progress in `ProgressUI` → `ProgressUI.commitMove()`
 
-```javascript
-// ProgressUI.commitMove()
-BoardDomain.commitBalance(consumeMove);  // Updates rank counters
-BooksDomain.addOrUpdateRange(bookKey);   // Updates book ranges
-EventsDomain.log({ book, consumeMove, from, to });  // Creates event
-```
+A single commit performs three coordinated operations:
+
+1. `BoardDomain.commitBalance(consumeMove)` — updates rank counters.
+2. `BooksDomain.addOrUpdateRange(bookKey)` — updates book ranges.
+3. `EventsDomain.log({ book, consumeMove, from, to })` — creates the event.
 
 **EventsDomain.log()** (`EventsDomain.js`):
 - Adds `ts`, `d` (date), `c1`/`c2` from `State.progressData`
@@ -59,14 +60,12 @@ EventsDomain.log({ book, consumeMove, from, to });  // Creates event
 
 ## Calendar Generation (`EventsDomain.js`)
 
-```javascript
-generateCalendar(events) {
-  // Groups events by date → months → weeks → days
-  // Each day: { day: 15, events: [Event] }
-  // Weeks padded to 7 days (partial weeks at month boundaries)
-  // Returns: [{ month, weeks: [{ days: [Day], partial: bool }], year }]
-}
-```
+`generateCalendar(events)` groups events by date into months → weeks → days. **Contract**
+(read `EventsDomain.js` for the implementation):
+
+- Each day is `{ day: Number, events: [Event] }`.
+- Weeks are padded to 7 days; partial weeks occur at month boundaries and carry a partial flag.
+- The return shape is `[{ month, weeks: [{ days: [Day], partial: Bool }], year }]`.
 
 **Merge dots logic** (`EventsUI.js`):
 - By default, merge multiple events for same book on same day → single dot

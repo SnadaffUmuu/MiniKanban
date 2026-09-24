@@ -16,26 +16,24 @@ All use **long-press (400ms)** on touch, immediate on mouse.
 
 ## Core State
 
-```javascript
-longPressTimer: null,      // 400ms timeout
-longPressTarget: null,     // Element that triggered long-press
-dragState: null,           // Active drag info
-colsScroll: {}             // Per-column vertical scroll preservation
-```
+`DragDrop.js` keeps a small amount of gesture state. Treat the live source as authoritative;
+the fields to know about are:
+
+| Field | Purpose |
+|-------|---------|
+| `longPressTimer` | 400ms timer for the long-press threshold |
+| `longPressTarget` | Element that triggered the long-press |
+| `dragState` | Active drag info (mutually exclusive — one drag at a time) |
+| `colsScroll` | Per-column vertical scroll preservation |
 
 ---
 
 ## Touch + Mouse Unification
 
-```javascript
-// Get coordinates from either event type
-const cursorX = event.clientX || (event.touches && event.changedTouches[0].clientX);
-const cursorY = event.clientY || (event.touches && event.changedTouches[0].clientY);
-
-// Passive: false for touchmove to allow preventDefault
-document.addEventListener('touchmove', onMove, { passive: false });
-document.addEventListener('mousemove', onMove);
-```
+One handler serves both input types: coordinates are read from `clientX`/`clientY` when
+present, otherwise from `touches`/`changedTouches`. The `touchmove` listener is registered with
+`{ passive: false }` so auto-scroll can call `preventDefault()`. See `DragDrop.js` for the exact
+listener setup.
 
 ---
 

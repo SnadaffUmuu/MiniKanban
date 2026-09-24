@@ -53,37 +53,26 @@ export const Events = {
 
 ## Handler Resolution
 
-```javascript
-// 'Namespace.method' → { ctx: Namespace, fn: Namespace.method }
-resolveMethod(methodPath) {
-  const [nsName, methodName] = methodPath.split('.');
-  const ns = this.namespaces[nsName];
-  return { ctx: ns, fn: ns[methodName] };
-}
+A map entry names its handler as `'Namespace.method'`. On dispatch, `Events.js` splits the
+path, looks the namespace up in `namespaces`, and invokes the method with the namespace as
+`this`, passing `(targetElement, event, params)`. A handler that does not resolve fails at
+dispatch time, so the namespace key must exist.
 
-// Called on event:
-handler(e, eventName) {
-  Object.keys(this.map[eventName]).forEach(selector => {
-    const callbacks = this.map[eventName][selector];
-    const shouldRun = selector === '##' || e.target.matches(selector);
-    if (!shouldRun) return;
+**Dispatch contract** (`Events.js` — source of truth):
 
-    callbacks.forEach(([methodPath, params]) => {
-      const resolved = this.resolveMethod(methodPath);
-      resolved.fn.call(resolved.ctx, e.target, e, params);
-    });
-  });
-}
-```
+- For each selector in `this.map[eventName]`, the entry runs when the selector is `##` **or**
+  `e.target.matches(selector)`.
+- Each matching entry invokes every callback in its (normalized) array as
+  `fn.call(ctx, e.target, e, params)`.
 
 ---
 
 ## Component-Local Events (`component.events`)
 
-Components declare their own events (merged at `Events.init()`):
+Components declare their own events (merged at `Events.init()`). This is the **required**
+location for new component handlers. Example shape (`BooksUI.js`):
 
 ```javascript
-// BooksUI.js
 events: {
   click: {
     '##': 'hideProgress',
@@ -97,18 +86,10 @@ events: {
 
 **Alias syntax**: `@selectorKey` → resolved via `component.selectors[selectorKey]`
 
-**Merging** (`Events.js`):
-```javascript
-Components.forEach(component => {
-  Object.keys(component.events).forEach(eventName => {
-    Object.keys(component.events[eventName]).forEach(selectorKey => {
-      const realSelector = this.resolveSelector(selectorKey, component);
-      const value = addNamespace(rawValue, component);  // Prefixes 'ComponentName.'
-      this.mergeMaps(this.map, { [eventName]: { [realSelector]: value } });
-    });
-  });
-});
-```
+**Merging contract** (`Events.js`): at startup, for every registered component and every
+declared event type, the component-local selector is resolved to a real CSS selector and the
+handler is prefixed with the component name (`'showProgress'` → `'BooksUI.showProgress'`),
+then merged into the runtime map. `Events.js` is the source of truth for the exact merge.
 
 ---
 

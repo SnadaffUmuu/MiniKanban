@@ -25,31 +25,28 @@
 
 ## Range System
 
-Books track reading progress as **ranges mapped to column indexes**:
+Books track reading progress as **ranges mapped to column indexes**. A `Range` is a three-field
+contract (`f` inclusive, `t` inclusive):
 
-```javascript
-// Range object
-{
-  c: 1,      // column index
-  f: 10,     // From page (inclusive)
-  t: 20      // To page (inclusive)
-}
-```
+| Field | Meaning |
+|-------|---------|
+| `c` | Column index |
+| `f` | From page (inclusive) |
+| `t` | To page (inclusive) |
 
 ## Range Validation & Merging (`BooksDomain.js`)
 
 **Flow**: User inputs ranges in ProgressUI or in BooksUI → `BooksDomain.getNewRangesForRanges()` → validation → merge → `addOrUpdateRange()`
 
-```javascript
-getNewRangesForRanges(rangesFromForm) {
-  // 1. Normalize: {c: Number, f: Number, t: Number}
-  // 2. Basic validation: f <= t
-  // 3. Ambiguous overlap detection (Utils.findAmbiguousOverlaps)
-  //    - Overlap OK if nested (one range fully contains another)
-  //    - Error if partial overlap (ambiguous which stage owns pages)
-  // 4. Apply sequentially via applyRange() → merged result
-}
-```
+**Contract** (read `BooksDomain.js` for the implementation):
+
+- Inputs are normalized to `{c: Number, f: Number, t: Number}`, then `f <= t` is enforced.
+- **Nested overlap is allowed** — a range fully containing another is accepted, because the
+  owning stage is unambiguous.
+- **Partial overlap is an error** — when two ranges overlap without one containing the other,
+  it is ambiguous which stage owns the pages.
+- Ranges are applied one at a time through `applyRange()`, and each application merges the
+  result per stage via `Utils.mergeRanges()`.
 
 **applyRange()** (`BooksDomain.js`):
 - Splits existing ranges at incoming range boundaries

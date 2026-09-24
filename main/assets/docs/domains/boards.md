@@ -94,51 +94,33 @@ colors, and unmentioned colors are auto-appended to the lowest level by
 
 **Trigger**: Task dropped on column with `consumeMove=true` (or column's `defaultConsumeMove`)
 
-**Logic** (`BoardDomain.js`):
-```javascript
-function commitBalance(consumeMove, level = 1) {
-  if (!consumeMove) return;  // Non-move actions don't affect ranks
+**Implementation**: `BoardDomain.js` — `commitBalance(consumeMove)`. Read the live source
+for exact behavior; it is the source of truth. The rule it implements is the following.
 
-  // 1. Absolute counter always increments
-  board.rankCountersAbs[level] = (board.rankCountersAbs[level] || 0) + 1;
+**Model — a token economy.** Lower-level moves are "minted" by spending upper-level quota.
+Level 1 is the base currency.
 
-  // 2. Board total counter
-  boardsCounters[board.id] = (boardsCounters[board.id] || 0) + 1;
+Order of effects when a move is committed at `level`:
 
-  // 3. Level 1 always increments own counter
-  if (level === 1) {
-    board.rankCounters[1] = (board.rankCounters[1] || 0) + 1;
-    return;
-  }
+1. The **absolute** counter `rankCountersAbs[level]` always increments (never resets).
+2. The **board total** counter (`boardsCounters[board.id]`) increments (never resets).
+3. If the move is not a move (`consumeMove` falsy), rank counters are left untouched.
+4. At level 1, only the level-1 counter increments.
+5. At higher levels, the own counter increments, **capped at that level's quota when it is
+   the last level** (no child level resets it).
+6. The **upper level decrements** by `1 × quotaUpper` — consuming a lower-level move "spends"
+   upper-level quota. This step is the core of the token economy.
+7. Counter mutations are wrapped in undo snapshots and persisted.
 
-  // 4. Higher levels: check quota
-  const quotaOwn = ranks[level].q;
-  const isLastLevel = level === Object.keys(ranks).length;
-
-  if (isLastLevel && ownCount >= quotaOwn) {
-    // Last level caps at quota (no child to reset it)
-    board.rankCounters[level] = quotaOwn;
-  } else {
-    board.rankCounters[level] = ownCount + 1;
-  }
-
-  // 5. Upper level DECREMENTS by (delta * quotaUpper)
-  // This is the key: consuming a lower-level move "spends" upper-level quota
-  const quotaUpper = ranks[level - 1].q;
-  board.rankCounters[level - 1] = upperCount - (1 * quotaUpper);
-
-  saveBoards();
-}
-```
-
-**Key insight**: Ranks form a **token economy**. Lower-level moves are "minted" by spending upper-level quota. Level 1 is the base currency.
+The level is derived from the moved task's color (`RanksUI.getLevelOfColor`), not passed as a
+parameter. Quotas come from `board.ranks[level].q`.
 
 ### Ideal Distribution (`BoardDomain.getIdealPercents()`)
-```javascript
-// From board.ideal values across reading boards
-const idealMap = { satori: 40, paper: 35, osarai: 25 };  // Sum = 100
-// Used in HeaderStats + EventStatsUI for "attention balance"
-```
+
+Relative share of each reading board, derived from the `board.ideal` values and normalized to
+100% (`BoardDomain.js`). Used in `HeaderStats` + `EventStatsUI` for "attention balance". The
+per-board `ideal` value in the data is the input; there is no hardcoded percentages map in the
+domain.
 
 ---
 

@@ -11,30 +11,18 @@ three places — tasks, books, and ranks — which is why the palette and the
 book-board-color binding are documented here, in one canonical place, rather than copied
 across the domain documents.
 
-```javascript
-// Colors.js — the canonical palette (key → hex value)
-export const Colors = {
-  peach: "#FFE2CC",
-  pink: "#FFD0D0",
-  plum: "#FAC7ED",
-  purple: "#DFCFEF",
-  blue: "#DBF6FF",
-  teal: "#c9fde2",
-  green: "#DFF6A7",
-  olive: "#E6EAD6",
-  yellow: "#FFFFB3",
-  white: "#FFFFFF",
-  beige: "#e5d9d6",
-};
+The canonical palette lives in `Colors.js` (a key → hex map, with
+`getColorsStyleHtml()` generating one `.colorkey` CSS class per entry). **That file is the
+source of truth for the current list** — see it directly rather than a copy here. The
+invariant that matters:
 
-export const getColorsStyleHtml = () => {
-  // Generates a `<style>` block defining one CSS class per color key
-  // (`.peach { background-color:#FFE2CC !important; }`, etc.)
-};
-```
+> A `color` field anywhere in the data model **is a key from `Colors.js`**, never a raw CSS
+> value. See [`Task.color`](boards.md) and [`book.color`](books.md).
 
-A `color` field anywhere in the data model **is a key from `Colors.js`**, not a raw CSS
-value. See [`Task.color`](boards.md) and [`book.color`](books.md).
+At the time of writing the palette has eleven keys (`peach`, `pink`, `plum`, `purple`,
+`blue`, `teal`, `green`, `olive`, `yellow`, `white`, `beige`); treat that list as
+illustrative and confirm against `Colors.js`.
+
 
 ---
 
