@@ -61,7 +61,7 @@ export const EventsUI = {
     return this.getCurrentView() == this.views.stats;
   },
 
-  render(initialRun) {
+  render(scrollToBottom) {
 
     if(!App.isEvents()) {
       this.dom.container.classList.toggle('hidden', true);
@@ -92,7 +92,7 @@ export const EventsUI = {
         this.dom.calenderBody.innerHTML = this.getCalendarHtml();
         this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
         this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
-        if (initialRun) {
+        if (scrollToBottom) {
           this.dom.calendarScrollable.scrollTo({
             top: this.dom.calendarScrollable.scrollHeight,
             behavior: "smooth"
@@ -207,8 +207,9 @@ export const EventsUI = {
   },
 
   switchEventsView(el) {
-    App.setStateProp('eventsView', el.dataset.eventsViewSwitch);
-    Bus.emit(Bus.events.eventsUiChanged);
+    const view = el.dataset.eventsViewSwitch;
+    App.setStateProp('eventsView', view);
+    Bus.emit(Bus.events.eventsUiChanged, view === this.views.calendar);
   },
 
   toggleExpand(el) {

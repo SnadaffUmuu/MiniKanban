@@ -253,10 +253,20 @@ header.expanded .top-menu-title {
 }
 
 #filtersWrap {
-  padding-top:10px;
+  padding:10px 0;
   display:flex;
   flex-flow:row wrap;
   align-items:center;
+}
+
+#filtersCheckboxesWrap {
+  display:flex;
+  flex-flow:column nowrap;
+  align-items:flex-end;
+}
+
+#filtersCheckboxesWrap label {
+  padding-left:5px;
 }
 
 #rename-board-block h3,
