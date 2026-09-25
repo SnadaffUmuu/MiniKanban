@@ -643,25 +643,27 @@ export const BooksUI = {
   },
 
   getTreeHtml(book) {
+    const bookData = BooksDomain.getBook(book);
+    const size = bookData ? Number(bookData.size) || 0 : 0;
+    const started = BooksDomain.getStartedPageCount(bookData);
+    // цвет заполненного круга: цвет книги или акцент при архиве
+    const filledColor = bookData && bookData.color
+      ? Colors[bookData.color]
+      : '#f79d35'; // orange fallback
+
     const positions =
-      BooksDomain.buildTreeLayout(Number(BooksDomain.getBook(book).size),);
+      BooksDomain.buildTreeLayout(size, 300, 300);
 
     return `
-    <svg
-      width="90%"
-      height="90%"
-      viewBox="0 0 300 300"
-    >
+    <svg viewBox="0 0 300 300" preserveAspectRatio="xMidYMax meet">
       ${positions.map(pos => `
         <circle
-          cx="${pos.x}"
-          cy="${pos.y}"
-          r="5"
-          fill="white"
-          stroke="#666"
+          cx="${pos.x}" cy="${pos.y}" r="${pos.r}"
+          fill="${pos.page <= started ? filledColor : 'transparent'}"
+          stroke="#555"
           data-page="${pos.page}"
         />
-      `).join("")}
+      `).join('')}
     </svg>
   `;
   }

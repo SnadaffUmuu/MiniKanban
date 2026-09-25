@@ -62,12 +62,22 @@ contract (`f` inclusive, `t` inclusive):
 - Renders segmented bar: each segment = column, width = % of book size
 - Colors = column gradient (HSL 210, 70%, lightness 85%→35%)
 
-### Tree View (in progress) (`BooksUI.js`, `BooksDomain.buildTreeLayout()`)
-- SVG visualization: pages as circles in triangular layout
-- Row n has n slots (1, 2, 3...), filled bottom-up
-- Shows reading progress as filled tree
+## Progress Visualization
 
----
+### Progress Bar (`BooksUI.js`)
+- Maps ranges → pages per column (using board columns)
+- Renders segmented bar: each segment = column, width = % of book size
+- Colors = column gradient (HSL 210, 70%, lightness 85%→35%)
+### Tree View (`BooksUI.js`, `BooksDomain.buildTreeLayout()` / `BooksDomain.getStartedPageCount()`)
+- SVG visualization: pages as circles arranged in a triangular layout.
+- Rows go from bottom to top; row n has n slots (1, 2, 3, … from left to right).
+- The number of circles equals the `size` parameter of the Book object (total pages).
+- Circles are filled (opaque) for pages that are **started** — i.e. covered by at least one range in `book.state.ranges`. Overlapping / nested ranges are merged before counting, so each page is counted once.
+- Empty circles (stroke only, no fill) represent remaining pages.
+- The color of filled circles comes from `book.color` (`Colors[book.color]`); if the book is archived and has no live color, an orange fallback (`#f79d35`) is used.
+- The layout is computed by `BooksDomain.buildTreeLayout(pageCount)` which determines rows and positions so that the whole triangle fits inside the viewBox with a small gap between circles.
+- Started-page counting is handled by `BooksDomain.getStartedPageCount(book)` which merges intervals across all columns to avoid double-counting.
+
 
 ## Archiving
 

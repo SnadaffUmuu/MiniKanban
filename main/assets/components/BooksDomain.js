@@ -452,72 +452,75 @@ export const BooksDomain = {
 
   buildTreeLayout(pageCount, width = 300, height = 300) {
     // Подбираем число рядов так, чтобы вместить все страницы.
-    // Для 300 страниц получится около 24 рядов.
-    const rowsCount = Math.ceil(Math.sqrt(pageCount * 2));
+    // Для N страниц нужен минимальный R с R*(R+1)/2 >= pageCount
+    // (нижний ряд = R слотов, верхний = 1).
+    let rows = 0;
+    while (rows * (rows + 1) / 2 < pageCount) rows++;
 
-    // Вместимость рядов.
-    // Верхний ряд = 1 место.
-    // Нижний ряд = rowsCount мест.
-    const capacities = [];
+    // f = fraction of pitch, сколько места занимает сам круг,
+    // чтобы оставить виденный отступ между соседними.
+    const f = 0.38;
+    // pitch ограничен шириной и высотой, чтобы весь треугольник
+    // (2*radius + (rows-1)*pitch) влезал в box.
+    const pitch = Math.min(
+      width  / (rows - 1 + 2 * f),
+      height / (rows - 1 + 2 * f)
+    );
+    const r = f * pitch;
 
-    for(let row = 1;row <= rowsCount;row++) {
-      capacities.push(row);
-    }
-
-    const totalCapacity =
-      capacities.reduce((a, b) => a + b, 0);
-
-    // Если рядов не хватило — добавляем еще.
-    while(totalCapacity < pageCount) {
-      capacities.push(capacities.length + 1);
-    }
+    // ширина нижней (самой длинной) строки: (rows-1) * pitch
+    const bottomY = height - r;          // центрируем снизу с отступом r
+    const triW = (rows - 1) * pitch;
+    const offsetX = (width - triW) / 2;  // горизонтальный центрир.
 
     const positions = [];
-
     let page = 1;
 
-    const rowHeight =
-      height / capacities.length;
+    // Ряды снизу вверх (k=0 → нижний ряд, k=rows-1 → верхний).
+    for(let k = 0; k < rows && page <= pageCount; k++) {
+      const slots = rows - k;            // в ряду k снизу мест: rows - k
+      const y = bottomY - k * pitch;     // вертикальный шаг
+      const rowWidth = (slots - 1) * pitch;
+      const startX = offsetX;
 
-    // Заполняем снизу вверх.
-    for(let rowIndex = capacities.length - 1;
-      rowIndex >= 0;
-      rowIndex--) {
-
-      const slots = capacities[rowIndex];
-
-      const y =
-        height -
-        (capacities.length - rowIndex - 0.5) *
-        rowHeight;
-
-      const rowWidth =
-        width * (slots / capacities.length);
-
-      const startX =
-        (width - rowWidth) / 2;
-
-      const step =
-        rowWidth / Math.max(slots - 1, 1);
-
-      for(let slot = 0;
-        slot < slots && page <= pageCount;
-        slot++) {
-
+      for(let s = 0; s < slots && page <= pageCount; s++) {
         positions.push({
           page,
-          x:
-            slots === 1
-              ? width / 2
-              : startX + slot * step,
-          y
+          x: startX + s * pitch,
+          y,
+          r
         });
-
         page++;
       }
     }
-
     return positions;
+  },
+
+  // Возвращает количество уникальных страниц, покрытых ranges.
+  // ranges — это массив {f, t} (включительно), колонка c игнорируется.
+  // Пересекающиеся/вложенные интервалы сливаются, чтобы не дублировать.
+  getStartedPageCount(book) {
+    const ranges = (book && book.state && book.state.ranges) || [];
+    if (!ranges.length) return 0;
+
+    const intervals = ranges
+      .map(r => ({ f: Number(r.f), t: Number(r.t) }))
+      .filter(r => r.f <= r.t)
+      .sort((a, b) => a.f - b.f);
+
+    let count = 0;
+    let cur = null;
+    for (const r of intervals) {
+      if (!cur) { cur = { f: r.f, t: r.t }; continue; }
+      if (r.f <= cur.t + 1) { // пересечение или смежность
+        cur.t = Math.max(cur.t, r.t);
+      } else {
+        count += cur.t - cur.f + 1;
+        cur = { f: r.f, t: r.t };
+      }
+    }
+    if (cur) count += cur.t - cur.f + 1;
+    return count;
   },
 
   takeBookSnapshot(bookKey) {

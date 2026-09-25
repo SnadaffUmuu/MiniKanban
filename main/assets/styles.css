@@ -1015,6 +1015,33 @@ body:has(.dragged) {
   align-items: stretch;
 }
 
+#book {
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+#tree-root {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+#tree-root svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 #booksList,
 #booksListArchived {
   width: 100%;
