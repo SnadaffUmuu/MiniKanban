@@ -751,7 +751,11 @@ export const BooksUI = {
 
     const dimensions = this.getTreeDimensions();
     const started = Math.min(size, BooksDomain.getStartedPageCount(book));
-    const shapeColor = book.color ? Colors[book.color] : '#f79d35';
+    const isArchived = BooksDomain.isArchived(book);
+    const bookColor = isArchived
+      ? BooksDomain.getLatestArchivedPeriod(book)?.color
+      : book.color;
+    const shapeColor = bookColor ? Colors[bookColor] : '#f79d35';
     const shape = this.getTreeShape();
     const showOutline = this.getTreeShowOutline();
     const fillMode = this.getTreeFillMode();
