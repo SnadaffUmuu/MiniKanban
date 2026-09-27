@@ -450,49 +450,92 @@ export const BooksDomain = {
     return Utils.mergeRanges(result, []);
   },
 
+  // Полуширина силуэта на заданной высоте v ∈ [0,1] (0 = низ, 1 = верх).
+  // Значения нормированы к 1.0 в самой широкой точке.
+  // peak < 0.5 → максимальная ширина ниже центра → низ шире верха.
+  // spread > 1 → оба конца остаются скруглёнными (овал, а не "капля").
+  shapeHalfWidth(v) {
+    const peak = 0.38;
+    const spread = 1.35;
+    const dy = (v - peak) / spread;
+    return Math.sqrt(Math.max(0, 1 - dy * dy));
+  },
+
+  // Раскладывает total точек на rows рядов пропорционально весам weights,
+  // так что сумма counts == total и каждый ряд >= 1 (метод наибольших остатков).
+  apportion(total, weights) {
+    const n = weights.length;
+    const counts = new Array(n).fill(1);
+    const surplus = total - n;
+    if (surplus <= 0) return counts;
+
+    const sum = weights.reduce((a, b) => a + b, 0) || 1;
+    const raw = weights.map(w => (surplus * w) / sum);
+
+    // сначала целые части
+    raw.forEach((v, i) => { counts[i] += Math.floor(v); });
+
+    // остаток раздаём по дробной части (убывание)
+    const order = raw
+      .map((v, i) => ({ i, f: v - Math.floor(v) }))
+      .sort((a, b) => b.f - a.f);
+
+    const rem = surplus - raw.reduce((a, b) => a + Math.floor(b), 0);
+    for (let j = 0; j < rem; j++) counts[order[j % n].i] += 1;
+
+    return counts;
+  },
+
   buildTreeLayout(pageCount, width = 300, height = 300) {
-    // Подбираем число рядов так, чтобы вместить все страницы.
-    // Для N страниц нужен минимальный R с R*(R+1)/2 >= pageCount
-    // (нижний ряд = R слотов, верхний = 1).
-    let rows = 0;
-    while (rows * (rows + 1) / 2 < pageCount) rows++;
-
-    // f = fraction of pitch, сколько места занимает сам круг,
-    // чтобы оставить виденный отступ между соседними.
-    const f = 0.38;
-    // pitch ограничен шириной и высотой, чтобы весь треугольник
-    // (2*radius + (rows-1)*pitch) влезал в box.
-    const pitch = Math.min(
-      width  / (rows - 1 + 2 * f),
-      height / (rows - 1 + 2 * f)
-    );
-    const r = f * pitch;
-
-    // ширина нижней (самой длинной) строки: (rows-1) * pitch
-    const bottomY = height - r;          // центрируем снизу с отступом r
-    const triW = (rows - 1) * pitch;
-    const offsetX = (width - triW) / 2;  // горизонтальный центрир.
-
     const positions = [];
+    if (!pageCount || pageCount < 1) return positions;
+
+    // Число рядов подбираем по корню, чтобы плотность точек была равномерной
+    // и в высоту, и в ширину.
+    const rows = Math.min(
+      pageCount,
+      Math.max(1, Math.ceil(Math.sqrt(pageCount * 1.35)))
+    );
+
+    // Вес ряда = полуширина силуэта на этой высоте.
+    const weights = [];
+    for (let k = 0; k < rows; k++) {
+      weights.push(this.shapeHalfWidth(rows === 1 ? 0.5 : k / (rows - 1)));
+    }
+
+    // Точное количество точек в каждом ряду.
+    const counts = this.apportion(pageCount, weights);
+    const widest = counts.reduce((a, b) => Math.max(a, b), 1);
+
+    // Радиус: чтобы между соседними кружками оставался зазор.
+    const vPitch = height / rows;
+    const hPitch = width / widest;
+    const r = Math.min(vPitch, hPitch) * 0.38;
+
+    const step = rows > 1 ? (height - 2 * r) / (rows - 1) : 0;
+    const bottomY = height - r;
+    const centerX = width / 2;
+    const halfBase = (width - 2 * r) / 2;
+
     let page = 1;
 
     // Ряды снизу вверх (k=0 → нижний ряд, k=rows-1 → верхний).
-    for(let k = 0; k < rows && page <= pageCount; k++) {
-      const slots = rows - k;            // в ряду k снизу мест: rows - k
-      const y = bottomY - k * pitch;     // вертикальный шаг
-      const rowWidth = (slots - 1) * pitch;
-      const startX = offsetX;
+    for (let k = 0; k < rows; k++) {
+      const c = counts[k];
+      const v = rows === 1 ? 0.5 : k / (rows - 1);
+      const halfW = this.shapeHalfWidth(v) * halfBase;
+      const y = bottomY - k * step;
 
-      for(let s = 0; s < slots && page <= pageCount; s++) {
-        positions.push({
-          page,
-          x: startX + s * pitch,
-          y,
-          r
-        });
+      // Точки ряда равномерно по его ширине, по центру оси.
+      for (let i = 0; i < c && page <= pageCount; i++) {
+        const x = c === 1
+          ? centerX
+          : centerX + halfW * ((2 * i) / (c - 1) - 1);
+        positions.push({ page, x, y, r });
         page++;
       }
     }
+
     return positions;
   },
 

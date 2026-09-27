@@ -62,21 +62,42 @@ contract (`f` inclusive, `t` inclusive):
 - Renders segmented bar: each segment = column, width = % of book size
 - Colors = column gradient (HSL 210, 70%, lightness 85%→35%)
 
-## Progress Visualization
+### Page Cloud (`BookTree.generate()` / `BooksUI.renderBookTree()`)
 
-### Progress Bar (`BooksUI.js`)
-- Maps ranges → pages per column (using board columns)
-- Renders segmented bar: each segment = column, width = % of book size
-- Colors = column gradient (HSL 210, 70%, lightness 85%→35%)
-### Tree View (`BooksUI.js`, `BooksDomain.buildTreeLayout()` / `BooksDomain.getStartedPageCount()`)
-- SVG visualization: pages as circles arranged in a triangular layout.
-- Rows go from bottom to top; row n has n slots (1, 2, 3, … from left to right).
-- The number of circles equals the `size` parameter of the Book object (total pages).
-- Circles are filled (opaque) for pages that are **started** — i.e. covered by at least one range in `book.state.ranges`. Overlapping / nested ranges are merged before counting, so each page is counted once.
-- Empty circles (stroke only, no fill) represent remaining pages.
-- The color of filled circles comes from `book.color` (`Colors[book.color]`); if the book is archived and has no live color, an orange fallback (`#f79d35`) is used.
-- The layout is computed by `BooksDomain.buildTreeLayout(pageCount)` which determines rows and positions so that the whole triangle fits inside the viewBox with a small gap between circles.
-- Started-page counting is handled by `BooksDomain.getStartedPageCount(book)` which merges intervals across all columns to avoid double-counting.
+`BookTree.js` owns the layout contract and shape registry; `BooksUI.js` measures `#tree-root`,
+applies reading progress, and renders the SVG. Device-level shape, fill-mode, and outline preferences are
+defined canonically in [`persistence.md`](../persistence.md#kanbanlocal-preference-fields).
+
+**Generation order** (behavioral contract; implementation in `BookTree.generate()`):
+
+1. Rasterize the selected shape, fitted by its own bounding box, then derive spacing from the
+   measured mask area.
+2. Seed the generator with the book key, shape, and page count; generate the fixed sample set.
+3. Run best-candidate placement three times for at most 30 pages, otherwise once, and keep the
+   lowest-energy initial layout.
+4. Apply at most six Lloyd-relaxation steps, stopping only on increased energy or negligible
+   improvement, then constrain the common diameter against neighbors and the boundary.
+
+**Invariants and why:**
+
+- There are exactly `book.size` equal-radius circles; diameter never exceeds 8 px, circles do not
+  overlap, and each circle remains inside the selected shape.
+- The shape mask and SVG outline use the same bounding-box transform. This keeps them aligned for
+  every container aspect ratio.
+- Six relaxation steps are fixed because iteration count is the only protection against visible
+  crystallization; there is intentionally no automatic grid metric. Increase it only after visual
+  review.
+- A row of dots near the shape edge is intentional, approved behavior rather than a layout defect.
+- The book key is the deterministic seed. Identical inputs are stable on one engine; cross-device
+  identity is not required because canvas rasterization may differ.
+- `BooksUI.getTreeFillOrder()` owns progress placement without changing cloud geometry. Page mode
+  keeps the existing generated-point order. Liquid mode completes horizontal bands from bottom to
+  top and orders each band from the cloud's horizontal center toward its edges; deterministic
+  vertical and point-index tie-breakers keep repeated renders stable.
+- `BooksDomain.getStartedPageCount()` merges intervals across columns. `BooksUI.renderBookTree()`
+  fills that many circles and leaves the remainder outlined. The shape uses the book color, and the
+  book name is overlaid by `.book-tree-title`. Exact SVG and title colors are illustrative—verify
+  them against `BooksUI.js` and `styles.css`.
 
 
 ## Archiving
@@ -145,7 +166,7 @@ domain owns two binding lookups:
 | `getNewRangesForRanges(input)` | Validate + merge ranges |
 | `addOrUpdateRange(bookKey)` | Applies `State.newRangesDraft` to book |
 | `applyRange(existing, incoming)` | Core range insertion logic |
-| `buildTreeLayout(pageCount)` | Generates SVG positions for tree view |
+| `getStartedPageCount(book)` | Counts unique pages covered by progress ranges for the tree view |
 | `takeBookSnapshot()` / `undoFromSnapshot()` | Undo for book edits |
 
 ---

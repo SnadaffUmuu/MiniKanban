@@ -88,6 +88,8 @@ The three screen components are mutually exclusive:
 | `EventsUI` | `events` | `if (!App.isEvents()) { hide; return; }` |
 
 `HeaderUI` shows or hides screen-specific toolbars via `data-screen-tools="board|books|events"`.
+The `BooksUI` single-book page-cloud controls and layout anchors are documented in the
+[Books domain](../domains/books.md#page-cloud-booktreegenerate--booksuirenderbooktree).
 
 ---
 

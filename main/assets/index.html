@@ -153,6 +153,25 @@
 
   <section id="book" class="hidden">
     <div class="toolbar">
+      <div id="book-tree-controls">
+        <label class="book-tree-control" for="bookTreeShape">
+          <select id="bookTreeShape">
+            <option value="canopy">Canopy</option>
+            <option value="egg">Egg</option>
+            <option value="blob">Blob</option>
+          </select>
+        </label>
+        <label class="book-tree-control" for="bookTreeFillMode">
+          <select id="bookTreeFillMode">
+            <option value="liquid">Liquid</option>
+            <option value="page">Page order</option>
+          </select>
+        </label>
+        <label class="book-tree-control" for="bookTreeShowOutline">
+          Outline 
+          <input type="checkbox" id="bookTreeShowOutline" checked>
+        </label>
+      </div>
       <button data-screen-switch="books" class="toolbar__button switch-screen"></button>
     </div>
     <div id="tree-root">some book's things go here</div>

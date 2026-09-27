@@ -6,6 +6,7 @@ import {Colors} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js'
 import {EventsDomain} from './EventsDomain.js'
 import {Utils} from './Utils.js'
+import {BookTree} from './BookTree.js'
 
 export const BooksUI = {
 
@@ -44,6 +45,9 @@ export const BooksUI = {
     bookNameCell: '#booksList td:first-child',
     booksListArchivedTd: '#booksListArchived td:first-child',
     treeRoot: '#tree-root',
+    treeShapeSelect: '#bookTreeShape',
+    treeFillModeSelect: '#bookTreeFillMode',
+    treeOutlineCheckbox: '#bookTreeShowOutline',
     switchToBooksButton: '#book [data-screen-switch="books"]',
   },
 
@@ -58,6 +62,11 @@ export const BooksUI = {
       '@bookNameCell': 'seeBook',
       '@booksListArchivedTd': 'seeBook',
       '@switchToBooksButton': 'switchToBooks',
+    },
+    change: {
+      '@treeShapeSelect': 'changeTreeShape',
+      '@treeFillModeSelect': 'changeTreeFillMode',
+      '@treeOutlineCheckbox': 'changeTreeOutline'
     }
   },
 
@@ -68,6 +77,12 @@ export const BooksUI = {
     Bus.on(Bus.events.booksChanged, this.render.bind(this));
     Bus.on(Bus.events.booksModeChanged, this.render.bind(this));
     Bus.on(Bus.events.filtersChanged, this.render.bind(this));
+    window.addEventListener('resize', () => {
+      clearTimeout(this.bookTreeResizeTimer);
+      this.bookTreeResizeTimer = setTimeout(() => {
+        if(State.booksUi.currentBook && App.isBooks()) this.render();
+      }, 160);
+    });
   },
 
   render() {
@@ -84,7 +99,8 @@ export const BooksUI = {
     this.dom.bookModeContainer.classList.toggle('hidden', !currentBook);
 
     if(currentBook) {
-      this.dom.treeRoot.innerHTML = this.getTreeHtml(currentBook);
+      this.renderBookTreeControls();
+      this.renderBookTree(currentBook);
     } else { //list
       this.dom.booksListContainer.innerHTML = this.getListHtml();
       this.dom.addBookUi.classList.toggle('hidden', !State.booksUi.addUiShown);
@@ -642,30 +658,153 @@ export const BooksUI = {
     Bus.emit(Bus.events.booksUiChanged);
   },
 
-  getTreeHtml(book) {
-    const bookData = BooksDomain.getBook(book);
-    const size = bookData ? Number(bookData.size) || 0 : 0;
-    const started = BooksDomain.getStartedPageCount(bookData);
-    // цвет заполненного круга: цвет книги или акцент при архиве
-    const filledColor = bookData && bookData.color
-      ? Colors[bookData.color]
-      : '#f79d35'; // orange fallback
+  getTreeDimensions() {
+    const style = window.getComputedStyle(this.dom.treeRoot);
+    const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+    return {
+      width: Math.max(1, Math.floor(this.dom.treeRoot.clientWidth - horizontalPadding)),
+      height: Math.max(1, Math.floor(this.dom.treeRoot.clientHeight - verticalPadding))
+    };
+  },
 
-    const positions =
-      BooksDomain.buildTreeLayout(size, 300, 300);
+  getTreeShape() {
+    const shape = App.getLocalProp('bookTreeShape');
+    return BookTree.hasShape(shape) ? shape : BookTree.defaultShape;
+  },
 
-    return `
-    <svg viewBox="0 0 300 300" preserveAspectRatio="xMidYMax meet">
-      ${positions.map(pos => `
-        <circle
-          cx="${pos.x}" cy="${pos.y}" r="${pos.r}"
-          fill="${pos.page <= started ? filledColor : 'transparent'}"
-          stroke="#555"
-          data-page="${pos.page}"
-        />
-      `).join('')}
-    </svg>
-  `;
+  getTreeShowOutline() {
+    const showOutline = App.getLocalProp('bookTreeShowOutline');
+    return showOutline == null ? true : showOutline === true;
+  },
+
+  getTreeFillMode() {
+    return App.getLocalProp('bookTreeFillMode') === 'liquid' ? 'liquid' : 'page';
+  },
+
+  renderBookTreeControls() {
+    this.dom.treeShapeSelect.value = this.getTreeShape();
+    this.dom.treeFillModeSelect.value = this.getTreeFillMode();
+    this.dom.treeOutlineCheckbox.checked = this.getTreeShowOutline();
+  },
+
+  changeTreeShape(el) {
+    App.setLocalProp(
+      'bookTreeShape',
+      BookTree.hasShape(el.value) ? el.value : BookTree.defaultShape
+    );
+    Bus.emit(Bus.events.booksUiChanged);
+  },
+
+  changeTreeFillMode(el) {
+    App.setLocalProp('bookTreeFillMode', el.value === 'liquid' ? 'liquid' : 'page');
+    Bus.emit(Bus.events.booksUiChanged);
+  },
+
+  changeTreeOutline(el) {
+    App.setLocalProp('bookTreeShowOutline', el.checked);
+    Bus.emit(Bus.events.booksUiChanged);
+  },
+
+  getTreeFillOrder(points, mode) {
+    const order = points.map((point, index) => index);
+    if(mode !== 'liquid' || points.length < 2) return order;
+
+    const xs = points.map(point => point.x);
+    const ys = points.map(point => point.y);
+    const minX = Math.min.apply(Math, xs);
+    const maxX = Math.max.apply(Math, xs);
+    const minY = Math.min.apply(Math, ys);
+    const maxY = Math.max.apply(Math, ys);
+    const width = Math.max(maxX - minX, 1);
+    const height = Math.max(maxY - minY, 1);
+    const centerX = (minX + maxX) / 2;
+    const bandsCount = Math.max(1, Math.round(Math.sqrt(points.length * height / width)));
+    const bandHeight = height / bandsCount;
+
+    const getBand = point => Math.min(
+      bandsCount - 1,
+      Math.floor((maxY - point.y) / bandHeight)
+    );
+
+    return order.sort((a, b) => {
+      const pointA = points[a];
+      const pointB = points[b];
+      const bandDifference = getBand(pointA) - getBand(pointB);
+      if(bandDifference) return bandDifference;
+
+      const centerDifference = Math.abs(pointA.x - centerX) - Math.abs(pointB.x - centerX);
+      if(centerDifference) return centerDifference;
+
+      const heightDifference = pointB.y - pointA.y;
+      return heightDifference || a - b;
+    });
+  },
+
+  renderBookTree(bookKey) {
+    const book = BooksDomain.getBook(bookKey);
+    const size = book ? Math.max(0, Math.floor(Number(book.size) || 0)) : 0;
+    if(!book || !size) {
+      this.dom.treeRoot.innerHTML = '';
+      return;
+    }
+
+    const dimensions = this.getTreeDimensions();
+    const started = Math.min(size, BooksDomain.getStartedPageCount(book));
+    const shapeColor = book.color ? Colors[book.color] : '#f79d35';
+    const shape = this.getTreeShape();
+    const showOutline = this.getTreeShowOutline();
+    const fillMode = this.getTreeFillMode();
+
+    try {
+      const layout = BookTree.generate({
+        seed: book.key,
+        n: size,
+        width: dimensions.width,
+        height: dimensions.height,
+        shape
+      });
+      const radius = layout.diameter / 2;
+      const fillOrder = this.getTreeFillOrder(layout.points, fillMode);
+      const fillRank = new Array(layout.points.length);
+      fillOrder.forEach((pointIndex, rank) => {
+        fillRank[pointIndex] = rank;
+      });
+      this.dom.treeRoot.innerHTML = `
+        <h2 class="book-tree-title">${Utils.escapeHtml(book.name)}</h2>
+        <svg
+          width="${layout.width}"
+          height="${layout.height}"
+          viewBox="0 0 ${layout.width} ${layout.height}"
+          role="img"
+          aria-label="${size} pages"
+        >
+          <path
+            d="${layout.outline.path}"
+            transform="${layout.outline.transform}"
+            fill="${shapeColor}"
+            stroke="${showOutline ? '#d8d8d8' : 'none'}"
+            stroke-width="1.4"
+            vector-effect="non-scaling-stroke"
+          />
+          <g>
+            ${layout.points.map((point, index) => `
+            <circle
+              cx="${point.x.toFixed(3)}"
+              cy="${point.y.toFixed(3)}"
+              r="${radius.toFixed(3)}"
+              fill="${fillRank[index] < started ? '#1b5998' : 'transparent'}"
+              stroke="${fillRank[index] < started ? '#1b5998' : '#929292'}"
+              data-page="${fillRank[index] + 1}"
+            />
+            `).join('')}
+          </g>
+        </svg>
+      `;
+    } catch(error) {
+      this.dom.treeRoot.innerHTML = '';
+      console.error('Unable to render book tree:', error);
+    }
   }
 
 };
