@@ -89,20 +89,70 @@ export const EventsUI = {
         this.dom.toggleExpandButton.classList.toggle('collapse', State.eventsUi.listExpanded);
         break;
       case this.views.calendar:
+        const scrollAnchor = scrollToBottom ? null : this.getCalendarScrollAnchor();
         this.dom.calenderBody.innerHTML = this.getCalendarHtml();
         this.dom.toggleMergeDots.classList.toggle('expand', State.eventsUi.dotsMerged);
         this.dom.toggleMergeDots.classList.toggle('collapse', !State.eventsUi.dotsMerged);
-        if (scrollToBottom) {
+        if(scrollToBottom) {
           this.dom.calendarScrollable.scrollTo({
             top: this.dom.calendarScrollable.scrollHeight,
             behavior: "smooth"
           });
+        } else if(scrollAnchor) {
+          this.restoreCalendarScrollAnchor(scrollAnchor);
         }
         break;
       case this.views.stats:
         EventStatsUI.render();
     }
 
+  },
+
+  getCalendarScrollAnchor() {
+    const days = this.dom.calenderBody.querySelectorAll('[data-date]');
+    if(!days.length) {
+      return null;
+    }
+
+    const scrollableRect = this.dom.calendarScrollable.getBoundingClientRect();
+    const viewportCenter = scrollableRect.top + this.dom.calendarScrollable.clientHeight / 2;
+    let anchor = null;
+    let closestDistance = Infinity;
+
+    Array.from(days).forEach(day => {
+      const rect = day.getBoundingClientRect();
+      const distance = rect.top <= viewportCenter && rect.bottom >= viewportCenter
+        ? 0
+        : Math.min(Math.abs(rect.top - viewportCenter), Math.abs(rect.bottom - viewportCenter));
+      if(distance < closestDistance) {
+        closestDistance = distance;
+        anchor = {
+          date: day.dataset.date,
+          offset: rect.top - scrollableRect.top
+        };
+      }
+    });
+
+    return anchor;
+  },
+
+  restoreCalendarScrollAnchor(anchor) {
+    const days = this.dom.calenderBody.querySelectorAll('[data-date]');
+    if(!days.length) {
+      this.dom.calendarScrollable.scrollTop = 0;
+      return;
+    }
+
+    let day = this.dom.calenderBody.querySelector(`[data-date="${anchor.date}"]`);
+    if(!day) {
+      const firstDay = days[0];
+      const lastDay = days[days.length - 1];
+      day = anchor.date < firstDay.dataset.date ? firstDay : lastDay;
+    }
+
+    const scrollableRect = this.dom.calendarScrollable.getBoundingClientRect();
+    const currentOffset = day.getBoundingClientRect().top - scrollableRect.top;
+    this.dom.calendarScrollable.scrollTop += currentOffset - anchor.offset;
   },
 
   getListHtml() {
@@ -155,8 +205,8 @@ export const EventsUI = {
   },
 
   getCalendarHtml() {
-    let events = EventsDomain.getFilteredEventsByOrder(true);
-    const calendar = EventsDomain.generateCalendar(events);
+    const events = EventsDomain.getFilteredEventsByOrder(true);
+    const calendar = EventsDomain.generateCalendar(events, EventsDomain.getEvents());
     console.log(calendar);
     let res = [];
     let currYear = null;
@@ -193,7 +243,7 @@ export const EventsUI = {
               dayBooks.push(event.book);
             }
           });
-          daysHtml.push(`<li data-day="${day.day}">${dayString}${dotsHtml.length ? `
+          daysHtml.push(`<li data-date="${day.date}" data-day="${day.day}">${dayString}${dotsHtml.length ? `
             <span class="eventDots">${dotsHtml.join('')}</span>
           ` : ''}</li>`);
         });

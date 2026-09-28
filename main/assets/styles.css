@@ -1028,18 +1028,25 @@ body:has(.dragged) {
 
 #book .toolbar {
   justify-content: space-between;
-  flex-wrap: wrap;
+}
+
+#book-tree-controls {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 5px;
 }
 
 .book-tree-control {
   color: #fff;
-  margin-left: 5px;
   white-space: nowrap;
+}
+
+.book-tree-control:not(:last-child) {
+  margin-right: 5px;
 }
 
 .book-tree-control select {
   font-size: 15px;
-  margin-left: 5px;
 }
 
 #tree-root {

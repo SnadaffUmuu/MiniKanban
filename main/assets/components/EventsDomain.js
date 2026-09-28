@@ -118,9 +118,9 @@ export const EventsDomain = {
 
   },
 
-  generateCalendar(events) {
+  generateCalendar(events, rangeEvents = events) {
 
-    if(!events.length) {
+    if(!rangeEvents.length) {
       return [];
     }
 
@@ -154,15 +154,24 @@ export const EventsDomain = {
     console.log(eventsMap);
 
     //range
-    const startEvent = newDate(events[0].d);
+    let firstDate = rangeEvents[0].d;
+    let lastDate = rangeEvents[0].d;
+    rangeEvents.forEach(event => {
+      if(event.d < firstDate) {
+        firstDate = event.d;
+      }
+      if(event.d > lastDate) {
+        lastDate = event.d;
+      }
+    });
 
+    const startEvent = newDate(firstDate);
     const start = new Date(
       startEvent.getFullYear(),
       startEvent.getMonth(),
       1
     );
-    const endEvent = newDate(events[events.length - 1].d);
-
+    const endEvent = newDate(lastDate);
     const end = new Date(
       endEvent.getFullYear(),
       endEvent.getMonth() + 1,

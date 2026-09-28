@@ -60,10 +60,13 @@ A single commit performs three coordinated operations:
 
 ## Calendar Generation (`EventsDomain.js`)
 
-`generateCalendar(events)` groups events by date into months → weeks → days. **Contract**
-(read `EventsDomain.js` for the implementation):
+`generateCalendar(events, rangeEvents)` groups events by date into months → weeks → days.
+**Contract** (read `EventsDomain.js` for the implementation):
 
-- Each day is `{ day: Number, events: [Event] }`.
+- `events` supplies the event dots attached to each generated day.
+- Optional `rangeEvents` supplies only the first/last calendar dates; it defaults to `events`.
+- `EventsUI.getCalendarHtml()` uses all event history for `rangeEvents`, keeping the calendar range and scroll position stable while filters change which dots are displayed.
+- Each day is `{ date: String, day: Number, weekday: Number, events: [Event] }`.
 - Weeks are padded to 7 days; partial weeks occur at month boundaries and carry a partial flag.
 - The return shape is `[{ month, weeks: [{ days: [Day], partial: Bool }], year }]`.
 
