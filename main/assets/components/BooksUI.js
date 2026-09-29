@@ -167,8 +167,18 @@ export const BooksUI = {
   getListHtml() {
     const active = BooksDomain.getFilteredBooksByOrder('board')
       .filter(b => !BooksDomain.isArchived(b));
+    // Archived books carry no live board, so match the board filter against
+    // their latest archive snapshot; the books filter applies by key.
+    const filter = App.getFilter();
     const archived = Utils.sortBy(
-      BooksDomain.getArchivedBooks(), 'name', true);
+      BooksDomain.getArchivedBooks().filter(b => {
+        if(filter.books && !filter.books.includes(b.key)) return false;
+        if(filter.board && filter.board !== BooksDomain.ARCHIVED_FILTER) {
+          const last = BooksDomain.getLatestArchivedPeriod(b);
+          if(!last || last.board != filter.board) return false;
+        }
+        return true;
+      }), 'name', true);
 
     const activeTable = active.length
       ? this.getTableHtml('booksList', 'Active books', active.map(b => this.getBookRowHtml(b, false)).join(''))

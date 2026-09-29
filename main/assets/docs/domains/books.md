@@ -152,7 +152,7 @@ domain owns two binding lookups:
 | Method | Description |
 |--------|-------------|
 | `getBooks()` / `getBook(key)` | Access all/single book |
-| `getFilteredBooks(filter)` | Filter by `board` or `books` (array of keys) |
+| `getFilteredBooks(filter)` | Filter by `board` or `books` (array of keys). `board === BooksDomain.ARCHIVED_FILTER` (`'archived'`) selects only archived books (they have no live `board`) |
 | `getBookRanges(key)` | Returns `book.state.ranges` |
 | `save(data)` | Create/update book (name, key, size, board, color) |
 | `deleteBook(key, deleteHistory)` | Removes book (TODO: clean events) |

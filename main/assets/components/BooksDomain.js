@@ -16,6 +16,10 @@ export const BooksDomain = {
 
   // --- Archive ---
 
+  // Special value of `filter.board` selecting only archived books (they have
+  // no live `board` to match against).
+  ARCHIVED_FILTER: 'archived',
+
   // A book is archived iff the explicit marker is set. The length of the
   // `archived` array means nothing on its own: a restored book keeps every
   // entry of its history, so it stays > 0 while the book is active.
@@ -245,7 +249,9 @@ export const BooksDomain = {
         params.forEach(param => {
           switch(param) {
             case 'board':
-              predicates.push(book.board == filter[param]);
+              predicates.push(filter[param] === this.ARCHIVED_FILTER
+                ? this.isArchived(book)
+                : book.board == filter[param]);
               break;
             case 'books':
               predicates.push(filter[param].includes(book.key));

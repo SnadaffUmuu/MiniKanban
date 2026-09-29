@@ -49,7 +49,9 @@ export const EventsDomain = {
         params.forEach(param => {
           switch(param) {
             case 'board':
-              predicates.push(this.resolveEventBoard(ev) == filter[param]);
+              predicates.push(filter[param] === BooksDomain.ARCHIVED_FILTER
+                ? BooksDomain.isArchived(BooksDomain.getBook(ev.b))
+                : this.resolveEventBoard(ev) == filter[param]);
               break;
             case 'books':
               predicates.push(filter[param].includes(ev.b));

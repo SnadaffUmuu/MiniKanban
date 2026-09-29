@@ -54,17 +54,18 @@ export const FiltersUI = {
     );
 
     this.dom.filterSelectBoards.innerHTML = `
-      <option ${!filters || !filters.board ? 'selected' : ''} value="">select board</value>
+      <option ${!filters || !filters.board ? 'selected' : ''} value="">select board</option>
       ${relevantBoards.map(board => {
         return `<option ${filters && filters.board && filters.board == board.id ? 'selected' : ''} value="${board.id}">${board.name}</option>`
       }
     ).join('')}
+      <option ${filters && filters.board === BooksDomain.ARCHIVED_FILTER ? 'selected' : ''} value="${BooksDomain.ARCHIVED_FILTER}">archived</option>
     `;
 
-    const relevantBooks = filters && filters.board ? allBooks.filter(book => book.board == filters.board) : allBooks;
+    const relevantBooks = this.getBooksForBoard(filters && filters.board);
     
     this.dom.filterBooksContainer.innerHTML = `
-      ${Utils.sortBy(relevantBooks, 'board', true).map(book => {
+      ${relevantBooks.map(book => {
         return `<label><input data-filter-param="book" type="checkbox" name="book" ${filters && filters.books && filters.books.includes(book.key) ? 'checked' : ''} value="${book.key}">&nbsp;${book.name}</label>`
       }
     ).join('')} 
@@ -80,14 +81,26 @@ export const FiltersUI = {
     this.dom.toggleIncludeArchivedLabel.classList.toggle('hidden', !isEvents);
   },
 
+  // Books for the boards dropdown value: '' -> all (archived at the bottom),
+  // 'archived' -> only archived, otherwise books of that board.
+  getBooksForBoard(board) {
+    const books = BooksDomain.getBooks();
+    if (board === BooksDomain.ARCHIVED_FILTER) {
+      return Utils.sortBy(books.filter(book => BooksDomain.isArchived(book)), 'name', true);
+    }
+    if (board) {
+      return Utils.sortBy(books.filter(book => book.board == board), 'board', true);
+    }
+    const active = Utils.sortBy(books.filter(book => !BooksDomain.isArchived(book)), 'board', true);
+    const archived = Utils.sortBy(books.filter(book => BooksDomain.isArchived(book)), 'name', true);
+    return [...active, ...archived];
+  },
+
   updateBooksOptions() {
     const board = this.dom.filterSelectBoards.value;
-    let books = BooksDomain.getBooks();
-    if (board) {
-      books = books.filter(book => book.board == board);
-    }
+    const books = this.getBooksForBoard(board);
     this.dom.filterBooksContainer.innerHTML = `
-      ${Utils.sortBy(books, 'board', true).map(book =>
+      ${books.map(book =>
       `<label><input data-filter-param="book" type="checkbox" name="book" value="${book.key}">&nbsp;${book.name}</label>`
     ).join('')}
     `;
