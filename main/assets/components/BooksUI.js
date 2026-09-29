@@ -2,7 +2,7 @@ import {Bus} from './Bus.js'
 import {BooksDomain} from './BooksDomain.js'
 import {State} from './State.js'
 import {App} from './App.js'
-import {Colors} from './Colors.js'
+import {Colors, getColorHex} from './Colors.js'
 import {BoardDomain} from './BoardDomain.js'
 import {EventsDomain} from './EventsDomain.js'
 import {Utils} from './Utils.js'
@@ -340,7 +340,7 @@ export const BooksUI = {
         <div style="position:relative;">
           <button class="js-cancel-current button-close button-close__extra"></button>
           ${extraUi}
-          ${error ? `<span style="color:red">${error}</span><br>` : ''}
+          ${error ? `<span class="form-error-text">${error}</span><br>` : ''}
         </div>
       </td>
     </tr>
@@ -556,8 +556,9 @@ export const BooksUI = {
   },
 
   getColumnColor(columnIndex, columnsCount) {
-    const lightnessStart = 85;
-    const lightnessEnd = 35;
+    const night = document.body.classList.contains('night');
+    const lightnessStart = night ? 65 : 85;
+    const lightnessEnd = night ? 25 : 35;
 
     const maxIndex = Math.max(columnsCount - 1, 1);
     const ratio = columnIndex / maxIndex;
@@ -768,7 +769,11 @@ export const BooksUI = {
     const bookColor = isArchived
       ? BooksDomain.getLatestArchivedPeriod(book)?.color
       : book.color;
-    const shapeColor = bookColor ? Colors[bookColor] : '#f79d35';
+    const isNight = document.body.classList.contains('night');
+    const shapeColor = (bookColor && getColorHex(bookColor)) || '#f79d35';
+    const outlineColor = isNight ? '#6a6a6a' : '#d8d8d8';
+    const pageColor = isNight ? '#6fa8ff' : '#1b5998';
+    const emptyPageStroke = isNight ? '#8a8a8a' : '#929292';
     const shape = this.getTreeShape();
     const showOutline = this.getTreeShowOutline();
     const fillMode = this.getTreeFillMode();
@@ -800,7 +805,7 @@ export const BooksUI = {
             d="${layout.outline.path}"
             transform="${layout.outline.transform}"
             fill="${shapeColor}"
-            stroke="${showOutline ? '#d8d8d8' : 'none'}"
+            stroke="${showOutline ? outlineColor : 'none'}"
             stroke-width="1.4"
             vector-effect="non-scaling-stroke"
           />
@@ -810,8 +815,8 @@ export const BooksUI = {
               cx="${point.x.toFixed(3)}"
               cy="${point.y.toFixed(3)}"
               r="${radius.toFixed(3)}"
-              fill="${fillRank[index] < started ? '#1b5998' : 'transparent'}"
-              stroke="${fillRank[index] < started ? '#1b5998' : '#929292'}"
+              fill="${fillRank[index] < started ? pageColor : 'transparent'}"
+              stroke="${fillRank[index] < started ? pageColor : emptyPageStroke}"
               data-page="${fillRank[index] + 1}"
             />
             `).join('')}

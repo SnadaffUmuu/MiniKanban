@@ -46,3 +46,7 @@ Rule for edits: do not introduce a *new* forbidden construct into a file that ha
 ## Adding a newer feature
 
 Prefer an ES7 alternative. If a polyfill is small, put it in `Utils.js` and note it here.
+
+## Night theme
+
+`body.night` switches CSS variables (`styles.css`, `Colors.js`). The SVG icons in `images/` are deliberately not themed yet (orange icons are kept as is). Night card shades in `Colors.js` are starting values, tuned by eye.

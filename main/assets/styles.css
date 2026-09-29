@@ -9,21 +9,34 @@
   --middle-bg: #d1d1d1;
   --middle-bg2: #efeeeb;
   --theme-text-color: #000;
-  --booklist-bg: var(var(--lighter-bg));
   --contrast-bg:#fff;
   --text-default:#000;
   --body-bg:#333533;
   --table-cell-border1:#e9e9e9;
   --table-cell-border2:#dddddd;
-  --semi-border:#47474775;
+  --semi-border:var(--shadow);
+  /* roles added for the night theme */
+  --card-bg: #fff;
+  --card-text: inherit;
+  --raised-bg: #fff;
+  --column-body-bg: #c3bfb6;
+  --border-soft: #cfcfcf;
+  --text-strong: #3b3b3b;
+  --link-blue: #02029d;
+  --shadow: #47474775;
+  --overlay-bg: #ffffff7a;
+  --danger: #d60000;
+  --success: #3da004;
+  --tree-bg: #fff;
+  --progress-border: #000;
+  --empty-segment: #eee;
 }
 
 body.night {
   --text-darker-accent : var(--text-accent);
   --theme-text-color: #fff;
   --theme-switch: #f79d35;
-  --lighter-bg : #333533; /* TODO: test */
-  --booklist-bg: #f1f1ee;
+  --lighter-bg : #2a2b2a;
   --middle-bg: #5a574d;
   --middle-bg2: #7a7870;
   --contrast-bg:#393633;
@@ -31,6 +44,20 @@ body.night {
   --table-cell-border1:#858484;
   --table-cell-border2:#a0a0a0;
   --semi-border:#b8b8b875;
+  --card-bg: #2e2f2e;
+  --card-text: #ececec;
+  --raised-bg: #3d3e3d;
+  --column-body-bg: #1c1d1c;
+  --border-soft: #4a4b4a;
+  --text-strong: #e2e2e2;
+  --link-blue: #8ab4ff;
+  --shadow: #000000a0;
+  --overlay-bg: #0000008a;
+  --danger: #ff6b6b;
+  --success: #6fd43a;
+  --tree-bg: #262826;
+  --progress-border: #888;
+  --empty-segment: #4a4b4a;
 }
 
 html,
@@ -232,7 +259,7 @@ header.expanded .top-menu-title {
 }
 
 .board {
-  background-color: #fff;
+  background-color: var(--card-bg);
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 10px;
@@ -360,8 +387,9 @@ header.expanded .top-menu-title {
 .task,
 .dragging:not(button) {
   border-radius: 5px;
-  box-shadow: 0 1px 3px #47474775;
-  background: #fff;
+  box-shadow: 0 1px 3px var(--shadow);
+  background: var(--card-bg);
+  color: var(--card-text);
   position: relative;
 }
 
@@ -423,7 +451,7 @@ main {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
-  box-shadow: 0 1px 3px #47474775;
+  box-shadow: 0 1px 3px var(--shadow);
   padding: 10px;
   flex: 0 0 auto;
 }
@@ -446,7 +474,7 @@ main {
 }
 
 .column-body {
-  background: #c3bfb6;
+  background: var(--column-body-bg);
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
   padding: 5px;
@@ -463,7 +491,7 @@ main {
 
 .column-menu {
   background: var(--lighter-bg);
-  box-shadow: 0 3px 3px #47474775;
+  box-shadow: 0 3px 3px var(--shadow);
   position: relative;
   margin-top: -10px;
 }
@@ -472,13 +500,13 @@ main {
 .column-menu label {
   background: transparent;
   border: 0;
-  border-top: 1px solid #cfcfcf;
+  border-top: 1px solid var(--border-soft);
   padding: 13px 0;
   margin-left: 60px;
   width: calc(100% - 60px);
   text-align: left;
   position: relative;
-  color: #3b3b3b;
+  color: var(--text-strong);
   display: block;
 }
 
@@ -837,7 +865,7 @@ body:has(.dragged) {
   border-radius: 7px;
   margin-right: 6px;
   margin-bottom: 6px;
-  color: #000;
+  color: var(--text-default);
   text-align: center;
 }
 
@@ -1087,7 +1115,7 @@ body:has(.dragged) {
 }
 
 #tree-root {
-  background: #fff;
+  background: var(--tree-bg);
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
@@ -1106,7 +1134,7 @@ body:has(.dragged) {
   left: 0;
   margin: 0;
   padding: 5px 10px;
-  color: #02029d;
+  color: var(--link-blue);
   font-size: 18px;
   text-align: center;
   pointer-events: none;
@@ -1142,7 +1170,7 @@ body:has(.dragged) {
 
 #booksList td:first-child,
 #booksListArchived td:first-child {
-  color:#02029d;
+  color:var(--link-blue);
 }
 
 .board-osarai-border,
@@ -1219,9 +1247,9 @@ select:invalid {
   width: 25px;
   height: 25px;
   border: none;
-  background-color: #fff;
+  background-color: var(--raised-bg);
   border-radius: 13px;
-  box-shadow: 1px 1px 1px #47474775;
+  box-shadow: 1px 1px 1px var(--shadow);
 }
 
 .editBookUi .editBookActions {
@@ -1341,7 +1369,7 @@ select:invalid {
   left: 0;
   bottom: 0;
   right: 0;
-  background: #ffffff7a;
+  background: var(--overlay-bg);
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
@@ -1352,7 +1380,7 @@ select:invalid {
 
 #dialogBody {
   background: var(--lighter-bg);
-  box-shadow: 1px 1px 1px #47474775;
+  box-shadow: 1px 1px 1px var(--shadow);
   width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -1370,7 +1398,7 @@ select:invalid {
   top: unset;
   bottom: 10px;
   right: 10px;
-  box-shadow: -1px 1px 2px #47474775;
+  box-shadow: -1px 1px 2px var(--shadow);
 }
 
 #growPrompt {
@@ -1393,7 +1421,7 @@ select:invalid {
   font-size: 18px;
   display: block;
   width: calc(100% - 6px);
-  background: white;
+  background: var(--raised-bg);
   box-sizing: border-box;
   box-shadow: 0px 4px 11px #47474733;
   margin: 15px auto 0;
@@ -1424,11 +1452,11 @@ select:invalid {
 }
 
 .formErrors {
-  color: #d60000;
+  color: var(--danger);
 }
 
 .successMessage {
-  color: #3da004;
+  color: var(--success);
   font-size: 18px;
   padding-top: 15px;
   font-weight: bold;
@@ -1448,10 +1476,10 @@ select:invalid {
   display: flex;
   width: 50px;
   height: 16px;
-  border: 1px solid #000;
+  border: 1px solid var(--progress-border);
   border-radius: 3px;
   /* overflow: hidden; */
-  background: #fff;
+  background: var(--raised-bg);
 }
 
 .progress-bar.popup {
@@ -1473,7 +1501,7 @@ select:invalid {
 }
 
 .segment.empty {
-  background: #eee;
+  background: var(--empty-segment);
 }
 
 .progress-bar .pagesCount {
@@ -1487,7 +1515,7 @@ select:invalid {
   bottom:-20px;
   transform:rotate(90deg);
   padding:1px 3px;
-  background:white;
+  background:var(--raised-bg);
   border-radius: 3px;
   transform-origin: top left;
   left: 20px;  
@@ -1596,14 +1624,14 @@ select:invalid {
   padding: 2px 6px 3px;
   border-radius: 10px;
   display: inline-block;
-  background: #f1f1ee;
-  border: 1px solid #c3bfb6;
+  background: var(--lighter-bg);
+  border: 1px solid var(--column-body-bg);
 }
 
 .eventsEntry .connector {
   display: inline-block;
   height: 2px;
-  background: #c3bfb6;
+  background: var(--column-body-bg);
   flex: 1 1 auto;
 }
 
@@ -1635,7 +1663,7 @@ select:invalid {
     z-index:10;
     top: -2px;
     left: -2px;
-    background: white;
+    background: var(--raised-bg);
     color: gray;
     border-radius: 5px;
     width: 17px;
@@ -1648,7 +1676,7 @@ select:invalid {
 .vocab-count-details {
   padding:5px;
   border-radius: 5px;
-  background:white;
+  background:var(--raised-bg);
   display:none;
   position:absolute;
   left:0;
@@ -1909,4 +1937,38 @@ select:invalid {
 
 .stats-table tr[data-month] td {
   white-space: nowrap;
+}
+.form-error-text {
+  color: red;
+}
+
+/* Night theme: surfaces that stay light-text-on-dark need explicit text colors */
+body.night .task,
+body.night .column-menu,
+body.night .eventsEntry,
+body.night [data-events-view],
+body.night #booksList,
+body.night #booksListArchived,
+body.night #dialogBody,
+body.night #addBookUi,
+body.night .vocab-count-details,
+body.night .progress-bar .pagesCount,
+body.night .board-management-button:not([disabled]) {
+  color: var(--text-default);
+}
+
+body.night .task {
+  color: var(--card-text);
+}
+
+body.night .vocab-count {
+  color: #bbb;
+}
+
+body.night .column-header {
+  color: var(--text-default);
+}
+
+body.night .board-management-button:not([disabled]) {
+  color: var(--text-accent);
 }

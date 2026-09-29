@@ -11,10 +11,9 @@ three places — tasks, books, and ranks — which is why the palette and the
 book-board-color binding are documented here, in one canonical place, rather than copied
 across the domain documents.
 
-The canonical palette lives in `Colors.js` (a key → hex map, with
-`getColorsStyleHtml()` generating one `.colorkey` CSS class per entry). **That file is the
-source of truth for the current list** — see it directly rather than a copy here. The
-invariant that matters:
+The canonical palette lives in `Colors.js` (key → `{light, dark}` hex pair). `getColorsStyleHtml()`
+generates `--card-<key>` variables for `:root` and `body.night` plus one `.colorkey` class per entry.
+**That file is the source of truth for the current list.** The invariant that matters:
 
 > A `color` field anywhere in the data model **is a key from `Colors.js`**, never a raw CSS
 > value. See [`Task.color`](boards.md) and [`book.color`](books.md).
@@ -22,7 +21,9 @@ invariant that matters:
 **Rendering rule:** UI code applies a color by adding the color key as a CSS class
 (`class="blue"`), never via inline `style="background…"`. The generated classes use
 `!important`, so they win over component CSS. Exceptions that need a raw hex/computed value:
-the book tree SVG fill (`BooksUI.js`) and the column-gradient progress segments.
+the book tree SVG (`BooksUI.js`) and the column-gradient progress segments. A key names a hue, not a
+shade: the hex depends on the theme, so such code must use `getColorHex(key)` (never read
+`Colors[key]` as a string) and is not re-rendered when the theme is toggled.
 For dropdowns, use `BooksUI.setColorsDropdownColor`, which swaps the class.
 
 ---
