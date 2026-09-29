@@ -4,6 +4,7 @@ import {State} from './State.js'
 import {Colors} from './Colors.js'
 import { App } from './App.js'
 import { EventsUI } from './EventsUI.js'
+import { RanksDomain } from './RanksDomain.js'
 
 export const RanksUI = {
 
@@ -47,9 +48,16 @@ export const RanksUI = {
 
     renderCountersButton: '#ranks-toggle-counters',
     infoContainer: '#ranks-panels-container',
+    counterOverride: '.rank-counter-override',
   },
 
   dom: {},
+
+  events: {
+    input: {
+      '@counterOverride': 'counterOverrideHandler',
+    }
+  },
 
   createDefaultState() {
     return {
@@ -60,6 +68,7 @@ export const RanksUI = {
       inputedRaw: null,
       colorsInUseShown: false,
       countersShown: true,
+      counterOverrides: {},
     }
   },
 
@@ -117,7 +126,7 @@ export const RanksUI = {
       null,
       null,
       true
-    ) : ''}
+    ) + this.getReconciliationHtml(draft.reconciliation, State.ranksUi.counterOverrides) : ''}
       </div>
       <div id="ranks-delete-confirm-message" class="ranks-message ${mode == this.modes.delete ? '' : 'hidden'}">Really delete ranks for this board?</div>
       <div id="ranks-counters-reset-message" class="ranks-message ${mode == this.modes.reset ? '' : 'hidden'}">Really reset  all counters for this board?</div>
@@ -167,89 +176,6 @@ export const RanksUI = {
     ) : '';
     return counters || absCounters ? `<div id="current-ranks">${counters}</div>
         <div id="abs-counters">${absCounters}</div>` : '';
-  },
-
-  parseRanks(raw) {
-    State.ranksUi.errors = [];
-
-    const lines = raw
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 0);
-
-    const result = {};
-    const ranks = {};
-
-    const usedColors = new Set();
-    const validColors = new Set(Object.keys(Colors));
-
-    lines.forEach((line, index) => {
-      const level = index + 1;
-
-      const firstSpace = line.indexOf(' ');
-      if(firstSpace === -1) {
-        State.ranksUi.errors.push(`Строка ${level}: отсутствует пробел после квоты`);
-      }
-
-      const quota = parseInt(line.slice(0, firstSpace), 10);
-      if(isNaN(quota) || quota <= 0) {
-        State.ranksUi.errors.push(`Строка ${level}: некорректная квота`);
-      }
-
-      const colorsPart = line.slice(firstSpace + 1);
-
-      const colors = colorsPart
-        .split(',')
-        .map(c => c.trim())
-        .filter(c => c.length > 0);
-
-      if(colors.length === 0) {
-        State.ranksUi.errors.push(`Строка ${level}: не указаны цвета`);
-      }
-
-      colors.forEach(color => {
-        if(!validColors.has(color)) {
-          State.ranksUi.errors.push(`Строка ${level}: цвет "${color}" не существует`);
-        }
-
-        if(usedColors.has(color)) {
-          State.ranksUi.errors.push(`Строка ${level}: цвет "${color}" используется повторно`);
-        }
-
-        usedColors.add(color);
-      });
-
-      ranks[level] = {
-        q: quota,
-        c: colors
-      };
-    });
-
-    console.log('usedColors', usedColors);
-    console.log('colorsOnBoard', BoardDomain.getColorsInUse());
-
-    /* 
-      цвета, которые есть на доске, но не указаны в поле,
-      автоматом приписываются как последний добавочный уровень
-    */
-    const notMentionedColors = BoardDomain.getColorsInUse().filter(c => ![...usedColors].includes(c));
-    console.log('notMentionedColors', notMentionedColors);
-
-    if(notMentionedColors && notMentionedColors.length) {
-      const lowestLevel = Math.max(0, ...Object.keys(ranks));
-      ranks[lowestLevel].c = [...ranks[lowestLevel].c, ...notMentionedColors];
-      lines[lines.length - 1] += `,${notMentionedColors.join(',')}`;
-      raw = lines.join('\n');
-    }
-
-    if(!State.ranksUi.errors.length) {
-      result.ranks = ranks;
-      result.ranksRaw = raw;
-      return result;
-    } else {
-      delete State.ranksUi.draft;
-    }
-    return null;
   },
 
   getRanksHtml(
@@ -310,6 +236,47 @@ export const RanksUI = {
       </ul>`;
   },
 
+  getReconciliationHtml(reconciliation, overrides) {
+    if(!reconciliation) return '';
+    const formatStanding = value => value == null
+      ? 'Go'
+      : value >= 0 ? `Go +${value}` : `${value}`;
+    const statusLabels = {
+      kept: 'kept',
+      grandfathered: 'grandfathered',
+      new: 'new',
+      dropped: 'dropped',
+      ambiguous: 'needs review',
+    };
+    const rows = reconciliation.rows.map(row => {
+      const before = row.status === 'new' ? '—' : formatStanding(row.oldStanding);
+      const after = row.status === 'dropped' ? '—' : formatStanding(row.newStanding);
+      const override = overrides && overrides[row.newLevel] != null
+        ? overrides[row.newLevel]
+        : row.openingBalance;
+      const balance = row.editable
+        ? `<input class="rank-counter-override" data-level="${row.newLevel}" type="number" value="${override}">`
+        : row.openingBalance == null ? '—' : row.openingBalance;
+      return `<tr class="rank-reconciliation-${row.status}">
+        <td>${row.colors.join(', ')}</td>
+        <td>${before}</td>
+        <td>${after}</td>
+        <td>${balance}</td>
+        <td>${statusLabels[row.status]}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="rank-reconciliation">
+      <span class="ranks-title">Counter reconciliation</span>
+      <table>
+        <thead><tr><th>Colors</th><th>Before</th><th>After</th><th>Balance</th><th>Result</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${reconciliation.rows.some(row => row.editable)
+        ? '<div class="rank-reconciliation-note">Split or merged color groups need review. You may change only their opening balances.</div>'
+        : ''}
+    </div>`;
+  },
+
   getColorsInUseHtml() {
     return `
     <span class="ranks-title">Colors in use</span>
@@ -330,24 +297,10 @@ export const RanksUI = {
     `;
   },
 
-  getLevelOfColor(color, ranks) {
-    if(ranks == undefined) {
-      ranks = BoardDomain.getCurrentBoard().ranks;
-    }
-    if(!ranks) return null;
-    let level = Object.keys(ranks).find(k => ranks[k].c.includes(color));
-    if(!level) {
-      level = Math.max(...Object.keys(ranks).map(o => parseInt(o))) + 1
-    } else {
-      level = parseInt(level);
-    }
-    return level;
-  },
-
   getLevelMarkHtml(color) {
     const ranks = BoardDomain.getCurrentBoard().ranks;
     if(!ranks) return '';
-    const level = this.getLevelOfColor(color, ranks);
+    const level = RanksDomain.getLevelOfColor(color, ranks);
     return level ? `<div class="cardLevel">L${level}</div>` : '';
   },
 
@@ -364,30 +317,13 @@ export const RanksUI = {
       return '';
     }
 
-    const level = this.getLevelOfColor(card.color, ranks);
+    const level = RanksDomain.getLevelOfColor(card.color, ranks);
     if(level == 1) return `<div class="cardPass positive">Go!</div>`; //первый уровень ходит безлимитно
 
-    const quotaOfUpperLevel = parseInt(ranks[level - 1].q);
-
-    let res = null;
-
-    let upperLevelCount = board.rankCounters ? board.rankCounters[level - 1] ? board.rankCounters[level - 1] : null : null;
-
-    // console.log('upperLevelCount', upperLevelCount);
-    // console.log('quotaOfUpperLevel', quotaOfUpperLevel);
-
-    if(upperLevelCount == null) {
-      res = -quotaOfUpperLevel;
-    } else {
-      res = upperLevelCount - quotaOfUpperLevel;
-    }
+    const passState = RanksDomain.getPassState(ranks, board.rankCounters, level);
+    const res = passState.standing;
     // console.log(`card L${level} "${card.description}" (color: ${card.color})`, res);
 
-    const grandCounters = board.rankCounters[level - 2];
-    let parentInDebt = false;
-    if (grandCounters && grandCounters < 0) {
-      parentInDebt = true;
-    }
     const text = (res >= 0 ? 'Go! ' : '')
       + (
         res !== 0 ?
@@ -395,7 +331,7 @@ export const RanksUI = {
           : ''
       );
     
-    const resClass = parentInDebt ? 'parentInDebt' : res >= 0 ? 'positive' : '';
+    const resClass = passState.parentInDebt ? 'parentInDebt' : res >= 0 ? 'positive' : '';
 
     return res != null ?
       `<div class="cardPass ${resClass}">${text}</div>`
@@ -405,7 +341,7 @@ export const RanksUI = {
   getUpperLevelMarkHtml(color) {
     const ranks = BoardDomain.getCurrentBoard().ranks;
     if(!ranks) return '';
-    const level = this.getLevelOfColor(color, ranks);
+    const level = RanksDomain.getLevelOfColor(color, ranks);
     if(level) {
       const upperLevel = ranks[level - 1];
       return upperLevel ? upperLevel.c.map(c => `<div class="rank-level-mark" style="background:${Colors[c]}"></div>`).join('') : '';
@@ -417,7 +353,7 @@ export const RanksUI = {
   getOwnCount(board, color) {
     let res = '';
     if(board && board.rankCounters) {
-      const count = board.rankCounters[this.getLevelOfColor(color)];
+      const count = board.rankCounters[RanksDomain.getLevelOfColor(color, board.ranks)];
       res = count != null ? `<span class="own-rank-count-mark">${count}</span>` : '';
     }
     return res;
@@ -427,11 +363,24 @@ export const RanksUI = {
 
   preview() {
     const newValue = State.ranksUi.inputedRaw;
-    const parsedRanks = this.parseRanks(newValue);
-    if(!State.ranksUi.errors.length && parsedRanks) {
+    const parsedRanks = RanksDomain.parseRanks(
+      newValue,
+      Object.keys(Colors),
+      BoardDomain.getColorsInUse()
+    );
+    State.ranksUi.errors = parsedRanks.errors;
+    if(!parsedRanks.errors.length && parsedRanks.ranks) {
+      const board = BoardDomain.getCurrentBoard();
+      parsedRanks.reconciliation = RanksDomain.reconcileCounters(
+        board.ranks || {},
+        board.rankCounters || {},
+        parsedRanks.ranks
+      );
       State.ranksUi.draft = parsedRanks;
       State.ranksUi.draftRaw = parsedRanks.ranksRaw;
+      State.ranksUi.counterOverrides = {};
     } else {
+      delete State.ranksUi.draft;
       State.ranksUi.draftRaw = newValue;
     }
     State.ranksUi.inputedRaw = State.ranksUi.draftRaw;
@@ -476,7 +425,9 @@ export const RanksUI = {
   },
 
   save() {
-    BoardDomain.setRanksData(State.ranksUi.draft);
+    BoardDomain.setRanksData(Object.assign({}, State.ranksUi.draft, {
+      counterOverrides: State.ranksUi.counterOverrides
+    }));
     State.ranksUi = this.createDefaultState();
     Bus.emit(Bus.events.boardsChanged);
   },
@@ -513,6 +464,20 @@ export const RanksUI = {
     this.dom.previewBlock.classList.toggle('hidden', nothingToPreview);
 
     this.dom.previewBlock.innerHTML = '';
+  },
+
+  counterOverrideHandler(el) {
+    State.ranksUi.counterOverrides[el.dataset.level] = el.value;
+    const row = State.ranksUi.draft.reconciliation.rows.find(item =>
+      item.newLevel === parseInt(el.dataset.level, 10)
+    );
+    if(row) {
+      const balance = parseInt(el.value, 10);
+      const quota = parseInt(State.ranksUi.draft.ranks[row.newLevel - 1].q, 10);
+      row.newStanding = (isNaN(balance) ? 0 : balance) - quota;
+      const afterCell = el.parentNode.previousElementSibling;
+      afterCell.textContent = row.newStanding >= 0 ? `Go +${row.newStanding}` : row.newStanding;
+    }
   },
 
 };

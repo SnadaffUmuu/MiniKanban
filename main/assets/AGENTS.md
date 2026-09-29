@@ -4,6 +4,7 @@ Each topic below has one canonical document. Follow links instead of copying fac
 
 - **Architecture and application lifecycle** → [`docs/architecture.md`](docs/architecture.md)
 - **Board domain** → [`docs/domains/boards.md`](docs/domains/boards.md)
+- **Ranks and quota-counter semantics** → [`docs/domains/ranks.md`](docs/domains/ranks.md)
 - **Book domain** → [`docs/domains/books.md`](docs/domains/books.md)
 - **Event domain** → [`docs/domains/events.md`](docs/domains/events.md)
 - **Color domain (palette + book-board-color binding)** → [`docs/domains/colors.md`](docs/domains/colors.md)

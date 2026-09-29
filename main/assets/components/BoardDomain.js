@@ -1,10 +1,10 @@
 import {App} from './App.js'
 import {Storage} from './Storage.js'
-import {RanksUI} from './RanksUI.js'
 import {Utils} from './Utils.js'
 import {Colors} from './Colors.js'
 import {Bus} from './Bus.js'
 import {State} from './State.js'
+import {RanksDomain} from './RanksDomain.js'
 
 export const BoardDomain = {
 
@@ -307,46 +307,25 @@ export const BoardDomain = {
   },
 
   checkAndUpdateRanks(board, color) {
-    //есть ли цвет в рангах?
-    const ranks = board.ranks;
-    if(!ranks) return;
-    const allRanksColors = [];
-    for(const key in ranks) {
-      allRanksColors.push(...ranks[key].c);
-    }
-    if(allRanksColors.includes(color)) {
-      return;
-    }
-    const lowestLevel = Math.max(0, ...Object.keys(ranks));
-    ranks[lowestLevel].c = [...ranks[lowestLevel].c, color];
-    board.ranks = ranks;
-    board.ranksRaw += `,${color}`;
+    const result = RanksDomain.addColorToLowestLevel(
+      board.ranks,
+      board.ranksRaw,
+      color
+    );
+    if(!result.changed) return;
+    board.ranks = result.ranks;
+    board.ranksRaw = result.ranksRaw;
   },
 
-  setRanksData({ranks, ranksRaw}) {
+  setRanksData({ranks, ranksRaw, counterOverrides}) {
     const board = this.getCurrentBoard();
     const oldRanks = board.ranks || {};
     const oldCounters = board.rankCounters || {};
-    
-    const oldLevelCount = Object.keys(oldRanks).length;
-    const newLevelCount = Object.keys(ranks).length;
-    
-    // Build new counters based on level positions (hierarchy slots)
-    // If levels increase: append new levels with 0
-    // If levels decrease: truncate to new level count (drop extra)
-    const newCounters = {};
-    var maxLevelToKeep = Math.min(oldLevelCount, newLevelCount);
-    
-    for (var level = 1; level <= maxLevelToKeep; level++) {
-      newCounters[level] = oldCounters[level] !== undefined ? oldCounters[level] : 0;
-    }
-    
-    if (newLevelCount > oldLevelCount) {
-      for (var level = oldLevelCount + 1; level <= newLevelCount; level++) {
-        newCounters[level] = 0;
-      }
-    }
-    // If decreasing, extra levels are automatically dropped
+
+    const reconciliation = RanksDomain.reconcileCounters(oldRanks, oldCounters, ranks);
+    const newCounters = RanksDomain.applyOverrides(reconciliation, counterOverrides);
+
+    this.takeBoardSnapshot();
     
     board.ranksRaw = ranksRaw;
     board.ranks = ranks;
@@ -416,59 +395,30 @@ export const BoardDomain = {
     const ranks = board.ranks;
     if(!ranks || !task) return;
 
-    const level = RanksUI.getLevelOfColor(task.color, ranks);
+    const level = RanksDomain.getLevelOfColor(task.color, ranks);
     if(!level) return;
 
-    board.rankCounters = board.rankCounters || {};
-    board.rankCountersAbs = board.rankCountersAbs || {};
-
-    const ownCount = Utils.toInt(board.rankCounters[level]);
-    const absCount = Utils.toInt(board.rankCountersAbs[level]);
-    const upperCount = level > 1 ? Utils.toInt(board.rankCounters[level - 1]) : 0;
-
-
-    // --- 3. Если не ход — логику рангов не трогаем
     if(!consumeMove) {
       return;
     }
 
+    board.rankCounters = board.rankCounters || {};
+    board.rankCountersAbs = board.rankCountersAbs || {};
     this.takeBoardRankCountersSnapshot(board);
     this.takeBoardsCountersSnapshot();
 
-    const delta = 1;
+    const rankBalance = RanksDomain.commitBalance(
+      ranks,
+      board.rankCounters,
+      board.rankCountersAbs,
+      level
+    );
+    board.rankCounters = rankBalance.counters;
+    board.rankCountersAbs = rankBalance.absCounters;
 
-    // --- 1. Абсолютный счётчик
-    board.rankCountersAbs[level] = absCount + delta;
-
-    // --- 2. Глобальный счётчик доски
     const boardsCounters = this.getBoardsCounters();
     const boardTotal = Utils.toInt(boardsCounters[board.id]);
-    boardsCounters[board.id] = boardTotal + delta;
-
-    this.saveCounters(boardsCounters);
-
-    // --- 4. Первый уровень — всегда меняет свой счётчик
-    if(level === 1) {
-      board.rankCounters[level] = ownCount + delta;
-      return;
-    }
-
-    const quotaOwn = Utils.toInt(ranks[level].q);
-    const isLastLevel = level === Object.keys(ranks).length;
-
-    if(isLastLevel && ownCount >= quotaOwn) {
-
-      // --- 5. В последнем уровне не накапливаем счет сверх квоты
-      // (т.к. нет потомков и его никто не обнуляет)
-      board.rankCounters[level] = quotaOwn;
-
-    } else {
-      board.rankCounters[level] = ownCount + delta;
-    }
-
-    // --- 7. Корректировка верхнего уровня
-    const quotaUpper = Utils.toInt(ranks[level - 1].q);
-    board.rankCounters[level - 1] = upperCount - (delta * quotaUpper);
+    boardsCounters[board.id] = boardTotal + 1;
 
     this.saveBoards(App.data.boards);
 

@@ -32,7 +32,7 @@ shape.
 
 A single commit performs three coordinated operations:
 
-1. `BoardDomain.commitBalance(consumeMove)` — updates rank counters.
+1. `BoardDomain.commitBalance(consumeMove)` — orchestrates the pure rank balance update documented in [`ranks.md`](ranks.md).
 2. `BooksDomain.addOrUpdateRange(bookKey)` — updates book ranges.
 3. `EventsDomain.log({ book, consumeMove, from, to })` — creates the event.
 

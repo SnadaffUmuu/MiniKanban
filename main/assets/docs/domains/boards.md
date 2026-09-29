@@ -1,6 +1,6 @@
 # Boards Domain
 
-**Related documentation**: [`books.md`](books.md) | [`colors.md`](colors.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
+**Related documentation**: [`ranks.md`](ranks.md) | [`books.md`](books.md) | [`colors.md`](colors.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
 
 ---
 
@@ -68,52 +68,9 @@ the rationale and the resulting invariant.
 
 ## Ranks System
 
-### Configuration (`board.ranks`)
-```javascript
-{
-  1: { c: ['peach', 'pink'], q: 3 },   // Level 1: 2 colors, quota 3
-  2: { c: ['plum', 'purple'], q: 2 },  // Level 2: 2 colors, quota 2
-  3: { c: ['blue'], q: 1 }             // Level 3: 1 color, quota 1
-}
-```
-- `c` — Array of color keys (from `Colors.js`)
-- `q` — Quota: how many level-N moves needed to produce 1 level-(N+1) move
-
-Ranks sit on top of the [book-board-color binding](colors.md): each rank level lists book
-colors, and unmentioned colors are auto-appended to the lowest level by
-`checkAndUpdateRanks()`. The palette itself is documented in [`colors.md`](colors.md).
-
-### Counters
-| Counter | Purpose | Updated By |
-|---------|---------|------------|
-| `rankCounters[level]` | Consumed moves at this level (resets when upper level consumes) | `BoardDomain.commitBalance()` |
-| `rankCountersAbs[level]` | Absolute move count at this level (never resets) | `BoardDomain.commitBalance()` |
-| `boardsCounters[boardId]` | Total consumed moves across all levels for board | `BoardDomain.commitBalance()` |
-
-### Rank Algorithm (`BoardDomain.commitBalance()`)
-
-**Trigger**: Task dropped on column with `consumeMove=true` (or column's `defaultConsumeMove`)
-
-**Implementation**: `BoardDomain.js` — `commitBalance(consumeMove)`. Read the live source
-for exact behavior; it is the source of truth. The rule it implements is the following.
-
-**Model — a token economy.** Lower-level moves are "minted" by spending upper-level quota.
-Level 1 is the base currency.
-
-Order of effects when a move is committed at `level`:
-
-1. The **absolute** counter `rankCountersAbs[level]` always increments (never resets).
-2. The **board total** counter (`boardsCounters[board.id]`) increments (never resets).
-3. If the move is not a move (`consumeMove` falsy), rank counters are left untouched.
-4. At level 1, only the level-1 counter increments.
-5. At higher levels, the own counter increments, **capped at that level's quota when it is
-   the last level** (no child level resets it).
-6. The **upper level decrements** by `1 × quotaUpper` — consuming a lower-level move "spends"
-   upper-level quota. This step is the core of the token economy.
-7. Counter mutations are wrapped in undo snapshots and persisted.
-
-The level is derived from the moved task's color (`RanksUI.getLevelOfColor`), not passed as a
-parameter. Quotas come from `board.ranks[level].q`.
+Ranks are persisted on a board as `ranks`, `ranksRaw`, `rankCounters`, and `rankCountersAbs`.
+`BoardDomain` orchestrates current-board selection, undo snapshots, board-wide counters, and
+persistence. All rank rules and data contracts are canonical in [`ranks.md`](ranks.md).
 
 ### Ideal Distribution (`BoardDomain.getIdealPercents()`)
 
@@ -139,10 +96,10 @@ domain.
 | `moveColumn(id, right)` | Reorders columns |
 | `renameColumn(id, name)` | Updates column name |
 | `setColumnDefaultConsumeMove(id, bool)` | Sets auto-consume flag |
-| `setRanksData(parsedRanks)` | Validates + saves ranks config |
+| `setRanksData(parsedRanks)` | Orchestrates reconciliation, undo snapshot, and persistence |
 | `deleteRanks()` | Clears ranks + counters |
 | `resetCounters()` | Clears rankCounters + rankCountersAbs |
-| `commitBalance(consumeMove, level)` | Core rank algorithm (see above) |
+| `commitBalance(consumeMove)` | Orchestrates pure `RanksDomain` balance mutation and persistence |
 | `takeBoardSnapshot()` / `undoFromSnapshot()` | Undo support |
 
 ---

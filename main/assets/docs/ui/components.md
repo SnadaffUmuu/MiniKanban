@@ -100,7 +100,7 @@ The `BooksUI` single-book page-cloud controls and layout anchors are documented 
 | `HeaderUI` | Top bar, screen switching, night mode, menus, and screen-specific tools |
 | `DragDrop` | Unified touch/mouse task and board drag-and-drop |
 | `TaskUI` | Task rendering and task display/edit modes |
-| `RanksUI` | Rank configuration editor; also used as a header mode |
+| `RanksUI` | Rank configuration editor and counter-reconciliation preview; rules live in [`RanksDomain`](../domains/ranks.md) |
 | `FiltersUI` | Book/event filter panel; also used as a header mode |
 | `ProgressUI` | Progress logging dialog |
 | `ColumnHeaderUI` | Column header controls and menus |

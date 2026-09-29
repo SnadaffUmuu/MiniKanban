@@ -947,6 +947,44 @@ body:has(.dragged) {
   flex-flow: column nowrap;
 }
 
+.rank-reconciliation {
+  margin-top: 10px;
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+.rank-reconciliation table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rank-reconciliation th,
+.rank-reconciliation td {
+  padding: 5px;
+  border: 1px dotted #817b7b;
+  text-align: left;
+}
+
+.rank-reconciliation input {
+  box-sizing: border-box;
+  width: 55px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--text-accent);
+}
+
+.rank-reconciliation-ambiguous {
+  color: var(--text-accent);
+}
+
+.rank-reconciliation-dropped {
+  color: #a3a0a1;
+}
+
+.rank-reconciliation-note {
+  padding-top: 7px;
+}
+
 #stats {
   padding: 10px 10px 10px 0;
 }

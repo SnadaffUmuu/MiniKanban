@@ -3,7 +3,6 @@ import {Utils} from "./Utils.js";
 import {BooksDomain} from "./BooksDomain.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {State} from "./State.js";
-import {RanksUI} from "./RanksUI.js";
 
 export const EventsDomain = {
 

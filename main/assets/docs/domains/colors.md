@@ -77,12 +77,8 @@ Consequences worth internalizing:
   below.
 
 ### Rank Relationship (Secondary)
-Ranks are a **priority overlay** on top of the book-color mapping. The rank system is
-owned by the [Board domain](boards.md#ranks-system); the color facts are:
-- `board.ranks` maps colors → level + quota
-- Colors not mentioned in ranks config are auto-appended to the lowest level (`BoardDomain.checkAndUpdateRanks()`)
-- Rank algorithm (`commitBalance()`) operates on levels, but levels are populated by book colors
-- Statistics (attention balance, board distribution) are computed per color = per book
+Ranks are a priority overlay on board colors, independent of book assignment. Their ownership,
+counter semantics, and color-placement rules are canonical in [`ranks.md`](ranks.md).
 
 ### What This Enables
 - Progress bars colored by book (not by rank level)
@@ -104,6 +100,5 @@ table records *where* each color behavior is owned so no document duplicates it:
 | `getFreeColors()` — palette colors with no card on the current board (Ranks-tool view, NOT book-assignable) | `BoardDomain.js` — see [`boards.md`](boards.md) |
 | `getUnregisteredColorsForBoard(board)` — `getColorsInUse` minus colors claimed by active books; the only colors a book may claim | `BooksDomain.js` — see [`books.md`](books.md) |
 | `betBookByBoard(boardId, color)` | `BooksDomain.js` — see [`books.md`](books.md) |
-| `checkAndUpdateRanks(board, color)` (auto-append to lowest level) | `BoardDomain.js` — see [`boards.md`](boards.md) |
-| Rank config (`board.ranks`) maps colors → level/quota | `BoardDomain.js` — see [`boards.md`](boards.md) |
+| Rank color placement and rank config | `RanksDomain.js`, orchestrated by `BoardDomain.js` — see [`ranks.md`](ranks.md) |
 | Color rendering in UI (badges, bars, dots) | UI components — see [`../ui/components.md`](../ui/components.md) |

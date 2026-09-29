@@ -9,7 +9,7 @@
 KanbanMvd is an Android WebView application with a UI layer, pure domain logic, shared application state, and a persistence boundary.
 
 - UI components are registered through `Components.js`. Their canonical registry is [`ui/components.md`](ui/components.md).
-- Board, book, and event rules are owned by the corresponding documents under [`domains/`](domains/boards.md).
+- Board, rank, book, and event rules are owned by the corresponding documents under [`domains/`](domains/boards.md), including the pure ranks engine documented in [`domains/ranks.md`](domains/ranks.md).
 - `State.js` owns transient UI state.
 - `App.js` owns loaded application data, current-screen state, and persistence coordination.
 - `Storage.js` provides the native Android/localStorage boundary described in [`persistence.md`](persistence.md).
