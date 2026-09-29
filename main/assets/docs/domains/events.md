@@ -101,6 +101,8 @@ All stats operate on `EventsDomain.getFilteredEvents()` (respects board/books fi
 - Deep dive for single board (selected via filter)
 - Per rank level: expected vs actual per book (color-coded)
 - Ratio = actual/expected (1.0 = perfect balance)
+- Counts consumed moves only (`cm: true`, via `checkSkipMoved`), unless `filter.includeSkipMove`
+- Replaces the removed legacy `rankCountersAbs` per-level counters
 - Used for "attention balance" visualization
 
 ---

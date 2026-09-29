@@ -67,7 +67,6 @@ export const BoardDomain = {
   resetCounters() {
     const board = this.getCurrentBoard();
     board.rankCounters = {};
-    board.rankCountersAbs = {};
     this.saveBoards(App.data.boards);
   },
 
@@ -308,7 +307,6 @@ export const BoardDomain = {
     board.ranksRaw = ranksRaw;
     board.ranks = ranks;
     board.rankCounters = newCounters;
-    // absCounters untouched per design
 
     console.log('ranks', board.ranks);
     console.log('ranksRaw', board.ranksRaw);
@@ -322,7 +320,6 @@ export const BoardDomain = {
     delete board.ranks;
     delete board.ranksRaw;
     delete board.rankCounters;
-    delete board.rankCountersAbs;
     this.saveBoards(App.data.boards);
   },
 
@@ -380,17 +377,14 @@ export const BoardDomain = {
     }
 
     board.rankCounters = board.rankCounters || {};
-    board.rankCountersAbs = board.rankCountersAbs || {};
     this.takeBoardRankCountersSnapshot(board);
 
     const rankBalance = RanksDomain.commitBalance(
       ranks,
       board.rankCounters,
-      board.rankCountersAbs,
       level
     );
     board.rankCounters = rankBalance.counters;
-    board.rankCountersAbs = rankBalance.absCounters;
 
     this.saveBoards(App.data.boards);
 
@@ -418,8 +412,7 @@ export const BoardDomain = {
 
   takeBoardRankCountersSnapshot(board) {
     State.undoSnapshot.boardRanksCountersSnapshot = {
-      counters: JSON.parse(JSON.stringify(board.rankCounters)),
-      absCounters: JSON.parse(JSON.stringify(board.rankCountersAbs))
+      counters: JSON.parse(JSON.stringify(board.rankCounters))
     };
   },
 
@@ -435,7 +428,6 @@ export const BoardDomain = {
       const ranksCountersSnapshot = State.undoSnapshot.boardRanksCountersSnapshot;
       if(ranksCountersSnapshot) {
         boards[index].rankCounters = ranksCountersSnapshot.counters;
-        boards[index].rankCountersAbs = ranksCountersSnapshot.absCounters;
       }
     }
 

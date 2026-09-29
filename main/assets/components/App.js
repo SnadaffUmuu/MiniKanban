@@ -31,6 +31,8 @@ export const App = {
     }
     // Legacy field: board balance is now derived from events (see EventsDomain.getBoardStats)
     delete this.data.boardsCounters;
+    // Legacy field: per-level attention balance is now derived from events (see EventsDomain.buildBoardAttentionBalance)
+    (this.data.boards || []).forEach(board => delete board.rankCountersAbs);
   },
 
   saveData() {

@@ -873,7 +873,6 @@ body:has(.dragged) {
 
 #preview-ranks,
 #current-ranks,
-#abs-counters,
 #current-colors {
   /* padding:10px; */
   padding-bottom: 0;

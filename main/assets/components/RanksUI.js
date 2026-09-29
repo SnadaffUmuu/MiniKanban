@@ -35,7 +35,6 @@ export const RanksUI = {
     textarea: '#ranks-input',
     currentColorsBlock: '#current-colors',
     currentRanksBlock: '#current-ranks',
-    absCountersBlock: '#abs-counters',
     previewBlock: '#preview-ranks',
     colorsInUseToggle: '#current-colors .ranks-title',
     freeColorsToggle: '#free-colors .ranks-title',
@@ -124,7 +123,6 @@ export const RanksUI = {
       draft.ranks,
       'Preview',
       null,
-      null,
       true
     ) + this.getReconciliationHtml(draft.reconciliation, State.ranksUi.counterOverrides) : ''}
       </div>
@@ -163,19 +161,9 @@ export const RanksUI = {
       board.ranks,
       undefined,
       true,
-      null,
       State.ranksUi.countersShown
     ) : '';
-    const absCounters = board.ranks ? this.getRanksHtml(
-      board,
-      board.ranks,
-      'Abs counters',
-      null,
-      true,
-      State.ranksUi.countersShown
-    ) : '';
-    return counters || absCounters ? `<div id="current-ranks">${counters}</div>
-        <div id="abs-counters">${absCounters}</div>` : '';
+    return counters ? `<div id="current-ranks">${counters}</div>` : '';
   },
 
   getRanksHtml(
@@ -183,7 +171,6 @@ export const RanksUI = {
     ranks,
     title = 'Current ranks',
     showCounters = false,
-    showAbsCounters = false,
     showList = false,
   ) {
 
@@ -208,8 +195,6 @@ export const RanksUI = {
       let counter = '';
       if(showCounters == true && board.rankCounters && board.rankCounters[level] != null) {
         counter = '&nbsp;&nbsp;' + board.rankCounters[level];
-      } else if(showAbsCounters == true && board.rankCountersAbs && board.rankCountersAbs[level] != null) {
-        counter = '&nbsp;&nbsp;' + board.rankCountersAbs[level];
       }
 
       // если последний уровень — без вложенного ul

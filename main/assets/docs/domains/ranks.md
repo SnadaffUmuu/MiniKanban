@@ -32,7 +32,6 @@ board.ranks = {
 | `q` | Number of level-N moves required for one level-(N+1) move |
 | `board.ranksRaw` | User textarea representation: one `quota colors` level per line |
 | `board.rankCounters[N]` | Level-N wallet/credit line available to the level-(N+1) group |
-| `board.rankCountersAbs[N]` | Absolute consumed-move count at level N |
 
 The persisted shapes remain positional. Level numbers are positions, not stable identities.
 
@@ -60,18 +59,17 @@ edit reconciliation.
 
 ## Consuming quota
 
-The pure mutation is `RanksDomain.commitBalance(ranks, counters, absCounters, level)`. The public
+The pure mutation is `RanksDomain.commitBalance(ranks, counters, level)`. The public
 application operation remains `BoardDomain.commitBalance(consumeMove)`, which derives the level
 from the progress task's color and persists the returned state.
 
 For a consumed move:
 
-1. Increment the absolute counter at the moved color's level.
-2. At level 1, increment its quota counter without spending an upper wallet.
-3. At a lower-priority level, increment its own counter and subtract the preceding level's quota
+1. At level 1, increment its quota counter without spending an upper wallet.
+2. At a lower-priority level, increment its own counter and subtract the preceding level's quota
    from the preceding counter.
-4. Cap the last level's own counter at its quota because no following group spends it.
-5. `BoardDomain` snapshots the previous counters (for undo) and persists.
+3. Cap the last level's own counter at its quota because no following group spends it.
+4. `BoardDomain` snapshots the previous counters (for undo) and persists.
 
 A falsy `consumeMove` leaves all rank counters unchanged.
 
@@ -88,8 +86,10 @@ overlapping colors and returns opening counters plus a preview report. The polic
    rows; `RanksDomain.applyOverrides()` applies it.
 5. An unmatched old group is dropped. The last counter remains a capped tail counter.
 
-Reconciliation never consults books, archive state, or cards. `rankCountersAbs` is intentionally
-not reconciled. No persistence migration is required.
+Reconciliation never consults books, archive state, or cards. No persistence migration is
+required. The legacy `rankCountersAbs` field (absolute per-level move counts) was removed; it was
+never reconciled and went stale after rank edits. Per-level move distribution is now derived from
+events — see `EventsDomain.buildBoardAttentionBalance` in [`events.md`](events.md).
 
 ## Public anchors
 

@@ -105,17 +105,15 @@ export const RanksDomain = {
     };
   },
 
-  commitBalance(ranks, counters, absCounters, level) {
+  commitBalance(ranks, counters, level) {
     const updatedCounters = Object.assign({}, counters || {});
-    const updatedAbsCounters = Object.assign({}, absCounters || {});
     level = toInt(level);
 
     const ownCount = toInt(updatedCounters[level]);
-    updatedAbsCounters[level] = toInt(updatedAbsCounters[level]) + 1;
 
     if(level === 1) {
       updatedCounters[level] = ownCount + 1;
-      return {counters: updatedCounters, absCounters: updatedAbsCounters};
+      return {counters: updatedCounters};
     }
 
     const levels = getLevels(ranks);
@@ -127,7 +125,7 @@ export const RanksDomain = {
     updatedCounters[level - 1] = toInt(updatedCounters[level - 1])
       - toInt(ranks[level - 1].q);
 
-    return {counters: updatedCounters, absCounters: updatedAbsCounters};
+    return {counters: updatedCounters};
   },
 
   getStanding(ranks, counters, level) {

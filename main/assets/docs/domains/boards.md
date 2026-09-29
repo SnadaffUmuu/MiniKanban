@@ -15,7 +15,6 @@
   columns: [Column],
   ranks: RanksConfig,  // Only for reading boards
   rankCounters: {},    // Per-level consumed moves (runtime)
-  rankCountersAbs: {}, // Absolute move counts per level (runtime)
   ideal: 30,           // Target % for attention balance (reading boards)
   startIndex: 0        // legacy, not used
 }
@@ -56,7 +55,7 @@ Features exclusive to reading boards:
 - **Ranks** — Hierarchical color-based progression system
 - **Books** — Books assigned to board via `book.board` + `book.color`
 - **Events** — Reading sessions logged per book
-- **Counters** — `rankCounters`, `rankCountersAbs`
+- **Counters** — `rankCounters`
 
 Colors on a board originate from its **cards**, not from books: `BoardDomain.getColorsInUse(board)`
 is the source of truth for "colors present on this board", and the Books domain derives the
@@ -68,7 +67,7 @@ the rationale and the resulting invariant.
 
 ## Ranks System
 
-Ranks are persisted on a board as `ranks`, `ranksRaw`, `rankCounters`, and `rankCountersAbs`.
+Ranks are persisted on a board as `ranks`, `ranksRaw`, and `rankCounters`.
 `BoardDomain` orchestrates current-board selection, undo snapshots, board-wide counters, and
 persistence. All rank rules and data contracts are canonical in [`ranks.md`](ranks.md).
 
@@ -98,7 +97,7 @@ domain.
 | `setColumnDefaultConsumeMove(id, bool)` | Sets auto-consume flag |
 | `setRanksData(parsedRanks)` | Orchestrates reconciliation, undo snapshot, and persistence |
 | `deleteRanks()` | Clears ranks + counters |
-| `resetCounters()` | Clears rankCounters + rankCountersAbs |
+| `resetCounters()` | Clears rankCounters |
 | `commitBalance(consumeMove)` | Orchestrates pure `RanksDomain` balance mutation and persistence |
 | `takeBoardSnapshot()` / `undoFromSnapshot()` | Undo support |
 
@@ -108,8 +107,9 @@ domain.
 
 There is no per-board move total in board data. The real-vs-ideal board balance is derived from
 the event log: `EventsDomain.getBoardStats()` (shown by `HeaderStats` and `EventStatsUI`), with
-targets from `BoardDomain.getIdealPercents()`. The legacy `boardsCounters` field is dropped on
-load (`App.loadData`).
+targets from `BoardDomain.getIdealPercents()`. The legacy `boardsCounters` and per-board
+`rankCountersAbs` fields are dropped on load (`App.loadData`); per-level balance within a board
+comes from `EventsDomain.buildBoardAttentionBalance()`.
 
 ---
 

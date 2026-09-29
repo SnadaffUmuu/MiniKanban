@@ -473,7 +473,8 @@ export const EventsDomain = {
   //joined data (expected + real)
   buildBoardAttentionBalance(events, boardId) {
 
-    events = this.addBoardsDataToEvents(events);
+    // Only consumed moves (cm === true) count, unless filter.includeSkipMove.
+    events = this.addBoardsDataToEvents(this.checkSkipMoved(events));
 
     const board =
       BoardDomain.getBoard(boardId);
