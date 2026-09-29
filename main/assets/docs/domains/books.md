@@ -1,72 +1,30 @@
 # Books Domain
 
-**Related documentation**: [`boards.md`](boards.md) | [`colors.md`](colors.md) | [`events.md`](events.md) | [`../ui/components.md`](../ui/components.md) | [`../persistence.md`](../persistence.md)
+**Related**: [`boards.md`](boards.md) | [`colors.md`](colors.md) | [`events.md`](events.md) | [`../persistence.md`](../persistence.md)
 
----
+## Book record
 
-## Book Data Structure
+Read `BooksDomain.save` for the shape. Key points: `key` is user-defined and unique; `board` + `color` bind the book to a color on a reading board (see below); `state.ranges` holds progress; `archived` is an array of `{ts, board, color}` snapshots and `archivedNow` is the live flag.
 
-```javascript
-{
-  key: 'book-key',       // Unique identifier (user-defined)
-  name: 'Book Name',     // Display name
-  size: 300,             // Total pages/units
-  board: 'board-id',     // BoardDomain board.id (reading board only)
-  color: 'peach',        // Color key from Colors.js (maps to board rank color)
-  state: {
-    ranges: [Range]      // Progress ranges (see below)
-  },
-  archived: [Snapshot],  // Archive history: [{ts, board, color}]
-  archivedNow: boolean   // True while the book is archived
-}
-```
+## Ranges
 
----
+A range is `{c, f, t}`: column index, from page, to page (both inclusive). Books track progress as ranges mapped to columns.
 
-## Range System
+Validation rules (`BooksDomain.getNewRangesForRanges`, `applyRange`):
 
-Books track reading progress as **ranges mapped to column indexes**. A `Range` is a three-field
-contract (`f` inclusive, `t` inclusive):
+- **Nested overlap is allowed**: a range fully containing another is accepted because the owning stage is unambiguous.
+- **Partial overlap is an error**: it is ambiguous which stage owns the pages.
+- Ranges within one stage end up non-overlapping (merged via `Utils.mergeRanges`).
 
-| Field | Meaning |
-|-------|---------|
-| `c` | Column index |
-| `f` | From page (inclusive) |
-| `t` | To page (inclusive) |
+## Progress visualization
 
-## Range Validation & Merging (`BooksDomain.js`)
+The segmented progress bar and its column gradient are in `BooksUI.js` (colors are illustrative; verify in source).
 
-**Flow**: User inputs ranges in ProgressUI or in BooksUI → `BooksDomain.getNewRangesForRanges()` → validation → merge → `addOrUpdateRange()`
-
-**Contract** (read `BooksDomain.js` for the implementation):
-
-- Inputs are normalized to `{c: Number, f: Number, t: Number}`, then `f <= t` is enforced.
-- **Nested overlap is allowed** — a range fully containing another is accepted, because the
-  owning stage is unambiguous.
-- **Partial overlap is an error** — when two ranges overlap without one containing the other,
-  it is ambiguous which stage owns the pages.
-- Ranges are applied one at a time through `applyRange()`, and each application merges the
-  result per stage via `Utils.mergeRanges()`.
-
-**applyRange()** (`BooksDomain.js`):
-- Splits existing ranges at incoming range boundaries
-- Inserts incoming range
-- Merges adjacent/overlapping ranges per stage via `Utils.mergeRanges()`
-
----
-
-## Progress Visualization
-
-### Progress Bar (`BooksUI.js`)
-- Maps ranges → pages per column (using board columns)
-- Renders segmented bar: each segment = column, width = % of book size
-- Colors = column gradient (HSL 210, 70%, lightness 85%→35%)
-
-### Page Cloud (`BookTree.generate()` / `BooksUI.renderBookTree()`)
+## Page cloud
 
 `BookTree.js` owns the layout contract and shape registry; `BooksUI.js` measures `#tree-root`,
 applies reading progress, and renders the SVG. Device-level shape, fill-mode, and outline preferences are
-defined canonically in [`persistence.md`](../persistence.md#kanbanlocal-preference-fields).
+defined canonically in [`persistence.md`](../persistence.md); tree shape, fill mode and outline are stored in `kanbanLocal` (see `App.js` for the field names).
 
 **Generation order** (behavioral contract; implementation in `BookTree.generate()`):
 
@@ -102,81 +60,24 @@ defined canonically in [`persistence.md`](../persistence.md#kanbanlocal-preferen
 
 ## Archiving
 
-A book can be **archived** to remove it from the active list without losing its history:
+Archiving removes a book from the active list without losing history (`archiveBook`, `restoreBook`).
 
-- `archiveBook(key, ts)` — records the current `board`/`color` into `book.archived` (an
-  array of `{ts, board, color}` snapshots), deletes the live `board`/`color`, and sets
-  `book.archivedNow = true`. Returns a `{result, message, details}` envelope.
-- `restoreBook(key, {board, color})` — validates the target board/color and re-binds the book,
-  clearing `archivedNow`. The color must be *available* on that board, which means it is both
-  (a) present as at least one card on that board and (b) not already claimed by another active
-  book. A palette color with no card on the board (e.g. "green" with no green cards) is
-  intentionally rejected — the board's cards, not the palette, define the assignable set (see
-  [`colors.md`](colors.md#why-a-book-can-only-claim-card-colors)). History is preserved: the
-  `archived` array keeps every snapshot, so a restored book still has `archived.length > 0`.
-- `isArchived(book)` — true iff `book.archivedNow === true` (the array length is irrelevant
-  on its own).
-- `getActiveBooks()` / `getArchivedBooks()` — partition by `isArchived`.
-- `getArchivedPeriods(book)` — returns the `archived` snapshot array.
-- `getBindingAt(book, ts)` — resolves the board/color a book had at a timestamp. Each
-  archive snapshot records the binding live until that time, so the snapshot with the
-  smallest `ts >= event ts` owns the event; events newer than every snapshot resolve to the
-  current root binding (absent while archived). Supports multiple archive/restore cycles.
+- Archiving snapshots `{ts, board, color}` into `book.archived`, deletes the live `board`/`color`, and sets `archivedNow = true`. Restoring re-binds and clears `archivedNow` but **keeps every snapshot**, so a restored book still has `archived.length > 0`. `isArchived` looks only at `archivedNow`, never at the array length.
+- Restore requires a color that is a card on the target board and not claimed by another active book. A palette color with no card is rejected on purpose ([why](colors.md#why-a-book-can-only-claim-card-colors)).
+- **Historic binding**: `getBindingAt(book, ts)` answers "which board/color did this book have at `ts`?". Each snapshot records the binding that was live *until* its `ts`, so the snapshot with the smallest `ts >= event ts` owns the event; events newer than all snapshots use the current binding (none while archived). This supports several archive/restore cycles and keeps past events and stats correct.
+- `getLatestArchivedPeriod` picks by `ts`, not array order.
+- `getFilteredBooks` treats `board === BooksDomain.ARCHIVED_FILTER` as "archived only" because archived books have no live `board`.
+- UI: archived books render in a separate table, colored from the **last snapshot**. Event visibility of archived books: [`events.md`](events.md#semantics-worth-knowing).
 
-`getFilteredEvents(filter)` in the Events domain shows events belonging to currently
-archived books by default; they are hidden only when the filter sets
-`includeArchived == false` (the "incl. archived?" filter checkbox, which defaults to checked).
+## Book-board-color binding
 
-In the books list the archived subset renders in a separate "Archived books" table. Archived
-rows are colored by the **last archive snapshot** (its board border and cell color), so they
-match the main table's look while keeping their own table. Archiving a book keeps its board and
-color for history so past events/stats stay correct after a restore.
+`book.board` + `book.color` identify a book on a reading board. Concept and rationale: [`colors.md`](colors.md). `BooksDomain.betBookByBoard(boardId, color)` finds the book for a task/event. `BooksDomain.getUnregisteredColorsForBoard(board)` gives the only colors a book may claim: `BoardDomain.getColorsInUse(board)` minus colors of *active* books. It is **not** the palette and **not** `BoardDomain.getFreeColors()` (a Ranks-tool view).
 
-## Book-Board-Color Binding
+## Known dead code
 
-A book is bound to one color on one reading board via `book.board` + `book.color`. The
-full concept — palette, the color = book-on-board mental model, technical binding methods,
-and the rank overlay — is documented canonically in [`colors.md`](colors.md). The Book
-domain owns two binding lookups:
+`BooksDomain.buildTreeLayout`, `shapeHalfWidth` and `apportion` have no callers; the cloud layout lives in `BookTree.js`. Safe to remove after a check.
 
-- `betBookByBoard(boardId, color)` — resolves which book a task/event belongs to
-- `getUnregisteredColorsForBoard(board)` — the only colors a book may claim on `board`:
-  `BoardDomain.getColorsInUse(board)` (colors present as cards on that board) minus the colors
-  already claimed by an *active* book. This is **not** the palette, and **not**
-  `BoardDomain.getFreeColors()`; see ["Why a book can only claim card colors"](colors.md#why-a-book-can-only-claim-card-colors).
+## Invariants
 
----
-
-## Book Operations (BooksDomain.js)
-
-| Method | Description |
-|--------|-------------|
-| `getBooks()` / `getBook(key)` | Access all/single book |
-| `getFilteredBooks(filter)` | Filter by `board` or `books` (array of keys). `board === BooksDomain.ARCHIVED_FILTER` (`'archived'`) selects only archived books (they have no live `board`) |
-| `getBookRanges(key)` | Returns `book.state.ranges` |
-| `save(data)` | Create/update book (name, key, size, board, color) |
-| `deleteBook(key, deleteHistory)` | Removes book (TODO: clean events) |
-| `archiveBook(key, ts)` | Archives a book, snapshotting board/color into history |
-| `restoreBook(key, {board, color})` | Re-binds an archived book to a board/color |
-| `isArchived(book)` | True while explicitly archived (`archivedNow`) |
-| `getActiveBooks()` / `getArchivedBooks()` | Split books by archive state |
-| `getArchivedPeriods(book)` | Returns the `archived` snapshot array |
-| `getLatestArchivedPeriod(book)` | The most recent snapshot, chosen by `ts` (not array order) |
-| `getBindingAt(book, ts)` | Board/color a book held at a timestamp |
-| `getNewRangesForRanges(input)` | Validate + merge ranges |
-| `addOrUpdateRange(bookKey)` | Applies `State.newRangesDraft` to book |
-| `applyRange(existing, incoming)` | Core range insertion logic |
-| `getStartedPageCount(book)` | Counts unique pages covered by progress ranges for the tree view |
-| `takeBookSnapshot()` / `undoFromSnapshot()` | Undo for book edits |
-
----
-
-## UI Components
-
-See the canonical [`UI component registry`](../ui/components.md#component-registry).
-
----
-
-## Key Invariants
-
-- **Ranges per stage are non-overlapping** — enforced by validation + merge
+- Ranges per stage are non-overlapping (validation + merge).
+- One active book per color per board.

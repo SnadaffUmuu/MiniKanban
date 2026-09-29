@@ -31,7 +31,7 @@ These key names and ownership assignments are defined only here. Other documents
 
 Domain operations request persistence through the corresponding `App.js` save method. `App.js` delegates the storage operation to `Storage.js`.
 
-Calls across the Android/storage boundary require `try/catch`, as specified in [`constraints.md`](constraints.md#code-style-rules).
+Calls across the Android/storage boundary require `try/catch`, as specified in [`constraints.md`](constraints.md).
 
 ---
 

@@ -90,16 +90,3 @@ Reconciliation never consults books, archive state, or cards. No persistence mig
 required. The legacy `rankCountersAbs` field (absolute per-level move counts) was removed; it was
 never reconciled and went stale after rank edits. Per-level move distribution is now derived from
 events — see `EventsDomain.buildBoardAttentionBalance` in [`events.md`](events.md).
-
-## Public anchors
-
-| Operation | Anchor |
-|-----------|--------|
-| Parse and validate textarea syntax | `RanksDomain.parseRanks()` |
-| Find a color's level | `RanksDomain.getLevelOfColor()` |
-| Add an unmentioned color | `RanksDomain.addColorToLowestLevel()` |
-| Calculate standing/pass state | `RanksDomain.getStanding()` / `getPassState()` |
-| Apply one consumed move | `RanksDomain.commitBalance()` |
-| Reconcile an edited hierarchy | `RanksDomain.reconcileCounters()` / `applyOverrides()` |
-| Board persistence orchestration | `BoardDomain.setRanksData()` / `commitBalance()` |
-| Preview and rendering | `RanksUI` |

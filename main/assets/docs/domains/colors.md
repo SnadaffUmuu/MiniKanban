@@ -25,11 +25,6 @@ invariant that matters:
 the book tree SVG fill (`BooksUI.js`) and the column-gradient progress segments.
 For dropdowns, use `BooksUI.setColorsDropdownColor`, which swaps the class.
 
-At the time of writing the palette has eleven keys (`peach`, `pink`, `plum`, `purple`,
-`blue`, `teal`, `green`, `olive`, `yellow`, `white`, `beige`); treat that list as
-illustrative and confirm against `Colors.js`.
-
-
 ---
 
 ## Book-Board-Color Binding
@@ -51,9 +46,6 @@ not the source of the color.
 
 ### Technical Binding
 - `book.color` + `book.board` = unique identifier for a book on that board
-- `BooksDomain.betBookByBoard(boardId, color)` — resolves which book a task/event belongs to
-- `BooksDomain.getUnregisteredColorsForBoard(board)` — card colors on the board that no active
-  book has claimed yet (see "Why a book can only claim card colors" below)
 - Only one book per color per board (enforced by UI)
 
 ### Why a book can only claim card colors
@@ -77,34 +69,17 @@ Consequences worth internalizing:
 - **A palette-only color with no cards is unassignable.** "Green" being in `Colors.js` (or in
   the "free colors" list shown by the Ranks tool) does *not* make it selectable for a book;
   a green card must exist on the board first.
-- **`getFreeColors()` is NOT the book-color list.** `BoardDomain.getFreeColors()` is a Ranks-tool
-  view of palette colors with no board card; the book-assignable set is
-  `BooksDomain.getUnregisteredColorsForBoard()` — see the [ownership map](#color-logic-ownership-map)
-  below.
+- **`getFreeColors()` is NOT the book-color list.** It is a Ranks-tool view of palette colors with no board card; the book-assignable set is `BooksDomain.getUnregisteredColorsForBoard()`.
 
 ### Rank Relationship (Secondary)
 Ranks are a priority overlay on board colors, independent of book assignment. Their ownership,
 counter semantics, and color-placement rules are canonical in [`ranks.md`](ranks.md).
 
-### What This Enables
-- Progress bars colored by book (not by rank level)
-- Events UI: calendar dots / list bars colored by book
-- EventStatsUI: attention balance per book (via its color)
-- Task rank badges (Level, Pass mark) derived from the book's assigned level
-
 ---
 
-## Color Logic: Ownership Map
+## Where things live
 
-The binding above is cross-domain; its implementation lives in two domain modules. This
-table records *where* each color behavior is owned so no document duplicates it:
-
-| Behavior | Owned by |
-|----------|----------|
-| Palette + CSS class generation | `Colors.js` |
-| `getColorsInUse(board)` — colors present as cards on a board (source of truth for book assignment) | `BoardDomain.js` — see [`boards.md`](boards.md) |
-| `getFreeColors()` — palette colors with no card on the current board (Ranks-tool view, NOT book-assignable) | `BoardDomain.js` — see [`boards.md`](boards.md) |
-| `getUnregisteredColorsForBoard(board)` — `getColorsInUse` minus colors claimed by active books; the only colors a book may claim | `BooksDomain.js` — see [`books.md`](books.md) |
-| `betBookByBoard(boardId, color)` | `BooksDomain.js` — see [`books.md`](books.md) |
-| Rank color placement and rank config | `RanksDomain.js`, orchestrated by `BoardDomain.js` — see [`ranks.md`](ranks.md) |
-| Color rendering in UI (badges, bars, dots) | UI components — see [`../ui/components.md`](../ui/components.md) |
+- Palette and CSS class generation: `Colors.js`.
+- `getColorsInUse` (card colors; source of truth) and `getFreeColors` (Ranks-tool view only, **not** book-assignable): `BoardDomain.js`.
+- `getUnregisteredColorsForBoard`, `betBookByBoard`: `BooksDomain.js`.
+- Rank color placement: `RanksDomain.js` ([`ranks.md`](ranks.md)).

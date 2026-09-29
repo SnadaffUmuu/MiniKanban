@@ -1,65 +1,62 @@
 # KanbanMvd Documentation Map
 
-Each topic below has one canonical document. Follow links instead of copying facts into other documents.
+Android WebView app, plain ES modules under `assets/` (`components/*.js`, `index.html`, `styles.css`), no build step.
+The code is the source of truth. These docs exist only for what the code cannot tell you: **intent, invariants, deliberate oddities, storage formats**.
 
-- **Architecture and application lifecycle** → [`docs/architecture.md`](docs/architecture.md)
-- **Board domain** → [`docs/domains/boards.md`](docs/domains/boards.md)
-- **Ranks and quota-counter semantics** → [`docs/domains/ranks.md`](docs/domains/ranks.md)
-- **Book domain** → [`docs/domains/books.md`](docs/domains/books.md)
-- **Event domain** → [`docs/domains/events.md`](docs/domains/events.md)
-- **Color domain (palette + book-board-color binding)** → [`docs/domains/colors.md`](docs/domains/colors.md)
-- **UI component registry and patterns** → [`docs/ui/components.md`](docs/ui/components.md)
-- **DOM event dispatch** → [`docs/ui/events-system.md`](docs/ui/events-system.md)
-- **Drag and drop** → [`docs/ui/dragdrop.md`](docs/ui/dragdrop.md)
-- **Persistence and storage keys** → [`docs/persistence.md`](docs/persistence.md)
-- **Runtime and language constraints** → [`docs/constraints.md`](docs/constraints.md)
+## Hard rules (no need to open any doc for these)
+
+1. Target runtime is an old WebView (API 21–28): write ES7-level JS, no `?.` / `??` in new code. Details and known drift: [`constraints.md`](docs/constraints.md).
+2. Domain modules (`*Domain.js`) never touch the DOM.
+3. UI peers coordinate through `Bus` events; do not call another component's methods or call `render()` directly during normal updates.
+4. New DOM handlers go into the component's own `events` map, not the legacy map in `Events.js`.
+5. Any `color` field is a key from `Colors.js`, applied as a CSS class, never as inline style.
+6. A book may only claim a color that already exists as a card on its board (not any palette color).
+7. Storage is reached only through `App.js` → `Storage.js`; wrap Android/storage calls in `try/catch`.
+
+## Read before touching
+
+| Task area | Read |
+|-----------|------|
+| Startup, render/update lifecycle, layer rules | [`docs/architecture.md`](docs/architecture.md) |
+| Boards, columns, tasks, ideal balance | [`docs/domains/boards.md`](docs/domains/boards.md) |
+| Ranks, quota counters, editing ranks | [`docs/domains/ranks.md`](docs/domains/ranks.md) |
+| Books, ranges, archiving, page cloud | [`docs/domains/books.md`](docs/domains/books.md) |
+| Event log, event fields, statistics | [`docs/domains/events.md`](docs/domains/events.md) |
+| Colors, book-board-color binding | [`docs/domains/colors.md`](docs/domains/colors.md) |
+| Adding/changing a UI component | [`docs/ui/components.md`](docs/ui/components.md) |
+| Adding a DOM event handler | [`docs/ui/events-system.md`](docs/ui/events-system.md) |
+| Drag and drop | [`docs/ui/dragdrop.md`](docs/ui/dragdrop.md) |
+| Storage keys, saving | [`docs/persistence.md`](docs/persistence.md) |
+| Language / WebView limits | [`docs/constraints.md`](docs/constraints.md) |
+
+For "where is function X / what does it take", use `grep`, not the docs.
 
 ---
 
 ## Documentation Conventions
 
-These docs are a **map, not a territory**. They are optimized for AI-assisted work: they tell a
-reader *where* something lives, *why* it is that way, and *which invariants* must not be broken.
-They are not a substitute for the source, and the source always wins.
+**Write a doc line only if it cannot be recovered by reading the code.** Ask: *would a model that reads the relevant file still get this wrong?* If not, do not write it.
 
-**Source of truth.** The live code under `assets/` (`*.js`, `styles.css`, `index.html`) is
-authoritative. When a document and the code disagree, the code is correct and the document is a
-bug. Prefer reading the relevant file over trusting a description.
+| Add | Do NOT add |
+|-----|-----------|
+| Why a design is the way it is; rejected alternatives | Method/function lists or signature tables |
+| Invariants and hard rules | Code blocks copied from source, pseudo-code |
+| Deliberate oddities ("looks like a bug, is intended") | Step-by-step narration of what a function does |
+| Persistence / wire field names (compact table) | Pixel sizes, timings, colors, CSS classes (unless marked *illustrative*) |
+| Order of operations that defines behavior (numbered, with one pointer) | Lists of things that exist in code (palette, components' methods) |
+| Known drift between docs/constraints and code, stated openly | Anything already stated in another doc (link instead) |
 
-**Keep, replace, or pointer — the rule for any content:**
+Rules of upkeep:
 
-| Content | Treatment |
-|---------|-----------|
-| Navigation ("X lives in `Y.js`") | **Keep.** This is the highest-value content. |
-| Invariants and hard rules ("one book per color per board") | **Keep.** Not derivable from code at a glance. |
-| "Why" a design is the way it is | **Keep.** The main reason these docs exist. |
-| Field/data shapes (wire and persistence contracts) | **Keep**, as a compact table. Field names are a contract. |
-| Order-of-operations that defines behavior | **Describe** as numbered steps + a pointer to the function. |
-| A copy of an implementation | **Replace** with a pointer (`see BoardDomain.js — commitBalance`). |
-| A hand-written pseudo-code re-implementation | **Replace** with the rule it encodes + a pointer. Pseudo-code drifts and is worse than nothing. |
-
-**Pointers over paraphrases.** When referring to behavior, name the concrete anchor — the file
-and, where useful, the method (`BooksDomain.getUnregisteredColorsForBoard`) — so a reader can
-verify with one lookup, instead of a paraphrase they might misapply.
-
-**Illustrative vs. normative.** UI/visual behavior (gradients, pixel margins, animation timings,
-exact CSS classes) ages fastest. When documenting it, mark it explicitly as illustrative and
-point at the source, e.g. *"verify against `styles.css`"*. Do not present it as a hard rule.
-
-**One canonical home per fact.** A fact lives in exactly one document; other documents link to
-it rather than copying it. If you find the same rule in two places, delete the copy and leave a
-link.
-
-**Honesty about drift.** If a document describes a rule the code does not fully follow, say so in
-the document (as [`constraints.md`](docs/constraints.md) does for optional chaining) instead of
-silently describing the desired state. A marked inconsistency prevents a wrong assumption; an
-unmarked one creates it.
-
-**When you change behavior, update the doc in the same change.** At minimum, check whether the
-affected invariants, shapes, or pointers still hold.
+- **One home per fact.** Link, do not copy.
+- **Pointers, not paraphrases.** Name file + method (`BooksDomain.getUnregisteredColorsForBoard`) only for non-obvious entry points, and never restate its signature. A renamed function makes a pointer stale, so keep pointers few.
+- **Prefer deleting to adding.** When you touch a doc, remove lines that are now obvious or wrong. A shorter correct doc beats a longer stale one.
+- **When you change behavior**, update only if an invariant, a "why", or a field contract changed. A refactor or new method usually needs **no** doc change.
+- **Honesty about drift.** If the code violates a documented rule, say so in the doc instead of describing the ideal.
+- Keep each doc short (target under ~100 lines). If it grows past that, you are probably copying code.
 
 ---
 
-## Tests 
+## Tests
 
-When a task is completed to not do any tests. 
+When a task is completed do not do any tests.

@@ -1,85 +1,38 @@
-# Architecture Overview
+# Architecture
 
-**Related documentation**: [`ui/components.md`](ui/components.md) | [`ui/events-system.md`](ui/events-system.md) | [`persistence.md`](persistence.md) | [`constraints.md`](constraints.md)
+**Related**: [`ui/components.md`](ui/components.md) | [`ui/events-system.md`](ui/events-system.md) | [`persistence.md`](persistence.md) | [`constraints.md`](constraints.md)
 
----
+## Layers
 
-## System Model
+- **UI components** (`*UI.js`, registered in `Components.js`) render and handle DOM events.
+- **Domain modules** (`BoardDomain`, `RanksDomain`, `BooksDomain`, `EventsDomain`) hold the rules. They may mutate data but never touch the DOM.
+- **`State.js`** is transient UI state (menus, drafts, undo snapshots). It is never persisted.
+- **`App.js`** owns loaded data, the current screen, and save coordination. **`Storage.js`** is the only persistence boundary ([`persistence.md`](persistence.md)).
 
-KanbanMvd is an Android WebView application with a UI layer, pure domain logic, shared application state, and a persistence boundary.
+## Two event systems, opposite directions
 
-- UI components are registered through `Components.js`. Their canonical registry is [`ui/components.md`](ui/components.md).
-- Board, rank, book, and event rules are owned by the corresponding documents under [`domains/`](domains/boards.md), including the pure ranks engine documented in [`domains/ranks.md`](domains/ranks.md).
-- `State.js` owns transient UI state.
-- `App.js` owns loaded application data, current-screen state, and persistence coordination.
-- `Storage.js` provides the native Android/localStorage boundary described in [`persistence.md`](persistence.md).
+- `Events.js`: DOM → application (delegated listeners → component handler). See [`ui/events-system.md`](ui/events-system.md).
+- `Bus.js`: application → subscribers (named change notifications). Render methods wrapped with `Bus.batchedMethod` are coalesced per microtask.
 
-Domain logic may mutate domain data but does not access the DOM. UI handlers call domain operations and publish resulting changes rather than duplicating domain rules.
+Why: components must stay decoupled. `Events.js` calling a handler from its declarative map is framework dispatch, not a component calling a peer. Apart from that and startup, a component never calls a peer's methods; it emits a Bus event.
 
----
+## Update lifecycle
 
-## Interaction Systems: `Events.js` and `Bus.js`
+DOM event → handler → change `State` or call domain op → domain/`App` saves if persistent → emit Bus event → batched renderers re-read state and update cached DOM → queued `State.afterRender` callbacks run.
 
-The two event-related modules have distinct directions and responsibilities:
+`afterRender` runs after a renderer's DOM update, **not** after a browser paint.
 
-| Module | Direction | Responsibility |
-|--------|-----------|----------------|
-| `Events.js` | DOM → application | Delegates browser DOM events and dispatches a matching UI handler. Its map format and exceptions are specified in [`ui/events-system.md`](ui/events-system.md). |
-| `Bus.js` | application → subscribers | Publishes named application changes. Subscribers use those notifications to coordinate updates; render subscribers are microtask-batched. |
+## Startup
 
-`Events.js` resolving and invoking the handler selected by its declarative map is framework dispatch, not one UI component imperatively calling a peer component. Outside framework dispatch and startup coordination, UI components do not invoke methods on peer UI components; they publish Bus events.
+`main.js` (short; read it) loads data, initializes `Events`, caches each component's selectors and calls its `init()`, then does explicit initial renders. Those explicit renders are the only sanctioned direct render calls; afterwards, emit Bus events.
 
----
+## Screens
 
-## Application Startup
+Exactly one of `BoardUI` / `BooksUI` / `EventsUI` is visible, chosen by `App.getCurrentScreen()` (persisted as `local.screen`). Each screen component hides itself in `render()` via `App.isBoard()` / `App.isEvents()` guards.
 
-Startup is coordinated by `main.js` in this order:
+## Rules
 
-1. Load board data through `App.loadData()`.
-2. Load local UI preferences through `App.loadLocal()`.
-3. Initialize delegated DOM events through `Events.init()`.
-4. For each registered component, cache its declared DOM selectors and run its optional `init()` method.
-5. Perform the explicit initial header render.
-6. Load book data.
-7. Perform the explicit initial render for the selected screen, loading event data first when required by that screen.
-
-The explicit renders in steps 5 and 7 are startup coordination. During normal updates, handlers publish Bus events instead of calling render methods directly.
-
----
-
-## Update and Rendering Lifecycle
-
-1. A user action is dispatched by `Events.js` to a UI handler.
-2. The handler changes transient `State` or invokes domain logic that changes application data.
-3. Persistent domain changes are saved through `App.js` as described in [`persistence.md`](persistence.md).
-4. The handler or domain operation emits the relevant Bus event.
-5. Subscribed render methods are coalesced into a single microtask per batched method.
-6. Each renderer reads current state/data and updates its cached DOM nodes.
-7. A relevant renderer drains queued `State.afterRender` callbacks after its DOM updates. This queue does not, by itself, guarantee execution after a browser paint.
-
-```text
-DOM event
-   ↓
-Events.js dispatch → UI handler → State/domain mutation → App save when persistent
-                                           ↓
-                                      Bus publication
-                                           ↓
-                                  batched subscribed render
-                                           ↓
-                                DOM update → afterRender queue
-```
-
----
-
-## Screen Management
-
-`App.getCurrentScreen()` returns the selected screen and `App.setScreen()` changes it. The selection is persisted in `local.screen`. Exactly one screen component is relevant at a time; the canonical component-to-screen mapping and guard conditions are in [`ui/components.md`](ui/components.md#screen-components).
-
----
-
-## Architectural Rules
-
-1. **Layer boundary** — Domain logic does not read or write the DOM.
-2. **Peer coordination** — UI peers coordinate through Bus publications, not imperative peer method calls. Declarative DOM dispatch and startup coordination are the explicit exceptions described above.
-3. **Normal rendering** — Do not call render methods directly during ordinary state updates; publish the appropriate Bus event.
-4. **Runtime compatibility** — Language and platform requirements are owned by [`constraints.md`](constraints.md).
+1. Domain code never reads or writes the DOM.
+2. UI peers coordinate through Bus, not method calls.
+3. Do not call render methods directly for ordinary updates; emit the Bus event.
+4. Language limits: [`constraints.md`](constraints.md).
