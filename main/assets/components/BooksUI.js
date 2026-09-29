@@ -225,10 +225,10 @@ export const BooksUI = {
       }
     }
     const board = BoardDomain.getBoard(boardId);
-    const cellStyle = !isArchived && b.color
-      ? ` style="background-color:${Colors[b.color]}"`
+    const cellClass = !isArchived && b.color
+      ? ` class="${b.color}"`
       : isArchived && color
-        ? ` style="background-color:${Colors[color]}"` : '';
+        ? ` class="${color}"` : '';
     let rowStyle = boardId && board
       ? `class="board-${board.key}-border${isArchived ? ' archived' : ''}"` : '';
     const extra = State.booksUi.rowUi[b.key]?.extra;
@@ -273,11 +273,11 @@ export const BooksUI = {
                 <option value="">choose a board</option>
                 ${App.data.boards.map(board => `<option ${board.id == b.board ? 'selected' : ''} value="${board.id}">${board.name}</option>`).join('')}
               </select><br>
-              <select required name="bookBoardColor" class="js-book-board-color" style="background-color:${Colors[b.color]}">
+              <select required name="bookBoardColor" class="js-book-board-color ${b.color}">
                 <option value="">choose a color</option>
-                <option selected value="${b.color}" style="background-color:${Colors[b.color]}">${b.color}</option>
+                <option selected value="${b.color}" class="${b.color}">${b.color}</option>
                 ${BooksDomain.getUnregisteredColorsForBoard(b.board)
-              .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
+              .map(color => `<option value="${color}" class="${color}">${color}</option>`)
               .join('')}
               </select><br>`}
               <div class="editBookActions">
@@ -323,11 +323,11 @@ export const BooksUI = {
     const lastUpdated = EventsDomain.getEventsForBook(b.key, false);
     return `
     <tr ${rowStyle} data-book-key="${b.key}">
-      <td ${cellStyle}>${b.name}</td>
-      <td ${cellStyle}>${b.size}</td>
-      <td ${cellStyle}><span class="nowrap">${lastUpdated.length ? lastUpdated[0].d : ''}</span></td>
-      <td ${cellStyle}>${this.renderProgressBar(b)}</td>
-      <td ${cellStyle}>
+      <td ${cellClass}>${b.name}</td>
+      <td ${cellClass}>${b.size}</td>
+      <td ${cellClass}><span class="nowrap">${lastUpdated.length ? lastUpdated[0].d : ''}</span></td>
+      <td ${cellClass}>${this.renderProgressBar(b)}</td>
+      <td ${cellClass}>
         <div class="book-action-container">
           <button class="book-action state js-edit-state"></button>
           <button class="book-action edit js-edit-book"></button>
@@ -365,18 +365,21 @@ export const BooksUI = {
       const board = BoardDomain.getBoard(el.value);
       select.innerHTML = '<option value="" selected>choose a color</option>'
         + BooksDomain.getUnregisteredColorsForBoard(board)
-          .map(color => `<option value="${color}" style="background-color:${Colors[color]}">${color}</option>`)
+          .map(color => `<option value="${color}" class="${color}">${color}</option>`)
           .join('');
       select.setAttribute('required', true);
     } else {
       select.innerHTML = '';
       select.removeAttribute('required');
     }
-    select.removeAttribute('style');
+    this.setColorsDropdownColor(select);
   },
 
   setColorsDropdownColor(el) {
-    el.style.backgroundColor = Colors[el.value];
+    Object.keys(Colors).forEach(key => el.classList.remove(key));
+    if(Colors[el.value]) {
+      el.classList.add(el.value);
+    }
   },
 
   addBook() {

@@ -201,8 +201,8 @@ export const RanksUI = {
 
       // генерируем список цветов текущего уровня
       const colorsHtml = c.map(color => {
-        const bg = Colors[color] || '#ffffff';
-        return `<span data-color="${color}" style="background:${bg}">${q}</span>`;
+        const colorClass = Colors[color] ? color : 'white';
+        return `<span data-color="${color}" class="${colorClass}">${q}</span>`;
       }).join('');
 
       let counter = '';
@@ -281,7 +281,7 @@ export const RanksUI = {
     return `
     <span class="ranks-title">Colors in use</span>
     <div class="colors-list colors-in-use ${State.ranksUi.colorsInUseShown ? '' : 'hidden'}">${BoardDomain.getColorsInUse().map(c => `
-      <div><span data-color="${c}" style="background:${Colors[c]}"></span><span class="label">${c}</span></div>
+      <div><span data-color="${c}" class="${c}"></span><span class="label">${c}</span></div>
       `).join('')}
     </div>
     `;
@@ -291,7 +291,7 @@ export const RanksUI = {
     return `
     <span class="ranks-title">Free colors</span>
     <div class="colors-list colors-in-use ${State.ranksUi.colorsInUseShown ? '' : 'hidden'}">${BoardDomain.getFreeColors().map(c => `
-      <div><span data-color="${c}" style="background:${Colors[c]}"></span><span class="label">${c}</span></div>
+      <div><span data-color="${c}" class="${c}"></span><span class="label">${c}</span></div>
       `).join('')}
     </div>
     `;
@@ -344,7 +344,7 @@ export const RanksUI = {
     const level = RanksDomain.getLevelOfColor(color, ranks);
     if(level) {
       const upperLevel = ranks[level - 1];
-      return upperLevel ? upperLevel.c.map(c => `<div class="rank-level-mark" style="background:${Colors[c]}"></div>`).join('') : '';
+      return upperLevel ? upperLevel.c.map(c => `<div class="rank-level-mark ${c}"></div>`).join('') : '';
     } else {
       return '';
     }

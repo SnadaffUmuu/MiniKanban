@@ -19,6 +19,12 @@ invariant that matters:
 > A `color` field anywhere in the data model **is a key from `Colors.js`**, never a raw CSS
 > value. See [`Task.color`](boards.md) and [`book.color`](books.md).
 
+**Rendering rule:** UI code applies a color by adding the color key as a CSS class
+(`class="blue"`), never via inline `style="background…"`. The generated classes use
+`!important`, so they win over component CSS. Exceptions that need a raw hex/computed value:
+the book tree SVG fill (`BooksUI.js`) and the column-gradient progress segments.
+For dropdowns, use `BooksUI.setColorsDropdownColor`, which swaps the class.
+
 At the time of writing the palette has eleven keys (`peach`, `pink`, `plum`, `purple`,
 `blue`, `teal`, `green`, `olive`, `yellow`, `white`, `beige`); treat that list as
 illustrative and confirm against `Colors.js`.

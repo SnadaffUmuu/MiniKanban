@@ -271,8 +271,7 @@ export const TaskUI = {
     const color = uiTask && uiTask.color ? uiTask.color : (domainTask ? domainTask.color : 'white');
 
     return `
-    <div class="task ${isMenuOpened ? 'expanded' : ''}" 
-      style="background:${Colors[color]};" 
+    <div class="task ${color} ${isMenuOpened ? 'expanded' : ''}" 
       data-color="${color}" 
       data-id="${id}"
       ${showVocabCount && domainTask.vocabCount ? `data-vocab-count="${Array.isArray(domainTask.vocabCount) ? domainTask.vocabCount.join(';') : domainTask.vocabCount}"` : ''}
@@ -350,12 +349,11 @@ export const TaskUI = {
 
   getTaskColorPicker(currentColor) {
     if(!currentColor) {
-      currentColor = Colors.white;
+      currentColor = 'white';
     }
     const colors = Object.keys(Colors).map(key => {
-      const color = Colors[key];
       return `
-        <li data-color="${key}" style="background:${color}" ${currentColor == key ? ' class="current"' : ''}></li>  
+        <li data-color="${key}" class="${key}${currentColor == key ? ' current' : ''}"></li>  
       `
     });
     return `

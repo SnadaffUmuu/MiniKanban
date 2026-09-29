@@ -4,7 +4,6 @@ import {EventsDomain} from "./EventsDomain.js";
 import {BooksDomain} from "./BooksDomain.js";
 import {Utils} from "./Utils.js";
 import {BoardDomain} from "./BoardDomain.js";
-import {Colors} from "./Colors.js";
 import {State} from "./State.js";
 import {EventStatsUI} from "./EventStatsUI.js";
 
@@ -173,8 +172,7 @@ export const EventsUI = {
       const isArchived = BooksDomain.isArchived(book);
       return `
       <div 
-        ${color ? `style="background-color:${Colors[color]}"` : ''} 
-        class="eventsEntry ${board ? 'board-' + board.key + '-border' : ''}${isArchived ? ' archived' : ''}" data-skip-move="${consumeMove ? 'false' : 'true'}"
+        class="eventsEntry ${color || ''} ${board ? 'board-' + board.key + '-border' : ''}${isArchived ? ' archived' : ''}" data-skip-move="${consumeMove ? 'false' : 'true'}"
         data-book="${ev.b}" 
         data-date="${ev.d}">
         <div class="eventsEntry__summary">
@@ -238,7 +236,7 @@ export const EventsUI = {
 
             if(!State.eventsUi.dotsMerged || !dayBooks.includes(event.book)) {
               const isArchived = BooksDomain.isArchived(book);
-              const html = `<span class="${board ? 'board-' + board.key + '-border' : ''} ${isArchived ? 'archived' : ''} ${markAsMoveSkipped ? 'skipMove' : ''}" style="background-color:${Colors[color]}"></span>`;
+              const html = `<span class="${board ? 'board-' + board.key + '-border' : ''} ${isArchived ? 'archived' : ''} ${markAsMoveSkipped ? 'skipMove' : ''} ${color || ''}"></span>`;
               dotsHtml.push(html);
               dayBooks.push(event.book);
             }

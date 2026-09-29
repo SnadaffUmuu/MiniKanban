@@ -1,7 +1,6 @@
 import {Bus} from './Bus.js'
 import {State} from './State.js'
 import {BoardDomain} from './BoardDomain.js'
-import {Colors} from './Colors.js';
 import {BooksDomain} from './BooksDomain.js';
 import {Utils} from './Utils.js';
 import {App} from './App.js';
@@ -128,7 +127,7 @@ export const ProgressUI = {
     return `
   <div id="progressUi">
     <h6>${task.description}</h6>
-    <table id="taskData" style="background:${Colors[task.color]}">
+    <table id="taskData" class="${task.color}">
       <tr><td>to column</td><td>${targetColName}</td></tr>
       <tr>
         <td>
