@@ -117,7 +117,7 @@ Activated via `State.headerUiMode` (rendered in header, not screen):
 | `boardsList` | `BoardsList` | Board selection and ordering |
 | `ranks` | `RanksUI` | Rank configuration |
 | `filters` | `FiltersUI` | Book/event filtering |
-| `stats` | `HeaderStats` | Board counter and attention statistics |
+| `stats` | `HeaderStats` | Boards balance (real vs ideal), computed from events via `EventsDomain.getBoardStats()` |
 | `renameBoard` | `RenameUI` | Board rename confirmation |
 | `deleteBoard` | `DeleteUI` | Board deletion confirmation |
 | `undoMove` | `UndoMoveUI` | Last-move undo confirmation |

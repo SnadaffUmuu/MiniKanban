@@ -275,7 +275,7 @@ export const ProgressUI = {
     const logRes = EventsDomain.log(eventData);
 
     if(logRes.result !== true) {
-      State.logUpdateError = res;
+      State.logUpdateError = logRes;
     }
     if(!State.logUpdateError) {
       State.progressUpdateSuccess = true;

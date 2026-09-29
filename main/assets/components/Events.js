@@ -94,10 +94,6 @@ export const Events = {
       [RanksUI.selectors.resetCountersCancelButton]: 'RanksUI.resetUi',
       [RanksUI.selectors.resetCountersConfirmButton]: 'RanksUI.resetCounters',
 
-      [HeaderStats.selectors.resetButton]: 'HeaderStats.promptReset',
-      [HeaderStats.selectors.confirmResetButton]: 'HeaderStats.reset',
-      [HeaderStats.selectors.cancelResetButton]: 'HeaderStats.resetUi',
-
       [BooksUI.selectors.addBookButton]: ['BooksUI.toggleAddUi', [true]],
       [BooksUI.selectors.addBookCancelButton]: ['BooksUI.toggleAddUi', [false]],      
       [BooksUI.selectors.deleteBookButton]: 'BooksUI.showDeleteBookUi',

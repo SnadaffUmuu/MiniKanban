@@ -1,7 +1,6 @@
 export const State = {
   headerUiMode: 'default', // boardsList, ranks, deleteBoard, stats, undoMove, renameBoard, booksDefault, filters
   openedTopMenu: null,
-  statsUiMode: null,
   boardUi: {
     columnUi: {}, // default, menu, rename, move, delete
     taskUi: {},
@@ -26,7 +25,6 @@ export const State = {
   undoSnapshot: {
     boardSnapshot: null,
     boardRanksCountersSnapshot: null,
-    boardsCountersSnapshot: null,
     bookSnapshot: null,
     logged: null,
   },

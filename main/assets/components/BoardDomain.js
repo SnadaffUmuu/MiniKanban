@@ -48,11 +48,6 @@ export const BoardDomain = {
     );
   },
 
-  getBoardsCounters() {
-    const bc = App.data.boardsCounters;
-    return bc != null ? bc : {};
-  },
-
   switchBoard(boardId) {
     if(this.getBoard(boardId)) {
       App.setCurrentBoard(boardId);
@@ -67,23 +62,6 @@ export const BoardDomain = {
       App.setCurrentBoard(currentBoardId);
     }
     App.saveData();
-  },
-
-  saveCounters(counters) {
-    App.data.boardsCounters = counters;
-    Storage.saveData(App.data);
-  },
-
-  resetBoardsCounters() {
-    App.data.boardsCounters = {};
-    Storage.saveData(App.data);
-  },
-
-  deleteBoardCounters(board, doSave) {
-    delete App.data.boardsCounters[board.id];
-    if(doSave) {
-      Storage.saveData(App.data);
-    }
   },
 
   resetCounters() {
@@ -345,7 +323,6 @@ export const BoardDomain = {
     delete board.ranksRaw;
     delete board.rankCounters;
     delete board.rankCountersAbs;
-    this.deleteBoardCounters(board, false);
     this.saveBoards(App.data.boards);
   },
 
@@ -405,7 +382,6 @@ export const BoardDomain = {
     board.rankCounters = board.rankCounters || {};
     board.rankCountersAbs = board.rankCountersAbs || {};
     this.takeBoardRankCountersSnapshot(board);
-    this.takeBoardsCountersSnapshot();
 
     const rankBalance = RanksDomain.commitBalance(
       ranks,
@@ -415,10 +391,6 @@ export const BoardDomain = {
     );
     board.rankCounters = rankBalance.counters;
     board.rankCountersAbs = rankBalance.absCounters;
-
-    const boardsCounters = this.getBoardsCounters();
-    const boardTotal = Utils.toInt(boardsCounters[board.id]);
-    boardsCounters[board.id] = boardTotal + 1;
 
     this.saveBoards(App.data.boards);
 
@@ -442,10 +414,6 @@ export const BoardDomain = {
   takeBoardSnapshot() {
     State.undoSnapshot.boardSnapshot = JSON.parse(JSON.stringify(this.getCurrentBoard()));
     console.log('Board snapshot taken', State.undoSnapshot);
-  },
-
-  takeBoardsCountersSnapshot() {
-    State.undoSnapshot.boardsCountersSnapshot = JSON.parse(JSON.stringify(App.data.boardsCounters));
   },
 
   takeBoardRankCountersSnapshot(board) {
@@ -473,13 +441,7 @@ export const BoardDomain = {
 
     this.saveBoards(boards);
     State.undoSnapshot.boardSnapshot = null;
-    State.boardRanksCountersSnapshot = null;
-
-    const boardsCountersSnapshot = State.undoSnapshot.boardsCountersSnapshot || null;
-    if(boardsCountersSnapshot) {
-      this.saveCounters(boardsCountersSnapshot);
-      State.undoSnapshot.boardsCountersSnapshot = null;
-    }
+    State.undoSnapshot.boardRanksCountersSnapshot = null;
   },
 
 };

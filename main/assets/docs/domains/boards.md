@@ -56,7 +56,7 @@ Features exclusive to reading boards:
 - **Ranks** — Hierarchical color-based progression system
 - **Books** — Books assigned to board via `book.board` + `book.color`
 - **Events** — Reading sessions logged per book
-- **Counters** — `rankCounters`, `rankCountersAbs`, `boardsCounters`
+- **Counters** — `rankCounters`, `rankCountersAbs`
 
 Colors on a board originate from its **cards**, not from books: `BoardDomain.getColorsInUse(board)`
 is the source of truth for "colors present on this board", and the Books domain derives the
@@ -104,14 +104,12 @@ domain.
 
 ---
 
-## Boards Counters (`boardsCounters`)
+## Boards balance
 
-Tracked in `App.data.boardsCounters` and persisted with board data:
-- Key: board.id
-- Value: total consumed moves (all levels)
-- Used for: HeaderStats (real vs ideal %), EventStatsUI board distribution
-
-Reset via HeaderStats UI → `BoardDomain.resetBoardsCounters()`.
+There is no per-board move total in board data. The real-vs-ideal board balance is derived from
+the event log: `EventsDomain.getBoardStats()` (shown by `HeaderStats` and `EventStatsUI`), with
+targets from `BoardDomain.getIdealPercents()`. The legacy `boardsCounters` field is dropped on
+load (`App.loadData`).
 
 ---
 

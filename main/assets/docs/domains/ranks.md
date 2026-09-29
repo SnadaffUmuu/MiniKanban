@@ -71,9 +71,9 @@ For a consumed move:
 3. At a lower-priority level, increment its own counter and subtract the preceding level's quota
    from the preceding counter.
 4. Cap the last level's own counter at its quota because no following group spends it.
-5. `BoardDomain` increments `boardsCounters[board.id]`, snapshots, and persists.
+5. `BoardDomain` snapshots the previous counters (for undo) and persists.
 
-A falsy `consumeMove` leaves all rank and board counters unchanged.
+A falsy `consumeMove` leaves all rank counters unchanged.
 
 ## Editing ranks and reconciling counters
 

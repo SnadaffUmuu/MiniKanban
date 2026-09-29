@@ -29,6 +29,8 @@ export const App = {
     if(!this.data) {
       this.data = {};
     }
+    // Legacy field: board balance is now derived from events (see EventsDomain.getBoardStats)
+    delete this.data.boardsCounters;
   },
 
   saveData() {
