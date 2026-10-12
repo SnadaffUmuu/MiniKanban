@@ -2,6 +2,7 @@ import {App} from "./App.js";
 import {EventsDomain} from "./EventsDomain.js";
 import {BoardDomain} from "./BoardDomain.js";
 import {State} from "./State.js";
+import {Bus} from "./Bus.js";
 
 export const EventStatsUI = {
 
@@ -11,6 +12,7 @@ export const EventStatsUI = {
     container: '[data-events-view="stats"]',
     statTypeContainersss: '[data-stat-type]',
     sortColTriger: '.stats-table th',
+    attentionPeriodSelect: '#attention-period',
   },
 
   statTypes: {
@@ -26,6 +28,9 @@ export const EventStatsUI = {
   events: {
     click: {
       '@sortColTriger': 'sortByColumn',
+    },
+    change: {
+      '@attentionPeriodSelect': 'changeAttentionPeriod',
     },
   },
 
@@ -158,28 +163,61 @@ export const EventStatsUI = {
   getBoardAttentionBalanceHtml() {
     const selectedBoard = App.getFilter().board;
     if(!selectedBoard) return 'Не выбрана доска';
-    const data = EventsDomain.buildBoardAttentionBalance(EventsDomain.getEvents(), selectedBoard);
+    const periods = EventsDomain.getRankPeriods(selectedBoard);
+    let periodId = State.eventsUi.attentionPeriod;
+    if(periodId != null && !periods.some(p => p.id === periodId)) {
+      periodId = null;
+    }
+    const data = EventsDomain.buildBoardAttentionBalance(EventsDomain.getEvents(), selectedBoard, periodId);
+    if(!data) return 'У доски нет рангов';
     console.log('getBoardAttentionBalanceHtml', data);
 
+    const formatDate = ts => ts > 0 ? new Date(ts).toISOString().slice(0, 10) : 'start';
+    const options = ['<option value="">Last moves (default)</option>']
+      .concat(periods.slice().reverse().map(p => `
+        <option value="${p.id}" ${p.id === periodId ? 'selected' : ''}>${formatDate(p.start)} — ${p.end == null ? 'now' : formatDate(p.end)}${p.approx ? ' (approx.)' : ''}</option>
+      `)).join('');
+
+    let note;
+    if(data.period) {
+      note = `Consumed moves in period: ${data.totalMoves}. `
+        + (data.period.approx
+          ? 'Approximate: ranks before tracking began are assumed to be the current ones; opening credit is taken as 0.'
+          : 'Opening counters are taken from the ranks history.');
+    } else {
+      note = `Last ${data.totalMoves} of ${data.wanted} wanted consumed moves`
+        + (data.cutShort ? ' (cut short: the window stops at the latest ranks change or at the start of the log)' : '')
+        + '. Opening credit is unknown and taken as 0.';
+    }
+
     return `
+    <p>
+      <select id="attention-period">${options}</select>
+    </p>
+    <p>${note}</p>
     <table class="stats-table">
       <thead>
         <th>level</th>
-        <th>expected</th>
-        <th>actual</th>
+        <th>expected %</th>
+        <th>actual %</th>
         <th>delta</th>
         <th>ratio</th>
-        <th>book</th>
+        <th>allowed</th>
+        <th>link ratio</th>
+        <th>color</th>
         <th>moves</th>
-        <th>b.expected</th>
-        <th>b.actual</th>
-        <th>b.delta</th>
-        <th>b.ratio</th>
+        <th>% of all</th>
+        <th>% in level</th>
       </thead>
       <tbody>
-      ${data.map(d => {
-        const book1 = d.books[0];
-        const rowspan = d.books.length > 1 ? ` rowspan="${d.books.length}"` : '';
+      ${data.levels.map(d => {
+        const rowspan = d.colors.length > 1 ? ` rowspan="${d.colors.length}"` : '';
+        const colorCells = c => `
+          <td class="${c.color}">${c.color}</td>
+          <td class="${c.color}">${c.moves}</td>
+          <td class="${c.color}">${c.actualPercent}</td>
+          <td class="${c.color}">${c.shareInLevel}</td>`;
+        const first = d.colors[0];
         return `
         <tr>
           <td ${rowspan}>${d.level}</td>
@@ -187,28 +225,34 @@ export const EventStatsUI = {
           <td ${rowspan}>${d.actualPercent}</td>
           <td ${rowspan}>${d.delta}</td>
           <td ${rowspan}>${d.ratio}</td>
-          <td class="${book1.color}">${book1.book}</td>
-          <td class="${book1.color}">${book1.moves}</td>
-          <td class="${book1.color}">${book1.expectedPercent}</td>
-          <td class="${book1.color}">${book1.actualPercent}</td>
-          <td class="${book1.color}">${book1.delta}</td>
-          <td class="${book1.color}">${book1.ratio}</td>
+          <td ${rowspan}>${d.allowed == null ? '—' : d.allowed}</td>
+          <td ${rowspan}>${d.linkRatio == null ? '—' : d.linkRatio}</td>
+          ${colorCells(first)}
         </tr>
-        ${d.books.length > 1 ? d.books.slice(1).map(book => `
-        <tr>
-          <td class="${book.color}">${book.book}</td>
-          <td class="${book.color}">${book.moves}</td>
-          <td class="${book.color}">${book.expectedPercent}</td>
-          <td class="${book.color}">${book.actualPercent}</td>
-          <td class="${book.color}">${book.delta}</td>
-          <td class="${book.color}">${book.ratio}</td>
-        </tr>
-          `).join('') : ''}
+        ${d.colors.slice(1).map(c => `<tr>${colorCells(c)}</tr>`).join('')}
         `;
       }).join('')}
+        <tr>
+          <td>—</td>
+          <td>—</td>
+          <td>${data.unranked.actualPercent}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>unranked</td>
+          <td>${data.unranked.moves}</td>
+          <td>${data.unranked.actualPercent}</td>
+          <td>—</td>
+        </tr>
       </tbody>
-    </table> 
+    </table>
     `;
+  },
+
+  changeAttentionPeriod(el) {
+    State.eventsUi.attentionPeriod = el.value === '' ? null : Number(el.value);
+    Bus.emit(Bus.events.eventsUiChanged);
   },
 
   sortByColumn(th) {
@@ -245,23 +289,3 @@ export const EventStatsUI = {
 
 
 };
-
-/*
-
-<table class="stats-table">
-  <thead>
-    <th></th>
-    <th></th>
-    <th></th>
-    <th></th>
-  </thead>
-  <tbody>
-    <tr>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-  </tbody>
-</table>  
-*/

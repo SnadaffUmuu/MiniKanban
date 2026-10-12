@@ -276,4 +276,54 @@ export const RanksDomain = {
     });
     return counters;
   },
+
+  // Turns a board's ranks history into periods during which quotas were fixed.
+  // `addColor` entries do not start a period: they only add a color to the
+  // lowest level, so quotas stay the same. Periods without ranks (after a
+  // `delete` entry) are not returned.
+  buildRankPeriods(history) {
+    const sorted = (history || []).slice().sort((a, b) => a.ts - b.ts);
+    const periods = [];
+    let current = null;
+
+    sorted.forEach(entry => {
+      if(entry.reason === 'addColor' && current && entry.ranks) {
+        current.ranks = entry.ranks;
+        return;
+      }
+      if(current) {
+        current.end = entry.ts;
+      }
+      current = null;
+      if(entry.ranks) {
+        current = {
+          id: entry.ts,
+          start: entry.ts,
+          end: null,
+          reason: entry.reason,
+          approx: entry.approx === true,
+          ranks: entry.ranks,
+          counters: entry.counters || {},
+        };
+        periods.push(current);
+      }
+    });
+
+    return periods;
+  },
+
+  // Number of consumed moves in one "full cycle": every level gets its turn
+  // as often as its quotas allow, the last level exactly once.
+  getCycleSize(ranks) {
+    const levels = getLevels(ranks);
+    let perLevel = 1;
+    let total = 0;
+    for(let i = levels.length - 1; i >= 0; i--) {
+      total += perLevel;
+      if(i > 0) {
+        perLevel *= Math.max(1, toInt(ranks[levels[i - 1]].q));
+      }
+    }
+    return total;
+  },
 };

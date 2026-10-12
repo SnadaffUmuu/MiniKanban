@@ -18,7 +18,7 @@ UI preferences always use `localStorage`, including inside the Android WebView.
 
 | Storage key | Contents | Backing mechanism |
 |-------------|----------|-------------------|
-| `kanbanAppData` | Boards (including per-board rank counters) | Android file, or `localStorage` fallback |
+| `kanbanAppData` | Boards (including per-board rank counters and `ranksHistory`, see [`domains/ranks.md`](domains/ranks.md#ranks-history)) | Android file, or `localStorage` fallback |
 | `kanbanBooks` | Books and progress ranges | Android file, or `localStorage` fallback |
 | `kanbanEvents` | Reading-move event log | Android file, or `localStorage` fallback |
 | `kanbanLocal` | Screen, filters, night mode, and other UI preferences | `localStorage` |

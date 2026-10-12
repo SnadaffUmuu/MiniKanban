@@ -67,6 +67,7 @@ export const BoardDomain = {
   resetCounters() {
     const board = this.getCurrentBoard();
     board.rankCounters = {};
+    this.recordRanksHistory(board, 'reset');
     this.saveBoards(App.data.boards);
   },
 
@@ -267,8 +268,8 @@ export const BoardDomain = {
     const theBoard = board || this.getCurrentBoard();
     const colors = new Set();
 
-    theBoard.columns?.forEach(column => {
-      column.tasks?.forEach(task => {
+    (theBoard.columns || []).forEach(column => {
+      (column.tasks || []).forEach(task => {
         if(task.color) {
           colors.add(task.color);
         }
@@ -292,6 +293,25 @@ export const BoardDomain = {
     if(!result.changed) return;
     board.ranks = result.ranks;
     board.ranksRaw = result.ranksRaw;
+    this.recordRanksHistory(board, 'addColor');
+  },
+
+  // Appends a copy of the board's current ranks and counters to
+  // `board.ranksHistory` (a null `ranks` means the ranks were deleted).
+  // The history is never deleted together with the ranks: see ranks.md.
+  recordRanksHistory(board, reason) {
+    if(!board.key) return;
+    if(!board.ranksHistory) {
+      board.ranksHistory = [];
+    }
+    board.ranksHistory.push({
+      ts: Date.now(),
+      reason: reason,
+      ranks: board.ranks ? JSON.parse(JSON.stringify(board.ranks)) : null,
+      counters: board.ranks
+        ? JSON.parse(JSON.stringify(board.rankCounters || {}))
+        : null,
+    });
   },
 
   setRanksData({ranks, ranksRaw, counterOverrides}) {
@@ -307,6 +327,7 @@ export const BoardDomain = {
     board.ranksRaw = ranksRaw;
     board.ranks = ranks;
     board.rankCounters = newCounters;
+    this.recordRanksHistory(board, 'edit');
 
     console.log('ranks', board.ranks);
     console.log('ranksRaw', board.ranksRaw);
@@ -320,6 +341,7 @@ export const BoardDomain = {
     delete board.ranks;
     delete board.ranksRaw;
     delete board.rankCounters;
+    this.recordRanksHistory(board, 'delete');
     this.saveBoards(App.data.boards);
   },
 

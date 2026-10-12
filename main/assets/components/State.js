@@ -21,6 +21,7 @@ export const State = {
     listExpanded : false,
     dotsMerged : true,
     statTypes : [], // monthAcitvity, boardsDistr, monthlyRate
+    attentionPeriod : null, // start ts of the selected ranks period; null = default window
   },
   undoSnapshot: {
     boardSnapshot: null,

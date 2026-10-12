@@ -2,6 +2,7 @@ import {App} from "./App.js"
 import {Utils} from "./Utils.js";
 import {BooksDomain} from "./BooksDomain.js";
 import {BoardDomain} from "./BoardDomain.js";
+import {RanksDomain} from "./RanksDomain.js";
 import {State} from "./State.js";
 
 export const EventsDomain = {
@@ -35,7 +36,7 @@ export const EventsDomain = {
     // Events of archived books are shown by default; they are only hidden when
     // the filter explicitly sets includeArchived to false (the "incl. archived?"
     // filter, which is checked by default).
-    if(filter?.includeArchived === false) {
+    if(filter && filter.includeArchived === false) {
       events = events.filter(ev => {
         const book = BooksDomain.getBook(ev.b);
         return !book || !BooksDomain.isArchived(book);
@@ -55,9 +56,6 @@ export const EventsDomain = {
               break;
             case 'books':
               predicates.push(filter[param].includes(ev.b));
-              break;
-            case 'includeArchived':
-              // handled above; no per-event predicate needed
               break;
           }
         });
@@ -326,7 +324,9 @@ export const EventsDomain = {
       const grouped = {};
 
       items.forEach(item => {
-        grouped[item.board] ??= 0;
+        if(grouped[item.board] == null) {
+          grouped[item.board] = 0;
+        }
         grouped[item.board]++;
       });
 
@@ -470,152 +470,152 @@ export const EventsDomain = {
     });
   },
 
-  //joined data (expected + real)
-  buildBoardAttentionBalance(events, boardId) {
+  // Periods (quotas fixed) of a board's ranks history, see RanksDomain.buildRankPeriods.
+  getRankPeriods(boardId) {
+    const board = BoardDomain.getBoard(boardId);
+    return RanksDomain.buildRankPeriods(board ? board.ranksHistory : []);
+  },
 
-    // Only consumed moves (cm === true) count, unless filter.includeSkipMove.
-    events = this.addBoardsDataToEvents(this.checkSkipMoved(events));
+  // How many consumed moves the default window (no period selected) wants.
+  ATTENTION_DEFAULT_CYCLES: 2,
 
-    const board =
-      BoardDomain.getBoard(boardId);
+  // Attention balance by color. Based on the ranks history: either the
+  // selected period (periodId = its start ts) or, by default, the last
+  // ATTENTION_DEFAULT_CYCLES full cycles of consumed moves, never reaching
+  // before the latest ranks change. Only consumed moves (cm === true) count,
+  // whatever the filters say. Books are irrelevant: only the color an event
+  // had at event time matters.
+  buildBoardAttentionBalance(events, boardId, periodId) {
+    const board = BoardDomain.getBoard(boardId);
+    if(!board || !board.ranks) return null;
 
-    const ranks = board.ranks;
+    const periods = this.getRankPeriods(boardId);
+    const selected = periodId != null
+      ? periods.find(p => p.id === periodId)
+      : null;
 
-    const filtered =
-      events.filter(e => e.board === boardId);
+    const all = this.addBoardsDataToEvents(
+      events.filter(ev => ev.cm === true)
+    ).filter(ev => ev.board === boardId);
+    all.sort((a, b) => a.ts - b.ts);
 
-    const totalMoves = filtered.length;
+    let ranks;
+    let counters = null; // opening counters; null = unknown (treated as 0)
+    let windowEvents;
+    let wanted = null;
+    let cutShort = false;
 
-    // Real moves per book + resolved color. Events are grouped by the color
-    // the book actually had at event time (bookKey + color), so archived
-    // books keep contributing their historical moves instead of vanishing.
-    const movesByBookColor = {};
+    if(selected) {
+      ranks = selected.ranks;
+      // An approximate period's counters were taken at first load, not at its start.
+      counters = selected.approx ? null : selected.counters;
+      windowEvents = all.filter(ev =>
+        ev.ts >= selected.start && (selected.end == null || ev.ts < selected.end)
+      );
+    } else {
+      ranks = board.ranks;
+      wanted = this.ATTENTION_DEFAULT_CYCLES * RanksDomain.getCycleSize(ranks);
+      const latest = periods.length ? periods[periods.length - 1] : null;
+      const sinceLatest = latest
+        ? all.filter(ev => ev.ts >= latest.start)
+        : all;
+      windowEvents = sinceLatest.slice(Math.max(0, sinceLatest.length - wanted));
+      cutShort = windowEvents.length < wanted;
+    }
 
-    filtered.forEach(e => {
-      const key = e.b + ':' + e.color;
-      movesByBookColor[key] ??= {book: e.b, color: e.color, moves: 0};
-      movesByBookColor[key].moves++;
+    const levels = Object.keys(ranks).map(Number).sort((a, b) => a - b);
+    const levelOfColor = {};
+    levels.forEach(level => {
+      ranks[level].c.forEach(color => {
+        levelOfColor[color] = level;
+      });
     });
 
-    /* Expected shares */
+    const totalMoves = windowEvents.length;
+    const percentOf = moves => totalMoves === 0 ? 0 : moves / totalMoves * 100;
 
+    const movesByColor = {};
+    const movesByLevel = {};
+    let unrankedMoves = 0;
+    windowEvents.forEach(ev => {
+      const level = ev.color != null ? levelOfColor[ev.color] : null;
+      if(level == null) {
+        unrankedMoves++;
+        return;
+      }
+      movesByColor[ev.color] = (movesByColor[ev.color] || 0) + 1;
+      movesByLevel[level] = (movesByLevel[level] || 0) + 1;
+    });
+
+    // Expected shares: level N gets 1/q of the flow of level N-1.
     const flows = {};
-
     let currentFlow = 1;
-
-    Object.entries(ranks).forEach(([level, data]) => {
+    levels.forEach(level => {
       flows[level] = currentFlow;
-      currentFlow /= data.q;
+      currentFlow /= ranks[level].q;
+    });
+    const totalFlow = levels.reduce((sum, level) => sum + flows[level], 0);
+
+    const result = levels.map((level, index) => {
+      const moves = movesByLevel[level] || 0;
+      const expectedPercent = flows[level] / totalFlow * 100;
+      const actualPercent = percentOf(moves);
+
+      // Link: how many moves this level earned from the level above it
+      // (opening credit + moves above, divided by the quota above).
+      let allowed = null;
+      let linkRatio = null;
+      if(index > 0) {
+        const prevLevel = levels[index - 1];
+        const opening = counters ? Utils.toInt(counters[prevLevel]) : 0;
+        const earned = opening + (movesByLevel[prevLevel] || 0);
+        allowed = Math.floor(earned / ranks[prevLevel].q);
+        if(allowed > 0) {
+          linkRatio = +(moves / allowed).toFixed(2);
+        }
+      }
+
+      return {
+        level: level,
+        moves: moves,
+        expectedPercent: +expectedPercent.toFixed(1),
+        actualPercent: +actualPercent.toFixed(1),
+        delta: +(actualPercent - expectedPercent).toFixed(1),
+        ratio: expectedPercent === 0
+          ? 0
+          : +(actualPercent / expectedPercent).toFixed(2),
+        allowed: allowed,
+        linkRatio: linkRatio,
+        colors: ranks[level].c.map(color => {
+          const colorMoves = movesByColor[color] || 0;
+          return {
+            color: color,
+            moves: colorMoves,
+            actualPercent: +percentOf(colorMoves).toFixed(1),
+            shareInLevel: moves === 0 ? 0 : +(colorMoves / moves * 100).toFixed(1),
+          };
+        }),
+      };
     });
 
-    const totalFlow =
-      Object.values(flows)
-        .reduce((a, b) => a + b, 0);
-
-    /* Build levels */
-
-    const result = [];
-
-    Object.entries(ranks).forEach(([level, data]) => {
-
-      level = Number(level);
-
-      const expectedLevelPercent =
-        flows[level] / totalFlow * 100;
-
-      const books = data.c.map(color => {
-
-        // Aggregate all historical moves whose resolved color matches this
-        // cell, regardless of the book's current (possibly archived) binding.
-        let moves = 0;
-        let bookKey = null;
-
-        Object.values(movesByBookColor).forEach(entry => {
-          if(entry.color === color) {
-            moves += entry.moves;
-            if(bookKey == null && entry.book != null) {
-              bookKey = entry.book;
-            }
-          }
-        });
-
-        const book = bookKey != null
-          ? BooksDomain.getBook(bookKey)
-          : BooksDomain
-              .getBooks()
-              .find(b =>
-                b.board === boardId &&
-                b.color === color
-              );
-
-        const actualPercent =
-          totalMoves === 0
-            ? 0
-            : moves / totalMoves * 100;
-
-        const expectedBookPercent =
-          expectedLevelPercent / data.c.length;
-
-        return {
-          book: book?.key,
-          color,
-
-          moves,
-
-          actualPercent:
-            +actualPercent.toFixed(1),
-
-          expectedPercent:
-            +expectedBookPercent.toFixed(1),
-
-          delta:
-            +(actualPercent - expectedBookPercent)
-              .toFixed(1),
-
-          ratio:
-            expectedBookPercent === 0
-              ? 0
-              : +(actualPercent / expectedBookPercent)
-                .toFixed(2)
-        };
-      });
-
-      const actualLevelPercent =
-        books.reduce(
-          (sum, b) => sum + b.actualPercent,
-          0
-        );
-
-      result.push({
-
-        level,
-
-        expectedPercent:
-          +expectedLevelPercent.toFixed(1),
-
-        actualPercent:
-          +actualLevelPercent.toFixed(1),
-
-        delta:
-          +(actualLevelPercent - expectedLevelPercent)
-            .toFixed(1),
-
-        ratio:
-          expectedLevelPercent === 0
-            ? 0
-            : +(actualLevelPercent / expectedLevelPercent)
-              .toFixed(2),
-
-        books
-      });
-
-    });
-
-    return result;
+    return {
+      period: selected
+        ? {id: selected.id, start: selected.start, end: selected.end, approx: selected.approx}
+        : null,
+      totalMoves: totalMoves,
+      wanted: wanted,
+      cutShort: cutShort,
+      openingKnown: !!selected && !selected.approx,
+      levels: result,
+      unranked: {
+        moves: unrankedMoves,
+        actualPercent: +percentOf(unrankedMoves).toFixed(1),
+      },
+    };
   },
 
   checkSkipMoved(events, filter = App.getFilter()) {
-    if(filter?.includeSkipMove != true) {
+    if(!filter || filter.includeSkipMove != true) {
       return events.filter(ev => ev.cm === true);
     }
     return events;

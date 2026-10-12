@@ -30,9 +30,8 @@ Also: `let`/`const` only, semicolons required.
 
 The table above is the target, not a description of the tree. Verify with `grep` before assuming a feature is safe or unsafe:
 
-- `?.` appears in about a dozen files (`BooksUI.js`, `BooksDomain.js`, `EventsDomain.js`, `BoardDomain.js`, …).
+- `?.` appears in about a dozen files (`BooksUI.js`, `BooksDomain.js`, …; removed from `EventsDomain.js` and `BoardDomain.js`).
 - `Object.entries` / `Object.values` are used in `EventsDomain.js`, `BoardDomain.js`, `EventStatsUI.js`; object spread in `Utils.js`. (These are ES2017/ES2018; whether they work depends on the actual WebView version in use.)
-- `??=` (ES2021) is used in `EventsDomain.js` (`getBoardDistribution`, `buildBoardAttentionBalance`). This is the most likely to break on an un-updated WebView; the true minimum WebView version is undecided.
 - Trailing commas in object/array literals are common and harmless.
 
 Rule for edits: do not introduce a *new* forbidden construct into a file that has none; when touching an existing one, either keep the file's convention or convert it.

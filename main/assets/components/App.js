@@ -33,6 +33,36 @@ export const App = {
     delete this.data.boardsCounters;
     // Legacy field: per-level attention balance is now derived from events (see EventsDomain.buildBoardAttentionBalance)
     (this.data.boards || []).forEach(board => delete board.rankCountersAbs);
+    // Boards with ranks but no history yet: the current ranks open the history.
+    // The entry is dated 0 and flagged `approx`: the ranks before tracking began
+    // are assumed to be the current ones, so older events still count (see ranks.md).
+    let historyAdded = false;
+    (this.data.boards || []).forEach(board => {
+      if(!board.key) return;
+      const history = board.ranksHistory;
+      if(board.ranks && !(history && history.length)) {
+        board.ranksHistory = [{
+          ts: 0,
+          approx: true,
+          reason: 'init',
+          ranks: JSON.parse(JSON.stringify(board.ranks)),
+          counters: JSON.parse(JSON.stringify(board.rankCounters || {})),
+        }];
+        historyAdded = true;
+      } else if(history && history.length) {
+        // Repair: an earlier version dated the init entry at first load.
+        history.forEach(entry => {
+          if(entry.reason === 'init' && entry.ts > 0 && !entry.approx) {
+            entry.ts = 0;
+            entry.approx = true;
+            historyAdded = true;
+          }
+        });
+      }
+    });
+    if(historyAdded) {
+      this.saveData();
+    }
   },
 
   saveData() {

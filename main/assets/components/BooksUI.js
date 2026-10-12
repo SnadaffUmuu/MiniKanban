@@ -95,7 +95,7 @@ export const BooksUI = {
 
     const currentBook = State.booksUi.currentBook;
 
-    this.dom.listModeContainer.classList.toggle('hidden', currentBook);
+    this.dom.listModeContainer.classList.toggle('hidden', !!currentBook);
     this.dom.bookModeContainer.classList.toggle('hidden', !currentBook);
 
     if(currentBook) {
