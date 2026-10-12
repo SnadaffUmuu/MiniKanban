@@ -10,15 +10,11 @@ Read `BooksDomain.save` for the shape. Key points: `key` is user-defined and uni
 
 A range is `{c, f, t}`: column index, from page, to page (both inclusive). Books track progress as ranges mapped to columns.
 
-Validation rules (`BooksDomain.getNewRangesForRanges`, `applyRange`):
+Validation rules:
 
 - **Nested overlap is allowed**: a range fully containing another is accepted because the owning stage is unambiguous.
 - **Partial overlap is an error**: it is ambiguous which stage owns the pages.
 - Ranges within one stage end up non-overlapping (merged via `Utils.mergeRanges`).
-
-## Progress visualization
-
-The segmented progress bar and its column gradient are in `BooksUI.js` (colors are illustrative; verify in source).
 
 ## Page cloud
 
@@ -48,14 +44,10 @@ defined canonically in [`persistence.md`](../persistence.md); tree shape, fill m
 - A row of dots near the shape edge is intentional, approved behavior rather than a layout defect.
 - The book key is the deterministic seed. Identical inputs are stable on one engine; cross-device
   identity is not required because canvas rasterization may differ.
-- `BooksUI.getTreeFillOrder()` owns progress placement without changing cloud geometry. Page mode
-  keeps the existing generated-point order. Liquid mode completes horizontal bands from bottom to
-  top and orders each band from the cloud's horizontal center toward its edges; deterministic
-  vertical and point-index tie-breakers keep repeated renders stable.
-- `BooksDomain.getStartedPageCount()` merges intervals across columns. `BooksUI.renderBookTree()`
-  fills that many circles and leaves the remainder outlined. The shape uses the book color, and the
-  book name is overlaid by `.book-tree-title`. Exact SVG and title colors are illustrative—verify
-  them against `BooksUI.js` and `styles.css`.
+- Progress placement does not change cloud geometry. Page mode keeps generated-point order. Liquid
+  mode completes horizontal bands from bottom to top and orders each band from the horizontal
+  center toward its edges; deterministic tie-breakers keep repeated renders stable.
+- Started-page intervals are merged across columns before deciding how many circles to fill.
 
 
 ## Archiving
@@ -71,13 +63,9 @@ Archiving removes a book from the active list without losing history (`archiveBo
 
 ## Book-board-color binding
 
-`book.board` + `book.color` identify a book on a reading board. Concept and rationale: [`colors.md`](colors.md). `BooksDomain.betBookByBoard(boardId, color)` finds the book for a task/event. `BooksDomain.getUnregisteredColorsForBoard(board)` gives the only colors a book may claim: `BoardDomain.getColorsInUse(board)` minus colors of *active* books. It is **not** the palette and **not** `BoardDomain.getFreeColors()` (a Ranks-tool view).
-
-## Known dead code
-
-`BooksDomain.buildTreeLayout`, `shapeHalfWidth` and `apportion` have no callers; the cloud layout lives in `BookTree.js`. Safe to remove after a check.
+`book.board` + `book.color` identify a book on a reading board. The ownership rationale and valid
+color set are canonical in [`colors.md`](colors.md).
 
 ## Invariants
 
-- Ranges per stage are non-overlapping (validation + merge).
 - One active book per color per board.

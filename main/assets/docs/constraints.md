@@ -28,11 +28,9 @@ Also: `let`/`const` only, semicolons required.
 
 ## Known drift (the code does not follow the baseline)
 
-The table above is the target, not a description of the tree. Verify with `grep` before assuming a feature is safe or unsafe:
-
-- `?.` appears in about a dozen files (`BooksUI.js`, `BooksDomain.js`, …; removed from `EventsDomain.js` and `BoardDomain.js`).
-- `Object.entries` / `Object.values` are used in `EventsDomain.js`, `BoardDomain.js`, `EventStatsUI.js`; object spread in `Utils.js`. (These are ES2017/ES2018; whether they work depends on the actual WebView version in use.)
-- Trailing commas in object/array literals are common and harmless.
+The table above is the target, not a description of the tree: existing code still contains some
+newer syntax and APIs. Verify the file being edited rather than treating existing drift as proof
+that a feature is safe on every supported WebView.
 
 Rule for edits: do not introduce a *new* forbidden construct into a file that has none; when touching an existing one, either keep the file's convention or convert it.
 

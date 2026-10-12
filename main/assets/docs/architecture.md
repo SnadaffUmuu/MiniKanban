@@ -29,10 +29,3 @@ DOM event → handler → change `State` or call domain op → domain/`App` save
 ## Screens
 
 Exactly one of `BoardUI` / `BooksUI` / `EventsUI` is visible, chosen by `App.getCurrentScreen()` (persisted as `local.screen`). Each screen component hides itself in `render()` via `App.isBoard()` / `App.isEvents()` guards.
-
-## Rules
-
-1. Domain code never reads or writes the DOM.
-2. UI peers coordinate through Bus, not method calls.
-3. Do not call render methods directly for ordinary updates; emit the Bus event.
-4. Language limits: [`constraints.md`](constraints.md).
