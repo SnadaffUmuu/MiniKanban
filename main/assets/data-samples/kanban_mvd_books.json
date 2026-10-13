@@ -14,23 +14,13 @@
         },
         {
           "c": 2,
-          "f": 181,
+          "f": 183,
           "t": 191
         },
         {
-          "c": 4,
-          "f": 179,
-          "t": 180
-        },
-        {
-          "c": 6,
-          "f": 1,
-          "t": 116
-        },
-        {
-          "c": 6,
-          "f": 136,
-          "t": 178
+          "c": 3,
+          "f": 182,
+          "t": 182
         }
       ]
     }
@@ -39,27 +29,23 @@
     "name": "ゴーショーグン0",
     "key": "go0",
     "size": "308",
-    "board": "_15ma569uj",
-    "color": "teal",
     "state": {
       "ranges": [
         {
-          "c": 5,
-          "f": 25,
-          "t": 26
-        },
-        {
           "c": 6,
           "f": 1,
-          "t": 24
-        },
-        {
-          "c": 6,
-          "f": 27,
           "t": 308
         }
       ]
-    }
+    },
+    "archived": [
+      {
+        "ts": 1790288960136,
+        "board": "_15ma569uj",
+        "color": "teal"
+      }
+    ],
+    "archivedNow": true
   },
   {
     "name": "しろばんば",
@@ -83,6 +69,116 @@
     }
   },
   {
+    "name": "チェルノブイリ",
+    "key": "chern",
+    "size": "312",
+    "board": "_15ma569uj",
+    "color": "purple",
+    "state": {
+      "ranges": [
+        {
+          "c": 2,
+          "f": 16,
+          "t": 23
+        },
+        {
+          "c": 5,
+          "f": 14,
+          "t": 15
+        },
+        {
+          "c": 6,
+          "f": 1,
+          "t": 13
+        }
+      ]
+    }
+  },
+  {
+    "name": "仮名に親しむ",
+    "key": "kana",
+    "size": "111",
+    "board": "_15ma569uj",
+    "color": "pink",
+    "state": {
+      "ranges": [
+        {
+          "c": 1,
+          "f": 62,
+          "t": 67
+        },
+        {
+          "c": 6,
+          "f": 20,
+          "t": 61
+        }
+      ]
+    }
+  },
+  {
+    "name": "boxes",
+    "key": "box",
+    "size": "15",
+    "board": "_15ma569uj",
+    "color": "yellow",
+    "state": {
+      "ranges": [
+        {
+          "c": 2,
+          "f": 8,
+          "t": 8
+        },
+        {
+          "c": 6,
+          "f": 1,
+          "t": 7
+        }
+      ]
+    }
+  },
+  {
+    "name": "HP1",
+    "key": "hp1",
+    "size": "419",
+    "board": "_15ma569uj",
+    "color": "olive",
+    "state": {
+      "ranges": [
+        {
+          "c": 5,
+          "f": 36,
+          "t": 37
+        },
+        {
+          "c": 6,
+          "f": 1,
+          "t": 35
+        }
+      ]
+    }
+  },
+  {
+    "name": "村上 風",
+    "key": "murakami1",
+    "size": "199",
+    "board": "_15ma569uj",
+    "color": "beige",
+    "state": {
+      "ranges": [
+        {
+          "c": 5,
+          "f": 66,
+          "t": 70
+        },
+        {
+          "c": 6,
+          "f": 1,
+          "t": 65
+        }
+      ]
+    }
+  },
+  {
     "name": "国語のおさらい",
     "key": "kokugo",
     "size": "191",
@@ -91,19 +187,14 @@
     "state": {
       "ranges": [
         {
-          "c": 2,
+          "c": 4,
           "f": 110,
           "t": 112
         },
         {
-          "c": 4,
-          "f": 109,
-          "t": 109
-        },
-        {
           "c": 6,
           "f": 1,
-          "t": 108
+          "t": 109
         }
       ]
     }
@@ -208,6 +299,162 @@
     }
   },
   {
+    "name": "敬語のおさらい",
+    "key": "keigo",
+    "size": "174",
+    "board": "_82cijdew3",
+    "color": "plum",
+    "state": {
+      "ranges": [
+        {
+          "c": 2,
+          "f": 13,
+          "t": 14
+        },
+        {
+          "c": 5,
+          "f": 11,
+          "t": 12
+        },
+        {
+          "c": 6,
+          "f": 1,
+          "t": 10
+        }
+      ]
+    }
+  },
+  {
+    "name": "地理のおさらい",
+    "key": "geo",
+    "size": "175",
+    "board": "_82cijdew3",
+    "color": "yellow",
+    "state": {
+      "ranges": [
+        {
+          "c": 2,
+          "f": 5,
+          "t": 7
+        },
+        {
+          "c": 2,
+          "f": 12,
+          "t": 15
+        },
+        {
+          "c": 6,
+          "f": 1,
+          "t": 4
+        }
+      ]
+    }
+  },
+  {
+    "name": "生物のおさらい",
+    "key": "bio",
+    "size": "167",
+    "board": "_82cijdew3",
+    "color": "teal",
+    "state": {
+      "ranges": [
+        {
+          "c": 6,
+          "f": 1,
+          "t": 4
+        },
+        {
+          "c": 6,
+          "f": 7,
+          "t": 10
+        },
+        {
+          "c": 3,
+          "f": 5,
+          "t": 6
+        }
+      ]
+    }
+  },
+  {
+    "name": "名作のおさらい",
+    "key": "biblio",
+    "size": "207",
+    "board": "_82cijdew3",
+    "color": "white",
+    "state": {
+      "ranges": [
+        {
+          "c": 1,
+          "f": 7,
+          "t": 12
+        },
+        {
+          "c": 3,
+          "f": 6,
+          "t": 6
+        },
+        {
+          "c": 4,
+          "f": 5,
+          "t": 5
+        },
+        {
+          "c": 6,
+          "f": 1,
+          "t": 4
+        }
+      ]
+    }
+  },
+  {
+    "name": "天文のおさらい",
+    "key": "astro",
+    "size": "155",
+    "board": "_82cijdew3",
+    "color": "peach",
+    "state": {
+      "ranges": [
+        {
+          "c": 1,
+          "f": 1,
+          "t": 26
+        }
+      ]
+    }
+  },
+  {
+    "name": "漢字のおさらい",
+    "key": "kanji",
+    "size": "174",
+    "board": "_82cijdew3",
+    "color": "olive",
+    "state": {
+      "ranges": []
+    }
+  },
+  {
+    "name": "SR Yuyu",
+    "key": "yuyu",
+    "size": "70",
+    "board": "_eya4w92kj",
+    "color": "yellow",
+    "state": {
+      "ranges": [
+        {
+          "c": 4,
+          "f": 17,
+          "t": 17
+        },
+        {
+          "c": 5,
+          "f": 1,
+          "t": 16
+        }
+      ]
+    }
+  },
+  {
     "name": "SR 変わらないもの",
     "key": "unchanged",
     "size": "14",
@@ -216,14 +463,14 @@
     "state": {
       "ranges": [
         {
-          "c": 3,
-          "f": 8,
-          "t": 8
+          "c": 4,
+          "f": 9,
+          "t": 9
         },
         {
           "c": 5,
           "f": 1,
-          "t": 7
+          "t": 8
         }
       ]
     }
@@ -237,7 +484,7 @@
     "state": {
       "ranges": [
         {
-          "c": 3,
+          "c": 4,
           "f": 4,
           "t": 4
         },
@@ -259,13 +506,165 @@
       "ranges": [
         {
           "c": 4,
-          "f": 6,
-          "t": 6
+          "f": 7,
+          "t": 7
         },
         {
           "c": 5,
           "f": 1,
-          "t": 5
+          "t": 6
+        }
+      ]
+    }
+  },
+  {
+    "name": "SR Secret",
+    "key": "secret",
+    "size": "98",
+    "board": "_eya4w92kj",
+    "color": "purple",
+    "state": {
+      "ranges": [
+        {
+          "c": 3,
+          "f": 25,
+          "t": 25
+        },
+        {
+          "c": 4,
+          "f": 19,
+          "t": 19
+        },
+        {
+          "c": 5,
+          "f": 1,
+          "t": 18
+        },
+        {
+          "c": 5,
+          "f": 20,
+          "t": 24
+        }
+      ]
+    }
+  },
+  {
+    "name": "SR Akiko",
+    "key": "akiko",
+    "size": "133",
+    "board": "_eya4w92kj",
+    "color": "green",
+    "state": {
+      "ranges": [
+        {
+          "c": 4,
+          "f": 10,
+          "t": 10
+        },
+        {
+          "c": 5,
+          "f": 1,
+          "t": 9
+        }
+      ]
+    }
+  },
+  {
+    "name": "SR Nutshell",
+    "key": "nut",
+    "size": "72",
+    "board": "_eya4w92kj",
+    "color": "blue",
+    "state": {
+      "ranges": [
+        {
+          "c": 2,
+          "f": 15,
+          "t": 15
+        },
+        {
+          "c": 5,
+          "f": 1,
+          "t": 14
+        }
+      ]
+    }
+  },
+  {
+    "name": "SR John in Tokyo",
+    "key": "john",
+    "size": "80",
+    "board": "_eya4w92kj",
+    "color": "plum",
+    "state": {
+      "ranges": [
+        {
+          "c": 4,
+          "f": 9,
+          "t": 9
+        },
+        {
+          "c": 5,
+          "f": 1,
+          "t": 8
+        }
+      ]
+    }
+  },
+  {
+    "name": "SR The Zama9 murders",
+    "key": "zama",
+    "size": "11",
+    "board": "_eya4w92kj",
+    "color": "beige",
+    "state": {
+      "ranges": [
+        {
+          "c": 4,
+          "f": 2,
+          "t": 2
+        },
+        {
+          "c": 5,
+          "f": 9,
+          "t": 9
+        }
+      ]
+    }
+  },
+  {
+    "name": "Human Japanese",
+    "key": "hj",
+    "size": "45",
+    "board": "_eya4w92kj",
+    "color": "peach",
+    "state": {
+      "ranges": [
+        {
+          "c": 5,
+          "f": 1,
+          "t": 23
+        }
+      ]
+    }
+  },
+  {
+    "name": "ゴーショーグン2",
+    "key": "go2",
+    "size": "246",
+    "board": "_15ma569uj",
+    "color": "green",
+    "state": {
+      "ranges": [
+        {
+          "c": 6,
+          "f": 1,
+          "t": 4
+        },
+        {
+          "c": 1,
+          "f": 5,
+          "t": 16
         }
       ]
     }
