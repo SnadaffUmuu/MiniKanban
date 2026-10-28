@@ -31,7 +31,8 @@ export const EventsDomain = {
   },
 
   getFilteredEvents(filter) {
-    let events = this.checkSkipMoved(this.getEvents());
+    filter = filter || {};
+    let events = this.checkSkipMoved(this.getEvents(), filter);
 
     // Events of archived books are shown by default; they are only hidden when
     // the filter explicitly sets includeArchived to false (the "incl. archived?"
@@ -57,6 +58,12 @@ export const EventsDomain = {
             case 'books':
               predicates.push(filter[param].includes(ev.b));
               break;
+            case 'dateFrom':
+              predicates.push(ev.d >= filter[param]);
+              break;
+            case 'dateTo':
+              predicates.push(ev.d <= filter[param]);
+              break;
           }
         });
         return predicates.every(pr => pr === true);
@@ -64,6 +71,45 @@ export const EventsDomain = {
     }
     console.log('filtered events', events);
     return events;
+  },
+
+  getAvailableDateRange(filter) {
+    const filterWithoutDates = {};
+    Object.keys(filter || {}).forEach(param => {
+      if(param !== 'dateFrom' && param !== 'dateTo') {
+        filterWithoutDates[param] = filter[param];
+      }
+    });
+    const events = this.getFilteredEvents(filterWithoutDates);
+    if(!events.length) return null;
+
+    let min = events[0].d;
+    let max = events[0].d;
+    events.forEach(event => {
+      if(event.d < min) min = event.d;
+      if(event.d > max) max = event.d;
+    });
+    return {min: min, max: max};
+  },
+
+  getEffectiveDateRange(filter) {
+    const available = this.getAvailableDateRange(filter);
+    if(!available) return null;
+    const from = filter && filter.dateFrom ? filter.dateFrom : available.min;
+    const to = filter && filter.dateTo ? filter.dateTo : available.max;
+    return from <= to ? {from: from, to: to} : null;
+  },
+
+  filterEventsByDateRange(events, range) {
+    if(!range) return [];
+    return events.filter(event => event.d >= range.from && event.d <= range.to);
+  },
+
+  getEventsForEffectiveDateRange(filter) {
+    return this.filterEventsByDateRange(
+      this.getEvents(),
+      this.getEffectiveDateRange(filter)
+    );
   },
 
   getFilteredEventsByDefaultOrder() {
@@ -117,9 +163,9 @@ export const EventsDomain = {
 
   },
 
-  generateCalendar(events, rangeEvents = events) {
+  generateCalendar(events, range) {
 
-    if(!rangeEvents.length) {
+    if(!range) {
       return [];
     }
 
@@ -153,16 +199,8 @@ export const EventsDomain = {
     console.log(eventsMap);
 
     //range
-    let firstDate = rangeEvents[0].d;
-    let lastDate = rangeEvents[0].d;
-    rangeEvents.forEach(event => {
-      if(event.d < firstDate) {
-        firstDate = event.d;
-      }
-      if(event.d > lastDate) {
-        lastDate = event.d;
-      }
-    });
+    const firstDate = range.from;
+    const lastDate = range.to;
 
     const startEvent = newDate(firstDate);
     const start = new Date(
@@ -482,10 +520,10 @@ export const EventsDomain = {
   // Attention balance by color. Based on the ranks history: either the
   // selected period (periodId = its start ts) or, by default, the last
   // ATTENTION_DEFAULT_CYCLES full cycles of consumed moves, never reaching
-  // before the latest ranks change. Only consumed moves (cm === true) count,
-  // whatever the filters say. Books are irrelevant: only the color an event
-  // had at event time matters.
-  buildBoardAttentionBalance(events, boardId, periodId) {
+  // before the latest ranks change. Only consumed moves (cm === true) count.
+  // The open approximate period may additionally receive the effective date
+  // range. Books are irrelevant: only the color an event had at event time matters.
+  buildBoardAttentionBalance(events, boardId, periodId, dateRange) {
     const board = BoardDomain.getBoard(boardId);
     if(!board || !board.ranks) return null;
 
@@ -512,6 +550,9 @@ export const EventsDomain = {
       windowEvents = all.filter(ev =>
         ev.ts >= selected.start && (selected.end == null || ev.ts < selected.end)
       );
+      if(selected.approx && selected.end == null && dateRange !== undefined) {
+        windowEvents = this.filterEventsByDateRange(windowEvents, dateRange);
+      }
     } else {
       ranks = board.ranks;
       wanted = this.ATTENTION_DEFAULT_CYCLES * RanksDomain.getCycleSize(ranks);

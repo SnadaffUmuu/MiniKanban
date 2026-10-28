@@ -82,7 +82,9 @@ export const EventStatsUI = {
   },
 
   getBoardDistrHtml() {
-    const data = EventsDomain.getBoardDistribution(EventsDomain.getEvents());
+    const data = EventsDomain.getBoardDistribution(
+      EventsDomain.getEventsForEffectiveDateRange(App.getFilter())
+    );
     const ideal = BoardDomain.getIdealPercents();
     console.log('getBoardDistrHtml', data);
     return `<p>Ideal: ${Object.keys(ideal).join(' / ')}: ${Object.values(ideal).join(' / ')}</p>`
@@ -134,7 +136,9 @@ export const EventStatsUI = {
   },
 
   getBoardStatsHtml() {
-    const data = EventsDomain.getBoardStats(EventsDomain.getEvents());
+    const data = EventsDomain.getBoardStats(
+      EventsDomain.getEventsForEffectiveDateRange(App.getFilter())
+    );
     console.log('getBoardStatsHtml', data);
     return `соответствует ли фактическая работа по доскам их целевому ratio<br>
     <table class="stats-table">
@@ -168,7 +172,16 @@ export const EventStatsUI = {
     if(periodId != null && !periods.some(p => p.id === periodId)) {
       periodId = null;
     }
-    const data = EventsDomain.buildBoardAttentionBalance(EventsDomain.getEvents(), selectedBoard, periodId);
+    const selectedPeriod = periodId != null
+      ? periods.find(p => p.id === periodId)
+      : null;
+    const usesDateRange = selectedPeriod && selectedPeriod.approx && selectedPeriod.end == null;
+    const dateRange = usesDateRange
+      ? EventsDomain.getEffectiveDateRange(App.getFilter())
+      : undefined;
+    const data = EventsDomain.buildBoardAttentionBalance(
+      EventsDomain.getEvents(), selectedBoard, periodId, dateRange
+    );
     if(!data) return 'У доски нет рангов';
     console.log('getBoardAttentionBalanceHtml', data);
 
@@ -184,6 +197,11 @@ export const EventStatsUI = {
         + (data.period.approx
           ? 'Approximate: ranks before tracking began are assumed to be the current ones; opening credit is taken as 0.'
           : 'Opening counters are taken from the ranks history.');
+      if(usesDateRange) {
+        note += dateRange
+          ? ` Date filter period: ${dateRange.from} — ${dateRange.to}.`
+          : ' Date filter period has no matching events.';
+      }
     } else {
       note = `Last ${data.totalMoves} of ${data.wanted} wanted consumed moves`
         + (data.cutShort ? ' (cut short: the window stops at the latest ranks change or at the start of the log)' : '')

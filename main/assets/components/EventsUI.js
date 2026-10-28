@@ -204,7 +204,8 @@ export const EventsUI = {
 
   getCalendarHtml() {
     const events = EventsDomain.getFilteredEventsByOrder(true);
-    const calendar = EventsDomain.generateCalendar(events, EventsDomain.getEvents());
+    const range = EventsDomain.getEffectiveDateRange(App.getFilter());
+    const calendar = EventsDomain.generateCalendar(events, range);
     console.log(calendar);
     let res = [];
     let currYear = null;
