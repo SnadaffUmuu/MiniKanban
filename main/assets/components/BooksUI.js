@@ -765,6 +765,10 @@ export const BooksUI = {
 
     const dimensions = this.getTreeDimensions();
     const started = Math.min(size, BooksDomain.getStartedPageCount(book));
+    const board = this.getBoard(book);
+    const completed = board && board.columns.length
+      ? Math.min(started, BooksDomain.getColumnPageCount(book, board.columns.length - 1))
+      : 0;
     const isArchived = BooksDomain.isArchived(book);
     const bookColor = isArchived
       ? BooksDomain.getLatestArchivedPeriod(book)?.color
@@ -773,7 +777,7 @@ export const BooksUI = {
     const shapeColor = (bookColor && getColorHex(bookColor)) || '#f79d35';
     const outlineColor = isNight ? '#6a6a6a' : '#d8d8d8';
     const pageColor = isNight ? '#6fa8ff' : '#1b5998';
-    const emptyPageStroke = isNight ? '#8a8a8a' : '#929292';
+    const emptyPageStroke = isNight ? '#8a8a8a' : '#a8a5a5';
     const shape = this.getTreeShape();
     const showOutline = this.getTreeShowOutline();
     const fillMode = this.getTreeFillMode();
@@ -799,7 +803,7 @@ export const BooksUI = {
           height="${layout.height}"
           viewBox="0 0 ${layout.width} ${layout.height}"
           role="img"
-          aria-label="${size} pages"
+          aria-label="${size} pages: ${completed} completed, ${started - completed} started"
         >
           <path
             d="${layout.outline.path}"
@@ -815,7 +819,7 @@ export const BooksUI = {
               cx="${point.x.toFixed(3)}"
               cy="${point.y.toFixed(3)}"
               r="${radius.toFixed(3)}"
-              fill="${fillRank[index] < started ? pageColor : 'transparent'}"
+              fill="${fillRank[index] < completed ? pageColor : 'transparent'}"
               stroke="${fillRank[index] < started ? pageColor : emptyPageStroke}"
               data-page="${fillRank[index] + 1}"
             />

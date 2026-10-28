@@ -47,7 +47,8 @@ defined canonically in [`persistence.md`](../persistence.md); tree shape, fill m
 - Progress placement does not change cloud geometry. Page mode keeps generated-point order. Liquid
   mode completes horizontal bands from bottom to top and orders each band from the horizontal
   center toward its edges; deterministic tie-breakers keep repeated renders stable.
-- Started-page intervals are merged across columns before deciding how many circles to fill.
+- Started-page intervals are merged across columns. Only pages in the last board column use filled
+  circles; other started pages use the same color as an outline.
 
 
 ## Archiving

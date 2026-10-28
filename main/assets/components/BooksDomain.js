@@ -546,10 +546,8 @@ export const BooksDomain = {
   },
 
   // Возвращает количество уникальных страниц, покрытых ranges.
-  // ranges — это массив {f, t} (включительно), колонка c игнорируется.
   // Пересекающиеся/вложенные интервалы сливаются, чтобы не дублировать.
-  getStartedPageCount(book) {
-    const ranges = (book && book.state && book.state.ranges) || [];
+  getPageCountForRanges(ranges) {
     if (!ranges.length) return 0;
 
     const intervals = ranges
@@ -570,6 +568,16 @@ export const BooksDomain = {
     }
     if (cur) count += cur.t - cur.f + 1;
     return count;
+  },
+
+  getStartedPageCount(book) {
+    const ranges = (book && book.state && book.state.ranges) || [];
+    return this.getPageCountForRanges(ranges);
+  },
+
+  getColumnPageCount(book, columnIndex) {
+    const ranges = (book && book.state && book.state.ranges) || [];
+    return this.getPageCountForRanges(ranges.filter(r => Number(r.c) === columnIndex));
   },
 
   takeBookSnapshot(bookKey) {
