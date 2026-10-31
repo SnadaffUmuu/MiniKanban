@@ -1723,6 +1723,14 @@ select:invalid {
   flex: 0 0 auto;
 }
 
+.toolbar__inner-tools {
+  flex:1 0 auto; 
+  display: flex; 
+  flex-flow:row nowrap;
+  align-items: center; 
+  gap: 10px;
+}
+
 .toolbar__button {
   width: 30px;
   height: 30px;
